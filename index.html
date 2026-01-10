@@ -1,0 +1,1675 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Mitchell Photo Organizer</title>
+
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mitchell Photos">
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --surface:#111b33;
+      --surface2:#162241;
+      --border:#26355f;
+      --text:#eef2ff;
+      --muted:#a7b1d8;
+      --primary:#3b82f6;
+      --danger:#ef4444;
+      --good:#22c55e;
+      --chip:#0d1630;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+      --nav-h:78px;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body { height:100%; }
+    body{
+      margin:0;
+      font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, #1a2a66 0%, rgba(26,42,102,0) 55%),
+                  radial-gradient(900px 700px at 80% 0%, #173a7a 0%, rgba(23,58,122,0) 60%),
+                  var(--bg);
+      color:var(--text);
+      overflow:hidden;
+    }
+
+    /* Layout */
+    .app{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      padding-top: var(--safe-t);
+    }
+    header{
+      padding: 14px 14px 10px 14px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+    .title h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+      font-weight:700;
+    }
+    .title .sub{
+      color:var(--muted);
+      font-size:12px;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border-radius:999px;
+      box-shadow: var(--shadow);
+    }
+    .pill small{ color:var(--muted); font-weight:600; }
+    .pill b{ font-size:12px; }
+
+    main{
+      flex:1;
+      overflow:auto;
+      padding: 0 14px calc(var(--nav-h) + var(--safe-b) + 16px) 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Cards + controls */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .row.space{ justify-content:space-between; }
+    .stack{ display:flex; flex-direction:column; gap:10px; }
+    .hr{ height:1px; background:rgba(255,255,255,.08); margin:10px 0; }
+
+    button, .btn{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(59,130,246,.22), rgba(59,130,246,.10));
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:700;
+      letter-spacing:.2px;
+      cursor:pointer;
+      user-select:none;
+    }
+    button.secondary{
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+    }
+    button.danger{
+      background: linear-gradient(180deg, rgba(239,68,68,.25), rgba(239,68,68,.12));
+      border-color: rgba(239,68,68,.35);
+    }
+    button.good{
+      background: linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.10));
+      border-color: rgba(34,197,94,.35);
+    }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+    .iconBtn{
+      width:44px; height:44px; padding:0;
+      display:inline-flex; align-items:center; justify-content:center;
+      border-radius:12px;
+    }
+
+    input, select, textarea{
+      width:100%;
+      padding: 10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(10,16,34,.55);
+      color: var(--text);
+      outline:none;
+    }
+    textarea{ min-height:74px; resize:vertical; }
+
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width: 720px){ .grid2{ grid-template-columns: 1fr; } }
+
+    /* Dropzone */
+    .drop{
+      border: 2px dashed rgba(255,255,255,.14);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: rgba(0,0,0,.12);
+      text-align:center;
+    }
+    .drop.drag{
+      border-color: rgba(59,130,246,.8);
+      background: rgba(59,130,246,.10);
+    }
+    .drop b{ display:block; margin-bottom:6px; }
+    .drop small{ color: var(--muted); }
+
+    /* Gallery */
+    .toolbar{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .toolbar .grow{ flex:1; min-width:210px; }
+
+    .thumbGrid{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 1100px){ .thumbGrid{ grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 820px){ .thumbGrid{ grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 520px){ .thumbGrid{ grid-template-columns: repeat(2, 1fr); } }
+
+    .thumb{
+      position:relative;
+      border-radius: 14px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      aspect-ratio: 1 / 1;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      cursor:pointer;
+      user-select:none;
+    }
+    .thumb img{
+      width:100%; height:100%;
+      object-fit: cover;
+      display:block;
+      transform: translateZ(0);
+    }
+    .thumb .meta{
+      position:absolute;
+      left:8px; right:8px; bottom:8px;
+      display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+    }
+    .chip{
+      font-size:11px;
+      padding: 5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(12,18,38,.65);
+      color: var(--text);
+      backdrop-filter: blur(10px);
+      max-width:100%;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .thumb .check{
+      position:absolute;
+      top:8px; left:8px;
+      width:26px; height:26px;
+      border-radius:9px;
+      border:1px solid rgba(255,255,255,.20);
+      background: rgba(0,0,0,.35);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:900;
+      font-size:14px;
+    }
+    .thumb.selected{
+      outline: 2px solid rgba(59,130,246,.85);
+      box-shadow: 0 0 0 6px rgba(59,130,246,.15);
+    }
+
+    /* Viewer */
+    .viewerOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.70);
+      backdrop-filter: blur(10px);
+      z-index: 50;
+      display:none;
+    }
+    .viewerOverlay.show{ display:block; }
+
+    .viewer{
+      position:absolute;
+      inset: 10px 10px calc(var(--nav-h) + var(--safe-b) + 10px) 10px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(12,18,38,.85);
+      box-shadow: var(--shadow);
+      display:flex;
+      overflow:hidden;
+    }
+    .vLeft{
+      flex:1.35;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.20);
+      min-width: 0;
+      touch-action: pan-y; /* allow vertical scroll in page, but we handle horizontal swipe */
+    }
+    .vLeft img{
+      max-width:100%;
+      max-height:100%;
+      object-fit: contain;
+      display:block;
+      user-select:none;
+      -webkit-user-drag: none;
+    }
+    .vRight{
+      flex:0.9;
+      border-left:1px solid rgba(255,255,255,.10);
+      padding:12px;
+      overflow:auto;
+      min-width: 300px;
+    }
+    @media (max-width: 900px){
+      .viewer{ flex-direction:column; }
+      .vRight{ border-left:none; border-top:1px solid rgba(255,255,255,.10); min-width: 0; }
+      .vLeft{ flex: 1.2; }
+    }
+
+    .vTopBar{
+      position:absolute;
+      top:10px; left:10px; right:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      pointer-events:none; /* allow image swipe; buttons will re-enable */
+    }
+    .vTopBar .group{
+      display:flex; gap:10px; align-items:center;
+      pointer-events:auto;
+    }
+
+    .navArrow{
+      position:absolute;
+      top:50%;
+      transform: translateY(-50%);
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 22px;
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
+      z-index: 2;
+      pointer-events:auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .navArrow:active{ transform: translateY(-50%) scale(.98); }
+    .navArrow.left{ left: 10px; }
+    .navArrow.right{ right: 10px; }
+    .navArrow[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
+
+    .kpi{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .kpi .tag{
+      padding: 6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      font-size:12px;
+      color: var(--muted);
+      font-weight:700;
+    }
+
+    /* Bottom nav */
+    .bottomNav{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      height: calc(var(--nav-h) + var(--safe-b));
+      padding-bottom: var(--safe-b);
+      background: rgba(10,16,34,.78);
+      border-top:1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(16px);
+      display:flex;
+      justify-content:space-around;
+      align-items:center;
+      z-index: 40;
+    }
+    .tab{
+      width: 25%;
+      height: var(--nav-h);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:6px;
+      color: var(--muted);
+      font-weight:800;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab .dot{
+      width: 6px; height: 6px; border-radius:999px;
+      background: transparent;
+    }
+    .tab.active{ color: var(--text); }
+    .tab.active .dot{ background: var(--primary); }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
+      background: rgba(0,0,0,.65);
+      border:1px solid rgba(255,255,255,.12);
+      padding: 10px 12px;
+      border-radius: 999px;
+      color: var(--text);
+      font-weight:700;
+      font-size:12px;
+      z-index: 60;
+      display:none;
+      max-width: 92vw;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      backdrop-filter: blur(12px);
+    }
+    .toast.show{ display:block; }
+
+    /* Small helpers */
+    .muted{ color:var(--muted); }
+    .tiny{ font-size:12px; color:var(--muted); }
+    .right{ text-align:right; }
+    .badge{
+      font-size:12px;
+      padding: 6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(59,130,246,.14);
+      color: var(--text);
+      font-weight:800;
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+  <header>
+    <div class="title">
+      <h1>Mitchell Photo Organizer</h1>
+      <div class="sub">Offline-ready • Folders • Categories • Review</div>
+    </div>
+    <div class="pill">
+      <small>Total</small> <b id="kTotal">0</b>
+      <small>Shown</small> <b id="kShown">0</b>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- PHOTOS TAB -->
+    <section id="viewPhotos" class="stack">
+      <div class="card stack">
+        <div class="row space">
+          <div class="kpi">
+            <div class="tag" id="kFolder">Folder: All</div>
+            <div class="tag" id="kCat">Category: All</div>
+            <div class="tag" id="kSel">Selected: 0</div>
+          </div>
+          <div class="row">
+            <label class="btn secondary" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+              <span>📷 Add Photos</span>
+              <input id="fileInput" type="file" accept="image/*" multiple hidden>
+            </label>
+            <label class="btn secondary" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+              <span>📸 Camera</span>
+              <input id="camInput" type="file" accept="image/*" capture="environment" hidden>
+            </label>
+            <button id="btnClearSel" class="secondary" disabled>Clear</button>
+          </div>
+        </div>
+
+        <div class="drop" id="dropZone">
+          <b>Drag & drop photos here</b>
+          <small>Or use “Add Photos” / “Camera”. Images are stored offline on this device.</small>
+        </div>
+
+        <div class="toolbar">
+          <div class="grow"><input id="search" placeholder="Search (filename, notes)..." /></div>
+          <select id="filterFolder"></select>
+          <select id="filterCat"></select>
+          <button id="btnSelectAll" class="secondary">Select All</button>
+        </div>
+
+        <div class="toolbar">
+          <select id="bulkFolder"></select>
+          <select id="bulkCat"></select>
+          <button id="btnApplyBulk" class="good" disabled>Apply to Selected</button>
+          <button id="btnDeleteSel" class="danger" disabled>Delete Selected</button>
+        </div>
+      </div>
+
+      <div id="thumbGrid" class="thumbGrid"></div>
+      <div class="tiny" id="emptyHint" style="display:none; text-align:center; padding: 26px 0;">
+        No photos yet. Add some above.
+      </div>
+    </section>
+
+    <!-- FOLDERS TAB -->
+    <section id="viewFolders" class="stack" style="display:none;">
+      <div class="card stack">
+        <div class="row space">
+          <div>
+            <b>Folders</b>
+            <div class="tiny">Create folders to group photos (e.g., “RO”, “Tear Down”, “Supplements”).</div>
+          </div>
+          <div class="badge" id="folderCount">0</div>
+        </div>
+        <div class="grid2">
+          <div class="stack">
+            <input id="newFolderName" placeholder="New folder name..." />
+            <button id="btnAddFolder" class="good">Add Folder</button>
+          </div>
+          <div class="stack">
+            <select id="folderManage"></select>
+            <button id="btnRenameFolder" class="secondary">Rename Selected Folder</button>
+            <button id="btnDeleteFolder" class="danger">Delete Selected Folder</button>
+            <div class="tiny">Deleting a folder does not delete photos — they move to “Unsorted”.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card stack">
+        <b>Categories</b>
+        <div class="tiny">These are your quick “Mitchell-style” tags. Add/edit anytime.</div>
+        <div class="hr"></div>
+        <div class="grid2">
+          <div class="stack">
+            <input id="newCatName" placeholder="New category (e.g., VIN, Odometer, Damage LF)..." />
+            <button id="btnAddCat" class="good">Add Category</button>
+          </div>
+          <div class="stack">
+            <select id="catManage"></select>
+            <button id="btnRenameCat" class="secondary">Rename Selected Category</button>
+            <button id="btnDeleteCat" class="danger">Delete Selected Category</button>
+            <div class="tiny">Deleting a category does not delete photos — they become “Uncategorized”.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEW TAB -->
+    <section id="viewReview" class="stack" style="display:none;">
+      <div class="card stack">
+        <div class="row space">
+          <div>
+            <b>Review</b>
+            <div class="tiny">Tap any thumbnail to open the full-screen reviewer. Swipe left/right or use arrows.</div>
+          </div>
+          <button id="btnOpenFirst" class="secondary">Open First Shown</button>
+        </div>
+        <div class="tiny">Tip: Keyboard ← → works on desktop. Viewer arrows are fixed (no “dead” click zones).</div>
+      </div>
+
+      <div class="card stack">
+        <b>Quick stats</b>
+        <div class="row space">
+          <div class="tiny" id="statsLine">—</div>
+          <button id="btnRandom" class="secondary">Open Random Shown</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPORT TAB -->
+    <section id="viewExport" class="stack" style="display:none;">
+      <div class="card stack">
+        <b>Export</b>
+        <div class="tiny">Export metadata as CSV/JSON. (Browsers don’t allow creating real folders/ZIP without extra libraries, but JSON/CSV is solid for backups.)</div>
+        <div class="hr"></div>
+        <div class="row">
+          <button id="btnExportCSV" class="secondary">Export CSV</button>
+          <button id="btnExportJSON" class="secondary">Export JSON Backup</button>
+          <button id="btnImportJSON" class="secondary">Import JSON Backup</button>
+          <input id="importJsonInput" type="file" accept="application/json" hidden>
+        </div>
+        <div class="hr"></div>
+        <div class="row space">
+          <div class="stack" style="flex:1; min-width:260px;">
+            <b>Danger Zone</b>
+            <div class="tiny">This clears all photos + data from this device.</div>
+          </div>
+          <button id="btnWipeAll" class="danger">Wipe Everything</button>
+        </div>
+      </div>
+
+      <div class="card stack">
+        <b>Storage</b>
+        <div class="tiny" id="storageHint">Checking…</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomNav" id="bottomNav">
+    <div class="tab active" data-tab="photos">
+      <div>🖼️</div>
+      <div>Photos</div>
+      <div class="dot"></div>
+    </div>
+    <div class="tab" data-tab="folders">
+      <div>🗂️</div>
+      <div>Folders</div>
+      <div class="dot"></div>
+    </div>
+    <div class="tab" data-tab="review">
+      <div>✅</div>
+      <div>Review</div>
+      <div class="dot"></div>
+    </div>
+    <div class="tab" data-tab="export">
+      <div>⬇️</div>
+      <div>Export</div>
+      <div class="dot"></div>
+    </div>
+  </nav>
+</div>
+
+<!-- Viewer Overlay -->
+<div class="viewerOverlay" id="viewerOverlay" aria-hidden="true">
+  <div class="viewer" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <div class="vLeft" id="vLeft">
+      <div class="vTopBar">
+        <div class="group">
+          <button class="iconBtn secondary" id="btnCloseViewer" title="Close">✕</button>
+          <div class="badge" id="vIndexBadge">0 / 0</div>
+        </div>
+        <div class="group">
+          <button class="iconBtn secondary" id="btnPrev" title="Previous">←</button>
+          <button class="iconBtn secondary" id="btnNext" title="Next">→</button>
+        </div>
+      </div>
+
+      <!-- Big arrows (these are the ones that were “dead” in a lot of buggy builds) -->
+      <div class="navArrow left" id="bigPrev" title="Previous" aria-disabled="false">‹</div>
+      <div class="navArrow right" id="bigNext" title="Next" aria-disabled="false">›</div>
+
+      <img id="viewerImg" alt="Photo" />
+    </div>
+
+    <div class="vRight stack">
+      <div class="row space">
+        <b>Details</b>
+        <span class="tiny" id="vFilename">—</span>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <div class="tiny">Folder</div>
+          <select id="vFolder"></select>
+        </div>
+        <div>
+          <div class="tiny">Category</div>
+          <select id="vCat"></select>
+        </div>
+      </div>
+
+      <div>
+        <div class="tiny">Notes</div>
+        <textarea id="vNotes" placeholder="Type notes (damage description, part notes, etc.)"></textarea>
+      </div>
+
+      <div class="row">
+        <button id="btnSaveDetails" class="good">Save</button>
+        <button id="btnToggleFav" class="secondary">★ Favorite</button>
+        <button id="btnDeleteOne" class="danger">Delete</button>
+      </div>
+
+      <div class="card stack" style="padding:10px;">
+        <b style="font-size:13px;">Shortcuts</b>
+        <div class="tiny">Swipe ←/→ • Arrow keys ←/→ • Esc to close</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  /* -----------------------------
+     IndexedDB (photos + metadata)
+  ------------------------------*/
+  const DB_NAME = "mitchell_photo_app_db_v1";
+  const DB_VER  = 1;
+  const STORE_PHOTOS = "photos";   // { id, blob, type }
+  const STORE_META   = "meta";     // { id, filename, created, folder, category, notes, fav }
+  const STORE_CFG    = "config";   // { key, value }
+
+  const defaultFolders = ["All", "Unsorted"];
+  const defaultCategories = [
+    "All",
+    "Uncategorized",
+    "Front",
+    "Rear",
+    "Left Side",
+    "Right Side",
+    "VIN",
+    "Odometer",
+    "Damage",
+    "Repair Area",
+    "Parts",
+    "After Repair"
+  ];
+
+  let db;
+  let photos = []; // merged meta list with id; blobs loaded on demand
+  let folders = [];
+  let categories = [];
+
+  // UI State
+  let activeTab = "photos";
+  let filterFolder = "All";
+  let filterCat = "All";
+  let searchTerm = "";
+  let selected = new Set();
+
+  // Viewer state
+  let shownIds = []; // IDs of the currently filtered set, in display order
+  let viewerPos = -1; // index within shownIds
+
+  /* -----------------------------
+     Helpers
+  ------------------------------*/
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const toastEl = $("#toast");
+  let toastTimer = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+
+  function fmtCount(n){ return (n ?? 0).toString(); }
+
+  function downloadText(filename, text, type="text/plain"){
+    const blob = new Blob([text], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function safeName(s){
+    return (s || "").trim().slice(0, 80);
+  }
+
+  function nowISO(){
+    return new Date().toISOString();
+  }
+
+  /* -----------------------------
+     DB
+  ------------------------------*/
+  function openDB(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onerror = () => reject(req.error);
+      req.onupgradeneeded = () => {
+        const d = req.result;
+        if (!d.objectStoreNames.contains(STORE_PHOTOS)) d.createObjectStore(STORE_PHOTOS, {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_META))   d.createObjectStore(STORE_META,   {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_CFG))    d.createObjectStore(STORE_CFG,    {keyPath:"key"});
+      };
+      req.onsuccess = () => resolve(req.result);
+    });
+  }
+
+  function tx(storeNames, mode="readonly"){
+    return db.transaction(storeNames, mode);
+  }
+
+  function idbGet(store, key){
+    return new Promise((resolve, reject) => {
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function idbPut(store, val){
+    return new Promise((resolve, reject) => {
+      const req = store.put(val);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function idbDel(store, key){
+    return new Promise((resolve, reject) => {
+      const req = store.delete(key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function idbGetAll(store){
+    return new Promise((resolve, reject) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function cfgGet(key, fallback){
+    const t = tx([STORE_CFG], "readonly");
+    const val = await idbGet(t.objectStore(STORE_CFG), key).catch(()=>null);
+    return val?.value ?? fallback;
+  }
+
+  async function cfgSet(key, value){
+    const t = tx([STORE_CFG], "readwrite");
+    await idbPut(t.objectStore(STORE_CFG), {key, value});
+  }
+
+  /* -----------------------------
+     Load / Init
+  ------------------------------*/
+  async function init(){
+    db = await openDB();
+
+    // Load config
+    folders = await cfgGet("folders", defaultFolders);
+    categories = await cfgGet("categories", defaultCategories);
+
+    // Ensure required entries
+    if (!folders.includes("All")) folders.unshift("All");
+    if (!folders.includes("Unsorted")) folders.push("Unsorted");
+    if (!categories.includes("All")) categories.unshift("All");
+    if (!categories.includes("Uncategorized")) categories.push("Uncategorized");
+
+    await cfgSet("folders", folders);
+    await cfgSet("categories", categories);
+
+    // Load meta list
+    const t = tx([STORE_META], "readonly");
+    const metas = await idbGetAll(t.objectStore(STORE_META));
+    photos = metas
+      .map(m => ({
+        id: m.id,
+        filename: m.filename || "photo.jpg",
+        created: m.created || nowISO(),
+        folder: m.folder || "Unsorted",
+        category: m.category || "Uncategorized",
+        notes: m.notes || "",
+        fav: !!m.fav
+      }))
+      .sort((a,b) => (b.created || "").localeCompare(a.created || ""));
+
+    wireUI();
+    renderAll();
+    updateStorageHint();
+  }
+
+  /* -----------------------------
+     UI wiring
+  ------------------------------*/
+  function wireUI(){
+    // Tabs
+    $("#bottomNav").addEventListener("click", (e) => {
+      const tab = e.target.closest(".tab");
+      if (!tab) return;
+      setTab(tab.dataset.tab);
+    });
+
+    // Import
+    $("#fileInput").addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (!files.length) return;
+      await addFiles(files);
+    });
+
+    $("#camInput").addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (!files.length) return;
+      await addFiles(files);
+    });
+
+    // Dropzone
+    const dz = $("#dropZone");
+    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.add("drag");
+    }));
+    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.remove("drag");
+    }));
+    dz.addEventListener("drop", async (e) => {
+      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
+      if (!files.length) return toast("No image files detected.");
+      await addFiles(files);
+    });
+
+    // Filters/search
+    $("#search").addEventListener("input", (e) => {
+      searchTerm = (e.target.value || "").trim().toLowerCase();
+      renderGallery();
+    });
+    $("#filterFolder").addEventListener("change", (e) => {
+      filterFolder = e.target.value;
+      renderGallery();
+    });
+    $("#filterCat").addEventListener("change", (e) => {
+      filterCat = e.target.value;
+      renderGallery();
+    });
+
+    // Bulk
+    $("#btnSelectAll").addEventListener("click", () => {
+      const ids = shownIds;
+      if (!ids.length) return;
+      const allSelected = ids.every(id => selected.has(id));
+      if (allSelected){
+        ids.forEach(id => selected.delete(id));
+      } else {
+        ids.forEach(id => selected.add(id));
+      }
+      updateSelectionUI();
+      renderThumbSelectionOnly();
+    });
+
+    $("#btnClearSel").addEventListener("click", () => {
+      selected.clear();
+      updateSelectionUI();
+      renderThumbSelectionOnly();
+    });
+
+    $("#btnApplyBulk").addEventListener("click", async () => {
+      if (!selected.size) return;
+      const f = $("#bulkFolder").value;
+      const c = $("#bulkCat").value;
+      const ids = Array.from(selected);
+      await updateMany(ids, {folder: f, category: c});
+      toast(`Updated ${ids.length} photo(s).`);
+      renderAll();
+    });
+
+    $("#btnDeleteSel").addEventListener("click", async () => {
+      if (!selected.size) return;
+      const n = selected.size;
+      if (!confirm(`Delete ${n} selected photo(s)? This cannot be undone.`)) return;
+      await deleteMany(Array.from(selected));
+      selected.clear();
+      toast(`Deleted ${n} photo(s).`);
+      renderAll();
+    });
+
+    // Folders manager
+    $("#btnAddFolder").addEventListener("click", async () => {
+      const name = safeName($("#newFolderName").value);
+      if (!name) return toast("Enter a folder name.");
+      if (["All"].includes(name)) return toast("That name is reserved.");
+      if (folders.includes(name)) return toast("Folder already exists.");
+      folders.push(name);
+      await cfgSet("folders", folders);
+      $("#newFolderName").value = "";
+      toast("Folder added.");
+      renderAll();
+    });
+
+    $("#btnRenameFolder").addEventListener("click", async () => {
+      const oldName = $("#folderManage").value;
+      if (!oldName || oldName === "All") return toast("Select a folder (not All).");
+      const nn = safeName(prompt("Rename folder to:", oldName) || "");
+      if (!nn) return;
+      if (["All"].includes(nn)) return toast("That name is reserved.");
+      if (folders.includes(nn)) return toast("Folder already exists.");
+      folders = folders.map(f => f === oldName ? nn : f);
+      // move photos
+      await updateMany(photos.filter(p => p.folder === oldName).map(p => p.id), {folder: nn});
+      await cfgSet("folders", folders);
+      toast("Folder renamed.");
+      renderAll();
+    });
+
+    $("#btnDeleteFolder").addEventListener("click", async () => {
+      const name = $("#folderManage").value;
+      if (!name || name === "All" || name === "Unsorted") return toast("Select a deletable folder.");
+      if (!confirm(`Delete folder "${name}"? Photos will move to Unsorted.`)) return;
+      folders = folders.filter(f => f !== name);
+      await cfgSet("folders", folders);
+      await updateMany(photos.filter(p => p.folder === name).map(p => p.id), {folder: "Unsorted"});
+      toast("Folder deleted.");
+      renderAll();
+    });
+
+    // Category manager
+    $("#btnAddCat").addEventListener("click", async () => {
+      const name = safeName($("#newCatName").value);
+      if (!name) return toast("Enter a category name.");
+      if (["All"].includes(name)) return toast("That name is reserved.");
+      if (categories.includes(name)) return toast("Category already exists.");
+      categories.push(name);
+      await cfgSet("categories", categories);
+      $("#newCatName").value = "";
+      toast("Category added.");
+      renderAll();
+    });
+
+    $("#btnRenameCat").addEventListener("click", async () => {
+      const oldName = $("#catManage").value;
+      if (!oldName || oldName === "All") return toast("Select a category (not All).");
+      const nn = safeName(prompt("Rename category to:", oldName) || "");
+      if (!nn) return;
+      if (["All"].includes(nn)) return toast("That name is reserved.");
+      if (categories.includes(nn)) return toast("Category already exists.");
+      categories = categories.map(c => c === oldName ? nn : c);
+      await updateMany(photos.filter(p => p.category === oldName).map(p => p.id), {category: nn});
+      await cfgSet("categories", categories);
+      toast("Category renamed.");
+      renderAll();
+    });
+
+    $("#btnDeleteCat").addEventListener("click", async () => {
+      const name = $("#catManage").value;
+      if (!name || name === "All" || name === "Uncategorized") return toast("Select a deletable category.");
+      if (!confirm(`Delete category "${name}"? Photos will move to Uncategorized.`)) return;
+      categories = categories.filter(c => c !== name);
+      await cfgSet("categories", categories);
+      await updateMany(photos.filter(p => p.category === name).map(p => p.id), {category: "Uncategorized"});
+      toast("Category deleted.");
+      renderAll();
+    });
+
+    // Review helpers
+    $("#btnOpenFirst").addEventListener("click", () => {
+      if (!shownIds.length) return toast("No photos to open.");
+      openViewerById(shownIds[0]);
+    });
+    $("#btnRandom").addEventListener("click", () => {
+      if (!shownIds.length) return toast("No photos to open.");
+      const id = shownIds[Math.floor(Math.random() * shownIds.length)];
+      openViewerById(id);
+    });
+
+    // Export
+    $("#btnExportCSV").addEventListener("click", exportCSV);
+    $("#btnExportJSON").addEventListener("click", exportJSON);
+    $("#btnImportJSON").addEventListener("click", () => $("#importJsonInput").click());
+    $("#importJsonInput").addEventListener("change", async (e) => {
+      const f = e.target.files?.[0];
+      e.target.value = "";
+      if (!f) return;
+      await importJSONFile(f);
+    });
+
+    $("#btnWipeAll").addEventListener("click", async () => {
+      if (!confirm("Wipe EVERYTHING (photos + data) from this device?")) return;
+      await wipeAll();
+      toast("Wiped.");
+      renderAll();
+      updateStorageHint();
+    });
+
+    // Viewer events
+    $("#btnCloseViewer").addEventListener("click", closeViewer);
+    $("#viewerOverlay").addEventListener("click", (e) => {
+      // click outside dialog closes
+      if (e.target.id === "viewerOverlay") closeViewer();
+    });
+
+    // IMPORTANT: fix for dead arrows:
+    // - no overlay elements with pointer-events blocking
+    // - explicitly attach click handlers to BOTH small and big buttons
+    $("#btnPrev").addEventListener("click", () => stepViewer(-1));
+    $("#btnNext").addEventListener("click", () => stepViewer(+1));
+    $("#bigPrev").addEventListener("click", () => stepViewer(-1));
+    $("#bigNext").addEventListener("click", () => stepViewer(+1));
+
+    // Touch swipe
+    let sx = 0, sy = 0, st = 0;
+    const vLeft = $("#vLeft");
+    vLeft.addEventListener("touchstart", (e) => {
+      if (!e.touches?.length) return;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      st = Date.now();
+    }, {passive:true});
+    vLeft.addEventListener("touchend", (e) => {
+      const t = e.changedTouches?.[0];
+      if (!t) return;
+      const dx = t.clientX - sx;
+      const dy = t.clientY - sy;
+      const dt = Date.now() - st;
+      // quick horizontal swipe
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2 && dt < 650){
+        if (dx < 0) stepViewer(+1);
+        else stepViewer(-1);
+      }
+    }, {passive:true});
+
+    // Keyboard
+    document.addEventListener("keydown", (e) => {
+      if (!$("#viewerOverlay").classList.contains("show")) return;
+      if (e.key === "Escape") closeViewer();
+      if (e.key === "ArrowLeft") stepViewer(-1);
+      if (e.key === "ArrowRight") stepViewer(+1);
+    });
+
+    // Viewer detail actions
+    $("#btnSaveDetails").addEventListener("click", async () => {
+      const id = shownIds[viewerPos];
+      if (!id) return;
+      await updateOne(id, {
+        folder: $("#vFolder").value,
+        category: $("#vCat").value,
+        notes: $("#vNotes").value || ""
+      });
+      toast("Saved.");
+      renderAll(false); // keep viewer open
+      // keep viewer image
+      await refreshViewerMeta();
+    });
+
+    $("#btnToggleFav").addEventListener("click", async () => {
+      const id = shownIds[viewerPos];
+      if (!id) return;
+      const p = photos.find(x => x.id === id);
+      const nv = !p?.fav;
+      await updateOne(id, {fav: nv});
+      toast(nv ? "Favorited." : "Unfavorited.");
+      renderAll(false);
+      await refreshViewerMeta();
+    });
+
+    $("#btnDeleteOne").addEventListener("click", async () => {
+      const id = shownIds[viewerPos];
+      if (!id) return;
+      if (!confirm("Delete this photo?")) return;
+      await deleteMany([id]);
+      toast("Deleted.");
+      // Recompute shown list and stay open if possible
+      renderAll(false);
+      if (!shownIds.length) closeViewer();
+      else {
+        viewerPos = Math.min(viewerPos, shownIds.length - 1);
+        await renderViewerAt(viewerPos);
+      }
+    });
+
+    // Changes in viewer dropdowns should not close viewer; just update UI
+    $("#vFolder").addEventListener("change", () => {});
+    $("#vCat").addEventListener("change", () => {});
+  }
+
+  function setTab(tab){
+    activeTab = tab;
+    $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+    $("#viewPhotos").style.display  = tab === "photos" ? "" : "none";
+    $("#viewFolders").style.display = tab === "folders" ? "" : "none";
+    $("#viewReview").style.display  = tab === "review" ? "" : "none";
+    $("#viewExport").style.display  = tab === "export" ? "" : "none";
+    // keep counts fresh
+    renderGallery();
+    updateStorageHint();
+  }
+
+  /* -----------------------------
+     Add / Update / Delete
+  ------------------------------*/
+  function uuid(){
+    // good enough for local app
+    return crypto.randomUUID ? crypto.randomUUID() : "id_" + Math.random().toString(16).slice(2) + Date.now();
+  }
+
+  async function addFiles(files){
+    // Apply current bulk selections as defaults
+    const defaultFolder = ($("#bulkFolder").value || "Unsorted");
+    const defaultCat = ($("#bulkCat").value || "Uncategorized");
+
+    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
+    const sP = t.objectStore(STORE_PHOTOS);
+    const sM = t.objectStore(STORE_META);
+
+    let added = 0;
+
+    for (const f of files){
+      try{
+        const id = uuid();
+        const blob = f;
+        const filename = f.name || `photo_${added+1}.jpg`;
+
+        await idbPut(sP, {id, blob, type: f.type || "image/jpeg"});
+        await idbPut(sM, {
+          id,
+          filename,
+          created: nowISO(),
+          folder: defaultFolder === "All" ? "Unsorted" : defaultFolder,
+          category: defaultCat === "All" ? "Uncategorized" : defaultCat,
+          notes: "",
+          fav: false
+        });
+
+        photos.unshift({
+          id,
+          filename,
+          created: nowISO(),
+          folder: defaultFolder === "All" ? "Unsorted" : defaultFolder,
+          category: defaultCat === "All" ? "Uncategorized" : defaultCat,
+          notes: "",
+          fav: false
+        });
+        added++;
+      } catch(err){
+        console.error(err);
+      }
+    }
+
+    toast(`Added ${added} photo(s).`);
+    renderAll();
+    updateStorageHint();
+  }
+
+  async function updateOne(id, patch){
+    const t = tx([STORE_META], "readwrite");
+    const sM = t.objectStore(STORE_META);
+    const cur = await idbGet(sM, id);
+    if (!cur) return;
+    const next = {...cur, ...patch};
+    await idbPut(sM, next);
+    const idx = photos.findIndex(p => p.id === id);
+    if (idx >= 0) photos[idx] = {...photos[idx], ...patch};
+  }
+
+  async function updateMany(ids, patch){
+    const t = tx([STORE_META], "readwrite");
+    const sM = t.objectStore(STORE_META);
+    for (const id of ids){
+      const cur = await idbGet(sM, id);
+      if (!cur) continue;
+      await idbPut(sM, {...cur, ...patch});
+      const idx = photos.findIndex(p => p.id === id);
+      if (idx >= 0) photos[idx] = {...photos[idx], ...patch};
+    }
+  }
+
+  async function deleteMany(ids){
+    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
+    const sP = t.objectStore(STORE_PHOTOS);
+    const sM = t.objectStore(STORE_META);
+    for (const id of ids){
+      await idbDel(sP, id).catch(()=>{});
+      await idbDel(sM, id).catch(()=>{});
+    }
+    photos = photos.filter(p => !ids.includes(p.id));
+  }
+
+  async function wipeAll(){
+    await new Promise((resolve, reject) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = resolve;
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => resolve();
+    });
+    db = await openDB();
+    folders = [...defaultFolders];
+    categories = [...defaultCategories];
+    await cfgSet("folders", folders);
+    await cfgSet("categories", categories);
+    photos = [];
+    selected.clear();
+  }
+
+  /* -----------------------------
+     Rendering
+  ------------------------------*/
+  function renderAll(closeViewerIfNeeded=true){
+    renderSelects();
+    renderGallery();
+    renderFolderCounts();
+    renderReviewStats();
+    if (closeViewerIfNeeded && $("#viewerOverlay").classList.contains("show")){
+      // Keep viewer open unless filters removed the current photo
+      const id = shownIds[viewerPos];
+      if (!id) closeViewer();
+      else {
+        // refresh arrows
+        setViewerNavState();
+      }
+    }
+  }
+
+  function renderSelects(){
+    // Folder selects
+    const fOpts = folders.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join("");
+    $("#filterFolder").innerHTML = fOpts;
+    $("#bulkFolder").innerHTML = fOpts;
+    $("#folderManage").innerHTML = folders.filter(f => f !== "All").map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join("");
+
+    // Category selects
+    const cOpts = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    $("#filterCat").innerHTML = cOpts;
+    $("#bulkCat").innerHTML = cOpts;
+    $("#catManage").innerHTML = categories.filter(c => c !== "All").map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+
+    // Viewer selects
+    $("#vFolder").innerHTML = folders.filter(f => f !== "All").map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join("");
+    $("#vCat").innerHTML = categories.filter(c => c !== "All").map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+
+    // Re-apply current values if possible
+    setIfHas($("#filterFolder"), filterFolder, "All");
+    setIfHas($("#filterCat"), filterCat, "All");
+    if (!folders.includes(filterFolder)) filterFolder = "All";
+    if (!categories.includes(filterCat)) filterCat = "All";
+
+    // Default bulk values
+    if (!folders.includes($("#bulkFolder").value)) $("#bulkFolder").value = "Unsorted";
+    if (!categories.includes($("#bulkCat").value)) $("#bulkCat").value = "Uncategorized";
+  }
+
+  function setIfHas(sel, val, fallback){
+    const opt = Array.from(sel.options).some(o => o.value === val);
+    sel.value = opt ? val : fallback;
+  }
+
+  function renderGallery(){
+    // Apply filters
+    let list = photos.slice();
+
+    if (filterFolder !== "All") list = list.filter(p => p.folder === filterFolder);
+    if (filterCat !== "All") list = list.filter(p => p.category === filterCat);
+
+    if (searchTerm){
+      list = list.filter(p => (p.filename||"").toLowerCase().includes(searchTerm) ||
+                              (p.notes||"").toLowerCase().includes(searchTerm));
+    }
+
+    // Update shownIds
+    shownIds = list.map(p => p.id);
+
+    // Update top KPIs
+    $("#kTotal").textContent = fmtCount(photos.length);
+    $("#kShown").textContent = fmtCount(list.length);
+    $("#kFolder").textContent = `Folder: ${filterFolder}`;
+    $("#kCat").textContent = `Category: ${filterCat}`;
+
+    // Clean selected if items gone
+    selected.forEach(id => { if (!photos.some(p => p.id === id)) selected.delete(id); });
+
+    // Build thumbs
+    const grid = $("#thumbGrid");
+    grid.innerHTML = "";
+    $("#emptyHint").style.display = photos.length ? "none" : "";
+
+    // Render thumbs (lazy fetch blobs)
+    list.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "thumb" + (selected.has(p.id) ? " selected" : "");
+      div.dataset.id = p.id;
+
+      // selection overlay
+      const check = document.createElement("div");
+      check.className = "check";
+      check.textContent = selected.has(p.id) ? "✓" : "";
+      div.appendChild(check);
+
+      const img = document.createElement("img");
+      img.alt = p.filename || "photo";
+      div.appendChild(img);
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      if (p.fav) meta.appendChild(makeChip("★"));
+      if (p.folder && p.folder !== "Unsorted") meta.appendChild(makeChip(p.folder));
+      if (p.category && p.category !== "Uncategorized") meta.appendChild(makeChip(p.category));
+      div.appendChild(meta);
+
+      // Click behavior:
+      // - tap check area toggles selection
+      // - tap elsewhere opens viewer
+      div.addEventListener("click", (e) => {
+        const rect = div.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const inCheck = x <= 44 && y <= 44; // top-left box
+        if (inCheck){
+          toggleSelect(p.id);
+          renderThumbSelectionOnly();
+          return;
+        }
+        openViewerById(p.id);
+      });
+
+      // Load image blob
+      loadThumb(p.id, img);
+
+      grid.appendChild(div);
+    });
+
+    updateSelectionUI();
+    renderReviewStats();
+  }
+
+  function renderThumbSelectionOnly(){
+    $$(".thumb").forEach(el => {
+      const id = el.dataset.id;
+      const isSel = selected.has(id);
+      el.classList.toggle("selected", isSel);
+      const ck = el.querySelector(".check");
+      if (ck) ck.textContent = isSel ? "✓" : "";
+    });
+  }
+
+  function makeChip(text){
+    const s = document.createElement("span");
+    s.className = "chip";
+    s.textContent = text;
+    return s;
+  }
+
+  async function loadThumb(id, imgEl){
+    // Using object URL for performance
+    try{
+      const t = tx([STORE_PHOTOS], "readonly");
+      const rec = await idbGet(t.objectStore(STORE_PHOTOS), id);
+      if (!rec?.blob) return;
+      const url = URL.createObjectURL(rec.blob);
+      imgEl.src = url;
+      imgEl.onload = () => URL.revokeObjectURL(url);
+    } catch(err){
+      console.error(err);
+    }
+  }
+
+  function updateSelectionUI(){
+    $("#kSel").textContent = `Selected: ${selected.size}`;
+    const has = selected.size > 0;
+    $("#btnClearSel").disabled = !has;
+    $("#btnApplyBulk").disabled = !has;
+    $("#btnDeleteSel").disabled = !has;
+  }
+
+  function toggleSelect(id){
+    if (selected.has(id)) selected.delete(id);
+    else selected.add(id);
+    updateSelectionUI();
+  }
+
+  function renderFolderCounts(){
+    $("#folderCount").textContent = fmtCount(folders.filter(f => f !== "All").length);
+  }
+
+  function renderReviewStats(){
+    const total = photos.length;
+    const shown = shownIds.length;
+    const fav = photos.filter(p => p.fav).length;
+    $("#statsLine").textContent = `Total: ${total} • Shown: ${shown} • Favorites: ${fav}`;
+  }
+
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  /* -----------------------------
+     Viewer
+  ------------------------------*/
+  function openViewerById(id){
+    const idx = shownIds.indexOf(id);
+    if (idx < 0) {
+      toast("That photo is not in the current filtered view.");
+      return;
+    }
+    viewerPos = idx;
+    $("#viewerOverlay").classList.add("show");
+    $("#viewerOverlay").setAttribute("aria-hidden", "false");
+    renderViewerAt(viewerPos);
+  }
+
+  function closeViewer(){
+    $("#viewerOverlay").classList.remove("show");
+    $("#viewerOverlay").setAttribute("aria-hidden", "true");
+    // release image src
+    $("#viewerImg").src = "";
+    viewerPos = -1;
+  }
+
+  function setViewerNavState(){
+    const left = $("#bigPrev");
+    const right = $("#bigNext");
+    const canPrev = viewerPos > 0;
+    const canNext = viewerPos < shownIds.length - 1;
+    left.setAttribute("aria-disabled", canPrev ? "false" : "true");
+    right.setAttribute("aria-disabled", canNext ? "false" : "true");
+    $("#btnPrev").disabled = !canPrev;
+    $("#btnNext").disabled = !canNext;
+  }
+
+  async function renderViewerAt(pos){
+    if (pos < 0 || pos >= shownIds.length) return;
+    const id = shownIds[pos];
+    const meta = photos.find(p => p.id === id);
+    if (!meta) return;
+
+    // badge
+    $("#vIndexBadge").textContent = `${pos + 1} / ${shownIds.length}`;
+    $("#vFilename").textContent = meta.filename || "—";
+
+    // selects + notes
+    $("#vFolder").value = (folders.includes(meta.folder) ? meta.folder : "Unsorted");
+    $("#vCat").value = (categories.includes(meta.category) ? meta.category : "Uncategorized");
+    $("#vNotes").value = meta.notes || "";
+    $("#btnToggleFav").textContent = meta.fav ? "★ Favorited" : "★ Favorite";
+
+    // image blob
+    try{
+      const t = tx([STORE_PHOTOS], "readonly");
+      const rec = await idbGet(t.objectStore(STORE_PHOTOS), id);
+      if (!rec?.blob) {
+        $("#viewerImg").alt = "Missing image";
+        $("#viewerImg").src = "";
+      } else {
+        const url = URL.createObjectURL(rec.blob);
+        const img = $("#viewerImg");
+        img.src = url;
+        img.onload = () => URL.revokeObjectURL(url);
+      }
+    } catch(err){
+      console.error(err);
+    }
+
+    setViewerNavState();
+  }
+
+  async function refreshViewerMeta(){
+    const id = shownIds[viewerPos];
+    if (!id) return;
+    const meta = photos.find(p => p.id === id);
+    if (!meta) return;
+    $("#vFilename").textContent = meta.filename || "—";
+    $("#btnToggleFav").textContent = meta.fav ? "★ Favorited" : "★ Favorite";
+    setViewerNavState();
+  }
+
+  function stepViewer(dir){
+    if (!$("#viewerOverlay").classList.contains("show")) return;
+    const next = viewerPos + dir;
+    if (next < 0 || next >= shownIds.length) return;
+    viewerPos = next;
+    renderViewerAt(viewerPos);
+  }
+
+  /* -----------------------------
+     Export / Import
+  ------------------------------*/
+  function exportCSV(){
+    const header = ["id","filename","created","folder","category","fav","notes"].join(",");
+    const lines = photos.map(p => [
+      p.id,
+      csv(p.filename),
+      p.created,
+      csv(p.folder),
+      csv(p.category),
+      p.fav ? "true" : "false",
+      csv(p.notes)
+    ].join(","));
+    downloadText(`mitchell_photos_${dateStamp()}.csv`, [header, ...lines].join("\n"), "text/csv");
+    toast("CSV exported.");
+  }
+
+  function csv(s){
+    const t = (s ?? "").toString().replaceAll('"','""');
+    return `"${t}"`;
+  }
+
+  function exportJSON(){
+    // Export meta + folders/categories (images are not embedded to keep file smaller)
+    const payload = {
+      version: 1,
+      exportedAt: nowISO(),
+      folders,
+      categories,
+      photos
+    };
+    downloadText(`mitchell_photos_backup_${dateStamp()}.json`, JSON.stringify(payload, null, 2), "application/json");
+    toast("JSON backup exported.");
+  }
+
+  async function importJSONFile(file){
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data || !Array.isArray(data.photos)) {
+        toast("Invalid backup file.");
+        return;
+      }
+      // merge folders/cats
+      if (Array.isArray(data.folders)) folders = uniqueEnsureBasics(data.folders, defaultFolders, "Unsorted");
+      if (Array.isArray(data.categories)) categories = uniqueEnsureBasics(data.categories, defaultCategories, "Uncategorized");
+      await cfgSet("folders", folders);
+      await cfgSet("categories", categories);
+
+      // import meta only (keeps existing images; won't create new images)
+      const t = tx([STORE_META], "readwrite");
+      const sM = t.objectStore(STORE_META);
+      let up = 0;
+      for (const p of data.photos){
+        if (!p?.id) continue;
+        await idbPut(sM, {
+          id: p.id,
+          filename: p.filename || "photo.jpg",
+          created: p.created || nowISO(),
+          folder: p.folder || "Unsorted",
+          category: p.category || "Uncategorized",
+          notes: p.notes || "",
+          fav: !!p.fav
+        });
+        up++;
+      }
+
+      // reload meta list fresh
+      const t2 = tx([STORE_META], "readonly");
+      const metas = await idbGetAll(t2.objectStore(STORE_META));
+      photos = metas.map(m => ({
+        id: m.id,
+        filename: m.filename || "photo.jpg",
+        created: m.created || nowISO(),
+        folder: m.folder || "Unsorted",
+        category: m.category || "Uncategorized",
+        notes: m.notes || "",
+        fav: !!m.fav
+      })).sort((a,b) => (b.created || "").localeCompare(a.created || ""));
+
+      toast(`Imported metadata for ${up} photo(s). (Images must still exist on device.)`);
+      renderAll();
+    } catch(err){
+      console.error(err);
+      toast("Import failed.");
+    }
+  }
+
+  function uniqueEnsureBasics(list, basics, ensure){
+    const out = [];
+    for (const x of list){
+      const s = safeName(x);
+      if (!s) continue;
+      if (!out.includes(s)) out.push(s);
+    }
+    // Ensure basics exist
+    for (const b of basics){
+      if (!out.includes(b)) out.unshift(b);
+    }
+    if (ensure && !out.includes(ensure)) out.push(ensure);
+    return out;
+  }
+
+  function dateStamp(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}${m}${day}`;
+  }
+
+  /* -----------------------------
+     Storage hint
+  ------------------------------*/
+  async function updateStorageHint(){
+    const el = $("#storageHint");
+    if (!el) return;
+    try{
+      if (navigator.storage && navigator.storage.estimate){
+        const est = await navigator.storage.estimate();
+        const used = est.usage || 0;
+        const quota = est.quota || 0;
+        const usedMB = (used / (1024*1024)).toFixed(1);
+        const quotaMB = quota ? (quota / (1024*1024)).toFixed(0) : "—";
+        el.textContent = `Estimated usage: ${usedMB} MB • Quota: ${quotaMB} MB (browser estimate)`;
+      } else {
+        el.textContent = "Storage estimate not supported in this browser.";
+      }
+    } catch {
+      el.textContent = "Storage estimate unavailable.";
+    }
+  }
+
+  /* -----------------------------
+     Boot
+  ------------------------------*/
+  init().catch(err => {
+    console.error(err);
+    toast("App failed to load.");
+  });
+
+})();
+</script>
+</body>
+</html>
