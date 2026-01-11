@@ -750,6 +750,10 @@
   let insertTarget = null;
   let suppressClickUntil = 0;
 
+  // ✅ Drag perf (RAF + elementFromPoint)
+  let dragRAF = 0;
+  let lastDragEvent = null;
+
   // overlay viewer/editor
   const overlay = document.getElementById("overlay");
   const canvas = document.getElementById("canvas");
@@ -782,6 +786,32 @@
   // autosave
   let saveTimer = null;
   const AUTOSAVE_MS = 300;
+
+  // ✅ UI refresh debounce (instant thumb updates)
+  let uiRefreshTimer = null;
+  function scheduleUIRefresh(){
+    clearTimeout(uiRefreshTimer);
+    uiRefreshTimer = setTimeout(() => {
+      if (currentFolder) renderFolderGrid();
+      renderFolders();
+    }, 150);
+  }
+
+  // ✅ Refresh/resume nav state
+  const NAV_KEY = "mitchell_nav_state_v1";
+  function saveNavState(){
+    const state = {
+      view: currentFolder ? "folder" : "home",
+      folder: currentFolder || null,
+      overlay: overlay.classList.contains("show"),
+      index: Number.isFinite(indexInFolder) ? indexInFolder : 0
+    };
+    sessionStorage.setItem(NAV_KEY, JSON.stringify(state));
+  }
+  function loadNavState(){
+    try { return JSON.parse(sessionStorage.getItem(NAV_KEY) || "null"); }
+    catch { return null; }
+  }
 
   // colors
   const GREEN = "rgba(0,255,0,0.95)";
@@ -1018,6 +1048,7 @@
     document.getElementById("homeView").style.display = "";
     document.getElementById("folderView").style.display = "none";
     currentFolder = null;
+    saveNavState();
   }
 
   async function openFolder(folder){
@@ -1036,6 +1067,7 @@
     await refreshMeta();
     setHdrCount();
     renderFolderGrid();
+    saveNavState();
   }
 
   // ---------- Folder Grid + drag reorder ----------
@@ -1179,49 +1211,63 @@
     grid.querySelectorAll(".insertLine").forEach(l => l.style.display = "none");
   }
 
+  // ✅ PERF FIX: no scanning all thumbs; use elementFromPoint + RAF
   function onDragMove(e, grid, badgeInner){
     if (!dragging) return;
     e.preventDefault();
 
-    dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
-    dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
+    lastDragEvent = e;
+    if (dragRAF) return;
 
-    const thumbs = Array.from(grid.querySelectorAll(".thumb"));
-    let hit = null;
-    for (const t of thumbs){
-      const r = t.getBoundingClientRect();
-      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
-        hit = { el:t, rect:r, index:Number(t.dataset.index) };
-        break;
+    dragRAF = requestAnimationFrame(() => {
+      dragRAF = 0;
+      const ev = lastDragEvent;
+      if (!dragging || !ev) return;
+
+      dragging.ghost.style.left = (ev.clientX - dragging.offsetX) + "px";
+      dragging.ghost.style.top  = (ev.clientY - dragging.offsetY) + "px";
+
+      clearInsertIndicators(grid);
+      insertTarget = null;
+
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const thumb = el ? el.closest(".thumb") : null;
+
+      if (!thumb || !grid.contains(thumb)){
+        badgeInner.textContent = "Move to a position…";
+        return;
       }
-    }
 
-    clearInsertIndicators(grid);
-    insertTarget = null;
+      const r = thumb.getBoundingClientRect();
+      const idx = Number(thumb.dataset.index);
+      const midX = (r.left + r.right) / 2;
+      const side = (ev.clientX < midX) ? "before" : "after";
 
-    if (!hit){
-      badgeInner.textContent = "Move to a position…";
-      return;
-    }
+      const line = thumb.querySelector(".insertLine");
+      if (line){
+        line.style.display = "block";
+        line.style.left = (side === "before") ? "8px" : "calc(100% - 8px)";
+      }
 
-    const midX = (hit.rect.left + hit.rect.right) / 2;
-    const side = (e.clientX < midX) ? "before" : "after";
+      insertTarget = { index: idx, side };
 
-    const line = hit.el.querySelector(".insertLine");
-    line.style.display = "block";
-    line.style.left = (side === "before") ? "8px" : "calc(100% - 8px)";
-
-    insertTarget = { index: hit.index, side };
-
-    const placeNum = hit.index + 1;
-    badgeInner.textContent = side === "before"
-      ? `Place BEFORE #${placeNum} (in front)`
-      : `Place AFTER #${placeNum} (behind)`;
+      const placeNum = idx + 1;
+      badgeInner.textContent = side === "before"
+        ? `Place BEFORE #${placeNum} (in front)`
+        : `Place AFTER #${placeNum} (behind)`;
+    });
   }
 
   async function onDragEnd(e, grid, badgeWrap){
     if (!dragging) return;
     e.preventDefault();
+
+    // ✅ cancel pending RAF
+    if (dragRAF){
+      cancelAnimationFrame(dragRAF);
+      dragRAF = 0;
+      lastDragEvent = null;
+    }
 
     clearInsertIndicators(grid);
     badgeWrap.style.display = "none";
@@ -1264,6 +1310,7 @@
     await refreshMeta();
     renderFolderGrid();
     renderFolders();
+    saveNavState();
   }
 
   // ---------- Add photos ----------
@@ -1304,6 +1351,7 @@
     setHdrCount();
     renderFolderGrid();
     renderFolders();
+    saveNavState();
   }
 
   async function ensureThumb(id){
@@ -1389,6 +1437,7 @@
     setArrows();
     setAngleHint();
     setTextHint();
+    saveNavState();
   }
 
   function closeViewer(){
@@ -1406,6 +1455,7 @@
     clearTimeout(saveTimer);
     saveTimer = null;
     phoneEditsUnlocked = false;
+    saveNavState();
   }
 
   function setArrows(){
@@ -1482,6 +1532,14 @@
     }
   }
 
+  // ✅ best-effort flush when tab hides / refreshes
+  window.addEventListener("beforeunload", () => { try { flushAutosave(); } catch {} });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden){
+      try { flushAutosave(); } catch {}
+    }
+  });
+
   async function persistMetaPatch(id, patch){
     const t = tx([STORE_META], "readwrite");
     const s = t.objectStore(STORE_META);
@@ -1502,6 +1560,7 @@
     const notes = document.getElementById("notesInput").value || "";
     await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
     await renderAndStoreEdited(currentId);
+    scheduleUIRefresh(); // ✅ thumbnails update immediately
   }
 
   function pushUndo(){
@@ -2088,6 +2147,7 @@
     toast("Reverted.");
     renderFolderGrid();
     renderFolders();
+    saveNavState();
   }
 
   async function deleteCurrent(){
@@ -2122,6 +2182,7 @@
     await openFolder(folder);
     toast("Deleted.");
     openViewer(folder, nextIndex, mode);
+    saveNavState();
   }
 
   // ---------- Export / Import ----------
@@ -2275,6 +2336,7 @@
     toast("Import complete.");
     await renderFolders();
     showHome();
+    saveNavState();
   }
 
   // ---------- Clear job ----------
@@ -2307,6 +2369,7 @@
     setHdrCount();
     await renderFolders();
     if (currentFolder) await openFolder(currentFolder);
+    saveNavState();
   }
 
   async function wipeAllDevice(){
@@ -2319,6 +2382,7 @@
     db = await openDB();
     meta = [];
     setHdrCount();
+    saveNavState();
   }
 
   // ---------- Camera Mode (multi-shot + LANDSCAPE shutter) ----------
@@ -2333,7 +2397,6 @@
 
   function updateCamLayout(){
     if (!camOverlay.classList.contains("show")) return;
-    // Landscape feel: wide aspect (not just orientation) so it works on Android too
     const landscape = window.matchMedia("(orientation: landscape)").matches || (window.innerWidth > window.innerHeight);
     camOverlay.classList.toggle("landscape", landscape);
   }
@@ -2344,7 +2407,6 @@
     camOverlay.classList.add("show");
     camOverlay.setAttribute("aria-hidden","false");
 
-    // Prime audio (helps some iPhones)
     try{ playSnapSound(); }catch{}
 
     updateCamLayout();
@@ -2460,6 +2522,7 @@
       closeViewer();
       showHome();
       renderFolders();
+      saveNavState();
     });
 
     document.getElementById("wipeBtn").addEventListener("click", async () => {
@@ -2468,6 +2531,7 @@
       toast("Wiped.");
       showHome();
       renderFolders();
+      saveNavState();
     });
 
     document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
@@ -2477,6 +2541,7 @@
       if (!confirm("Clear this job (remove all photos on this device)?")) return;
       await clearJob();
       toast("Job cleared.");
+      saveNavState();
     });
 
     // Phone quick buttons
@@ -2504,6 +2569,7 @@
       toast("Folder wiped.");
       await openFolder(currentFolder);
       await renderFolders();
+      saveNavState();
     });
 
     // Add Photos
@@ -2531,7 +2597,7 @@
     });
 
     // Overlay
-    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
+    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); saveNavState(); closeViewer(); });
     document.getElementById("prevBtn").addEventListener("click", () => step(-1));
     document.getElementById("nextBtn").addEventListener("click", () => step(+1));
     document.getElementById("bigPrev").addEventListener("click", () => step(-1));
@@ -2539,7 +2605,7 @@
 
     document.addEventListener("keydown", async (e) => {
       if (!overlay.classList.contains("show")) return;
-      if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
+      if (e.key === "Escape"){ await flushAutosave(); saveNavState(); closeViewer(); }
       if (e.key === "ArrowLeft") step(-1);
       if (e.key === "ArrowRight") step(+1);
     });
@@ -2585,7 +2651,7 @@
     // Camera Mode
     document.getElementById("openCamBtn").addEventListener("click", camStart);
     document.getElementById("camSnapBtn").addEventListener("click", camSnap);
-    document.getElementById("camShutter").addEventListener("click", camSnap); // big landscape shutter
+    document.getElementById("camShutter").addEventListener("click", camSnap);
     document.getElementById("camDoneBtn").addEventListener("click", camDone);
     document.getElementById("camCancelBtn").addEventListener("click", camCancel);
     document.getElementById("camClearBtn").addEventListener("click", camClear);
@@ -2597,8 +2663,20 @@
     db = await openDB();
     wireUI();
     setupCanvas();
-    showHome();
+
+    // ✅ restore last state
     await renderFolders();
+    const st = loadNavState();
+
+    if (st?.folder){
+      await openFolder(st.folder);
+      if (st.overlay && Number.isFinite(st.index)){
+        // restore into viewer (view mode on restore)
+        await openViewer(st.folder, st.index, "view");
+      }
+    } else {
+      showHome();
+    }
   }
   init().catch(err => { console.error(err); toast("Failed to load."); });
 })();
