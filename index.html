@@ -375,6 +375,7 @@
     }
     .toast.show{ display:block; }
 
+    /* Camera */
     .camOverlay{
       position:fixed;
       inset:0;
@@ -424,7 +425,6 @@
       height:100%;
       object-fit: cover;
       display:block;
-      transform: scaleX(-1);
     }
     .camStrip{
       flex: 0.65;
@@ -451,7 +451,49 @@
     @media (max-width: 900px){
       .camBody{ flex-direction:column; }
       .camStrip{ min-width:0; }
-      .camLive video{ transform:none; }
+    }
+
+    /* Landscape shutter */
+    .camShutter {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      width: 86px;
+      height: 86px;
+      border-radius: 999px;
+      border: 6px solid rgba(255,255,255,.85);
+      background: rgba(255,255,255,.12);
+      box-shadow: 0 18px 50px rgba(0,0,0,.55);
+      display: none; /* only landscape */
+      cursor: pointer;
+      user-select: none;
+      z-index: 5;
+    }
+    .camShutter::after{
+      content:"";
+      display:block;
+      width: 62px;
+      height: 62px;
+      margin: 6px auto 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+    }
+    .camShutter:active{
+      transform: translateX(-50%) scale(0.97);
+      filter: brightness(1.05);
+    }
+
+    /* When we add .landscape on camOverlay (JS), make camera huge + shutter visible */
+    .camOverlay.landscape .camBody{
+      flex-direction: column;
+      padding: 8px;
+    }
+    .camOverlay.landscape .camStrip{
+      display:none;
+    }
+    .camOverlay.landscape .camShutter{
+      display:block;
     }
 
     .bigPhoneBtn{
@@ -494,7 +536,7 @@
         ">
         <button class="btn" id="clearJobBtn">Clear Job</button>
       </div>
-      <div class="muted" style="margin-top:6px;">Tip: Job name is used in ZIP file name.</div>
+      <div class="muted" style="margin-top:6px;">Tip: Job name is used in the ZIP file name.</div>
 
       <div class="hr"></div>
 
@@ -523,7 +565,7 @@
       </div>
 
       <div style="font-weight:1000; font-size:16px;">Folders</div>
-      <div class="muted">Tap a folder. Drag to reorder. (Desktop: single click view, double click edit.)</div>
+      <div class="muted">Tap a folder. Drag to reorder. (Desktop: click=view, double click=edit.)</div>
       <div class="folders" id="folders"></div>
 
       <div class="hr"></div>
@@ -542,7 +584,7 @@
       <div class="row" style="justify-content:space-between;">
         <div>
           <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
-          <div class="muted" id="folderSub">Drag to reorder. Desktop: single click view, double click edit.</div>
+          <div class="muted" id="folderSub">Drag to reorder. Desktop: click=view, double click=edit.</div>
         </div>
         <div class="row">
           <button class="btn" id="backHomeBtn">← Folders</button>
@@ -642,9 +684,7 @@
       <div class="hint" id="textHint" style="display:none;">
         Text tool: tap to place. Drag to move. Double click a text box to edit content.
       </div>
-      <div class="hint" id="editHint">
-        You are in <b>VIEW</b>.
-      </div>
+      <div class="hint" id="editHint">You are in <b>VIEW</b>.</div>
     </div>
   </div>
 </div>
@@ -664,7 +704,9 @@
     <div class="camBody">
       <div class="camLive">
         <video id="camVideo" playsinline autoplay muted></video>
+        <div class="camShutter" id="camShutter" title="Snap"></div>
       </div>
+
       <div class="camStrip">
         <div class="row" style="justify-content:space-between;">
           <button class="btn primary" id="camSnapBtn">Snap</button>
@@ -685,7 +727,7 @@
 (() => {
   const FOLDERS = ["Walk Around","UPD","Teardown"];
 
-  const DB_NAME = "mitchell_app_pro_v5";
+  const DB_NAME = "mitchell_app_pro_v6";
   const DB_VER = 1;
   const STORE_ORIG  = "originals";
   const STORE_EDIT  = "edits";
@@ -719,7 +761,7 @@
 
   // mode: 'view' or 'edit'
   let mode = "view";
-  let phoneEditsUnlocked = false; // only via button
+  let phoneEditsUnlocked = false;
 
   // base original + view transform
   let baseBitmap = null;
@@ -745,6 +787,32 @@
   const GREEN = "rgba(0,255,0,0.95)";
   const DARK  = "rgba(0,0,0,0.55)";
   const WIDTH = 4;
+
+  // --- Snap sound (synth click, no file needed, works offline) ---
+  let audioCtx = null;
+  function playSnapSound(){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const ac = audioCtx;
+      const t0 = ac.currentTime;
+
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+
+      osc.type = "square";
+      osc.frequency.setValueAtTime(1200, t0);
+      osc.frequency.exponentialRampToValueAtTime(250, t0 + 0.03);
+
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.07);
+    }catch{}
+  }
 
   // Job name
   const jobNameEl = document.getElementById("jobName");
@@ -963,7 +1031,7 @@
     const folderSub = document.getElementById("folderSub");
     folderSub.textContent = isPhoneMode
       ? "Drag to reorder. (Phone: capture here, edit later on computer.)"
-      : "Drag to reorder. Desktop: single click view, double click edit.";
+      : "Drag to reorder. Desktop: click=view, double click=edit.";
 
     await refreshMeta();
     setHdrCount();
@@ -1022,7 +1090,7 @@
           openViewer(currentFolder, idx, "edit");
         });
       } else {
-        // Phone: single tap = view only (capture-first)
+        // Phone: tap=view only (capture-first)
         div.addEventListener("click", () => {
           if (Date.now() < suppressClickUntil) return;
           openViewer(currentFolder, idx, "view");
@@ -1264,7 +1332,7 @@
     await waitTxDone(t4);
   }
 
-  // ---------- Viewer / Editor (same as your working version) ----------
+  // ---------- Viewer / Editor ----------
   function setMode(next){
     mode = next;
     document.getElementById("modeTitle").textContent = (mode === "edit") ? "EDIT" : "VIEW";
@@ -1273,7 +1341,6 @@
       ? "Phone capture mode: editing is hidden. Use “Enable Edit” if needed."
       : "Desktop: Double click to enter EDIT.";
 
-    // tools enable/disable
     const toolsEnabled = (mode === "edit");
     document.querySelectorAll(".toolIcon").forEach(el => {
       el.style.opacity = toolsEnabled ? "1" : "0.55";
@@ -1311,7 +1378,6 @@
     resetView();
     redraw();
 
-    // Phone: ALWAYS start in VIEW (capture-first). Desktop: honor openAs.
     if (isPhoneMode){
       setMode("view");
       document.getElementById("forceEditBtn").style.display = "";
@@ -1839,7 +1905,6 @@
   let movingText = null;
 
   function setupCanvas(){
-    // Desktop only: dblclick enters edit
     canvas.addEventListener("dblclick", () => {
       if (isPhoneMode && !phoneEditsUnlocked) return;
       if (mode === "view"){
@@ -1856,7 +1921,6 @@
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
 
-      // If phone and edits locked: force pan only
       if (isPhoneMode && !phoneEditsUnlocked){
         tool = "pan";
       }
@@ -1931,7 +1995,6 @@
       if (tool === "pan"){ tempShape = null; return; }
       if (mode !== "edit"){ tempShape = null; return; }
 
-      // Text tool: tap places text
       if (tool === "text"){
         const p = pointerPos(e);
         const w = screenToWorld(p.x, p.y);
@@ -1960,7 +2023,6 @@
         return;
       }
 
-      // Angle tool: commit 2 lines
       if (angleStage === 0){
         angleLine1 = structuredClone(tempShape);
         pushUndo();
@@ -1983,7 +2045,6 @@
       }
     });
 
-    // dblclick text to edit (desktop / or phone when unlocked)
     canvas.addEventListener("dblclick", (e) => {
       if (mode !== "edit") return;
       if (isPhoneMode && !phoneEditsUnlocked) return;
@@ -2142,11 +2203,10 @@
   }
 
   async function exportZipAll(){
-    // Desktop default: export edited if available
     await exportZipFolders(FOLDERS, { useEditedIfAvailable: true, promptClearAfter: false });
   }
 
-  // Import ZIP: unpack into proper folders (desktop tool)
+  // Import ZIP (desktop)
   function normFolderName(s){
     return (s || "").toLowerCase().replace(/[\s_\-]+/g,"").trim();
   }
@@ -2205,7 +2265,6 @@
       byFolder.get(folderGuess).push({ name, blob, order: order ?? 999999 });
     }
 
-    // Add them in order per folder
     for (const folder of FOLDERS){
       const list = byFolder.get(folder) || [];
       list.sort((a,b) => (a.order - b.order) || a.name.localeCompare(b.name));
@@ -2218,7 +2277,7 @@
     showHome();
   }
 
-  // ---------- Clear job (job-at-a-time) ----------
+  // ---------- Clear job ----------
   async function wipeFolder(folder){
     await refreshMeta();
     const list = folderItems(folder);
@@ -2262,7 +2321,7 @@
     setHdrCount();
   }
 
-  // ---------- Camera Mode (multi-shot) ----------
+  // ---------- Camera Mode (multi-shot + LANDSCAPE shutter) ----------
   const camOverlay = document.getElementById("camOverlay");
   const camVideo = document.getElementById("camVideo");
   const camThumbs = document.getElementById("camThumbs");
@@ -2272,11 +2331,25 @@
   let camFacing = "environment";
   let camShots = []; // {blob, url}
 
+  function updateCamLayout(){
+    if (!camOverlay.classList.contains("show")) return;
+    // Landscape feel: wide aspect (not just orientation) so it works on Android too
+    const landscape = window.matchMedia("(orientation: landscape)").matches || (window.innerWidth > window.innerHeight);
+    camOverlay.classList.toggle("landscape", landscape);
+  }
+
   async function camStart(){
     camShots = [];
     renderCamThumbs();
     camOverlay.classList.add("show");
     camOverlay.setAttribute("aria-hidden","false");
+
+    // Prime audio (helps some iPhones)
+    try{ playSnapSound(); }catch{}
+
+    updateCamLayout();
+    window.addEventListener("resize", updateCamLayout, {passive:true});
+    window.addEventListener("orientationchange", updateCamLayout, {passive:true});
 
     if (!navigator.mediaDevices?.getUserMedia){
       alert("Camera Mode not supported on this browser. Use Add Photos instead.");
@@ -2299,6 +2372,7 @@
       });
       camVideo.srcObject = camStream;
       await camVideo.play().catch(()=>{});
+      updateCamLayout();
     }catch(err){
       console.error(err);
       alert("Camera permission blocked. Allow camera access in your browser settings, then try again.");
@@ -2308,7 +2382,12 @@
 
   function camStop(){
     camOverlay.classList.remove("show");
+    camOverlay.classList.remove("landscape");
     camOverlay.setAttribute("aria-hidden","true");
+
+    window.removeEventListener("resize", updateCamLayout);
+    window.removeEventListener("orientationchange", updateCamLayout);
+
     if (camStream){
       camStream.getTracks().forEach(t => t.stop());
       camStream = null;
@@ -2335,6 +2414,8 @@
     cctx.drawImage(camVideo, 0, 0, c.width, c.height);
     const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
     if (!blob) return;
+
+    playSnapSound();
 
     const url = URL.createObjectURL(blob);
     camShots.push({blob, url});
@@ -2404,7 +2485,6 @@
       await camStart();
     });
     document.getElementById("phoneSendOffice").addEventListener("click", async () => {
-      // Phone "Send to Office": ORIGINALS only + prompt clear
       await exportZipFolders(FOLDERS, { useEditedIfAvailable: false, promptClearAfter: true });
     });
 
@@ -2505,6 +2585,7 @@
     // Camera Mode
     document.getElementById("openCamBtn").addEventListener("click", camStart);
     document.getElementById("camSnapBtn").addEventListener("click", camSnap);
+    document.getElementById("camShutter").addEventListener("click", camSnap); // big landscape shutter
     document.getElementById("camDoneBtn").addEventListener("click", camDone);
     document.getElementById("camCancelBtn").addEventListener("click", camCancel);
     document.getElementById("camClearBtn").addEventListener("click", camClear);
