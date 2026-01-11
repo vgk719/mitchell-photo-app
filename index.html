@@ -147,17 +147,9 @@
     .folderTitle{ font-weight:1000; font-size: 16px; }
     .folderHint{ color: var(--muted); font-size: 12px; }
 
-    /* small thumb strip on home */
-    .miniStrip{
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top: 6px;
-    }
+    .miniStrip{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top: 6px; }
     .miniThumb{
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,.12);
       object-fit: cover;
@@ -165,17 +157,12 @@
       box-shadow: 0 10px 20px rgba(0,0,0,.20);
     }
     .miniMore{
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.06);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 1000;
-      font-size: 12px;
-      color: var(--muted);
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000; font-size: 12px; color: var(--muted);
     }
 
     .grid{
@@ -233,7 +220,6 @@
       white-space:nowrap;
     }
 
-    /* drag reorder */
     .ghost{
       position:fixed;
       z-index: 9999;
@@ -274,7 +260,6 @@
       text-overflow: ellipsis;
     }
 
-    /* VIEW/EDIT overlay */
     .overlay{
       position:fixed;
       inset:0;
@@ -390,7 +375,6 @@
     }
     .toast.show{ display:block; }
 
-    /* Camera modal */
     .camOverlay{
       position:fixed;
       inset:0;
@@ -469,6 +453,14 @@
       .camStrip{ min-width:0; }
       .camLive video{ transform:none; }
     }
+
+    .bigPhoneBtn{
+      width:100%;
+      padding: 14px 14px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 1100;
+    }
   </style>
 </head>
 
@@ -485,8 +477,53 @@
   <!-- HOME -->
   <section id="homeView">
     <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div style="font-weight:1000; font-size:16px;">Job</div>
+        <div class="pill" id="modePill">Mode</div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="jobName" placeholder="Job name (RO12345_Smith)" style="
+          flex:1; min-width: 220px;
+          padding: 10px 12px; border-radius: 12px;
+          border:1px solid rgba(255,255,255,.14);
+          background: rgba(10,16,34,.55);
+          color: var(--text);
+          outline:none;
+          font-weight: 900;
+        ">
+        <button class="btn" id="clearJobBtn">Clear Job</button>
+      </div>
+      <div class="muted" style="margin-top:6px;">Tip: Job name is used in ZIP file name.</div>
+
+      <div class="hr"></div>
+
+      <!-- Desktop import -->
+      <div id="desktopImportBox" style="display:none;">
+        <div class="row" style="justify-content:space-between;">
+          <div style="font-weight:1000;">Computer Tools</div>
+          <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+            ⬆️ Import Job ZIP
+            <input id="zipInput" type="file" accept=".zip,application/zip" hidden>
+          </label>
+        </div>
+        <div class="muted" style="margin-top:6px;">Upload a ZIP and it will unpack into Walk Around / UPD / Teardown automatically.</div>
+        <div class="hr"></div>
+      </div>
+
+      <!-- Phone capture shortcuts -->
+      <div id="phoneQuickBox" style="display:none;">
+        <div style="font-weight:1000;">Phone Capture</div>
+        <div class="muted" style="margin-top:6px;">Capture photos on your phone → send ZIP to the office → edit/order on computer.</div>
+        <div class="hr"></div>
+        <button class="btn primary bigPhoneBtn" id="phoneGoTeardown">📸 Teardown (Camera Mode)</button>
+        <button class="btn ok bigPhoneBtn" id="phoneSendOffice" style="margin-top:10px;">📦 Send to Office (ZIP)</button>
+        <div class="muted" style="margin-top:8px;">This exports ORIGINAL photos (best for editing later on the computer).</div>
+        <div class="hr"></div>
+      </div>
+
       <div style="font-weight:1000; font-size:16px;">Folders</div>
-      <div class="muted">Tap a folder. Drag to reorder. Single tap = view. Double tap = edit.</div>
+      <div class="muted">Tap a folder. Drag to reorder. (Desktop: single click view, double click edit.)</div>
       <div class="folders" id="folders"></div>
 
       <div class="hr"></div>
@@ -505,7 +542,7 @@
       <div class="row" style="justify-content:space-between;">
         <div>
           <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
-          <div class="muted">Drag to reorder. Single tap = view. Double tap = edit.</div>
+          <div class="muted" id="folderSub">Drag to reorder. Desktop: single click view, double click edit.</div>
         </div>
         <div class="row">
           <button class="btn" id="backHomeBtn">← Folders</button>
@@ -519,9 +556,7 @@
           <input id="fileInput" type="file" accept="image/*" multiple hidden>
         </label>
 
-        <!-- NEW: in-app camera multi-shot -->
         <button class="btn primary" id="openCamBtn">📸 Camera Mode</button>
-
         <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
       </div>
 
@@ -564,8 +599,13 @@
     </div>
 
     <div class="vRight">
-      <div style="font-weight:1000; margin-bottom:6px;" id="modeTitle">VIEW</div>
-      <div class="muted" id="modeSub">Single tap opens VIEW. Double tap opens EDIT.</div>
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:1000; margin-bottom:2px;" id="modeTitle">VIEW</div>
+          <div class="muted" id="modeSub">Viewing</div>
+        </div>
+        <button class="btn primary sm" id="forceEditBtn" style="display:none;">Enable Edit</button>
+      </div>
 
       <div class="hr"></div>
 
@@ -600,10 +640,10 @@
         Angle tool: draw <b>Line 1</b> (start→end), then draw <b>Line 2</b> (start→end). Angle shows between them.
       </div>
       <div class="hint" id="textHint" style="display:none;">
-        Text tool: tap to place. Drag to move. Double tap a text box to edit content.
+        Text tool: tap to place. Drag to move. Double click a text box to edit content.
       </div>
       <div class="hint" id="editHint">
-        You are in <b>VIEW</b>. Double tap/click the image to enter <b>EDIT</b>.
+        You are in <b>VIEW</b>.
       </div>
     </div>
   </div>
@@ -645,18 +685,24 @@
 (() => {
   const FOLDERS = ["Walk Around","UPD","Teardown"];
 
-  const DB_NAME = "mitchell_app_pro_v4";
+  const DB_NAME = "mitchell_app_pro_v5";
   const DB_VER = 1;
   const STORE_ORIG  = "originals";
   const STORE_EDIT  = "edits";
   const STORE_THUMB = "thumbs";
   const STORE_META  = "meta";
 
+  // Device mode
+  const isTouch = matchMedia("(pointer: coarse)").matches || ("ontouchstart" in window);
+  const isSmall = matchMedia("(max-width: 900px)").matches;
+  const isPhoneMode = isTouch && isSmall;   // capture-first
+  const isDesktopMode = !isPhoneMode;
+
   let db;
   let meta = [];
   let currentFolder = null;
 
-  // drag reorder (threshold-based)
+  // drag reorder
   let dragCandidate = null;
   let dragging = null;
   let insertTarget = null;
@@ -673,6 +719,7 @@
 
   // mode: 'view' or 'edit'
   let mode = "view";
+  let phoneEditsUnlocked = false; // only via button
 
   // base original + view transform
   let baseBitmap = null;
@@ -686,8 +733,8 @@
   let anno = [];
   let undoStack = [];
 
-  // angle tool state (true two lines)
-  let angleStage = 0;      // 0 => line1, 1 => line2
+  // angle tool state
+  let angleStage = 0;
   let angleLine1 = null;
 
   // autosave
@@ -698,6 +745,18 @@
   const GREEN = "rgba(0,255,0,0.95)";
   const DARK  = "rgba(0,0,0,0.55)";
   const WIDTH = 4;
+
+  // Job name
+  const jobNameEl = document.getElementById("jobName");
+  const LS_JOB = "mitchell_job_name";
+  jobNameEl.value = localStorage.getItem(LS_JOB) || "";
+  jobNameEl.addEventListener("input", () => localStorage.setItem(LS_JOB, jobNameEl.value || ""));
+
+  // mode pill UI
+  const modePill = document.getElementById("modePill");
+  modePill.textContent = isPhoneMode ? "Phone Capture Mode" : "Desktop Editor Mode";
+  document.getElementById("desktopImportBox").style.display = isDesktopMode ? "" : "none";
+  document.getElementById("phoneQuickBox").style.display = isPhoneMode ? "" : "none";
 
   // toast
   const toastEl = document.getElementById("toast");
@@ -901,6 +960,11 @@
     document.getElementById("folderTitle").textContent = folder;
     document.getElementById("dropFolderName").textContent = folder;
 
+    const folderSub = document.getElementById("folderSub");
+    folderSub.textContent = isPhoneMode
+      ? "Drag to reorder. (Phone: capture here, edit later on computer.)"
+      : "Drag to reorder. Desktop: single click view, double click edit.";
+
     await refreshMeta();
     setHdrCount();
     renderFolderGrid();
@@ -944,33 +1008,28 @@
       insertLine.className = "insertLine";
       div.appendChild(insertLine);
 
-      // Single click => VIEW, Double click => EDIT
-      let clickTimer = null;
-      div.addEventListener("click", () => {
-        if (Date.now() < suppressClickUntil) return;
-        clearTimeout(clickTimer);
-        clickTimer = setTimeout(() => openViewer(currentFolder, idx, "view"), 200);
-      });
-      div.addEventListener("dblclick", () => {
-        if (Date.now() < suppressClickUntil) return;
-        clearTimeout(clickTimer);
-        openViewer(currentFolder, idx, "edit");
-      });
-
-      // Touch: double tap => edit
-      let lastTap = 0;
-      div.addEventListener("pointerup", (e) => {
-        if (Date.now() < suppressClickUntil) return;
-        if (e.pointerType !== "touch") return;
-        const now = Date.now();
-        if (now - lastTap < 260){
+      // Desktop: click=view, dblclick=edit
+      if (isDesktopMode){
+        let clickTimer = null;
+        div.addEventListener("click", () => {
+          if (Date.now() < suppressClickUntil) return;
+          clearTimeout(clickTimer);
+          clickTimer = setTimeout(() => openViewer(currentFolder, idx, "view"), 200);
+        });
+        div.addEventListener("dblclick", () => {
+          if (Date.now() < suppressClickUntil) return;
           clearTimeout(clickTimer);
           openViewer(currentFolder, idx, "edit");
-        }
-        lastTap = now;
-      });
+        });
+      } else {
+        // Phone: single tap = view only (capture-first)
+        div.addEventListener("click", () => {
+          if (Date.now() < suppressClickUntil) return;
+          openViewer(currentFolder, idx, "view");
+        });
+      }
 
-      // Drag candidate (threshold so taps still work)
+      // Drag threshold
       div.addEventListener("pointerdown", (e) => {
         if (overlay.classList.contains("show")) return;
         if (e.button !== undefined && e.button !== 0) return;
@@ -1205,21 +1264,25 @@
     await waitTxDone(t4);
   }
 
-  // ---------- Viewer / Editor ----------
+  // ---------- Viewer / Editor (same as your working version) ----------
   function setMode(next){
     mode = next;
     document.getElementById("modeTitle").textContent = (mode === "edit") ? "EDIT" : "VIEW";
-    document.getElementById("modeSub").textContent = (mode === "edit") ? "Autosave ON" : "Viewing (double tap to edit)";
-    document.getElementById("editHint").style.display = (mode === "edit") ? "none" : "";
+    document.getElementById("modeSub").textContent = (mode === "edit") ? "Autosave ON" : "Viewing";
+    document.getElementById("editHint").textContent = isPhoneMode
+      ? "Phone capture mode: editing is hidden. Use “Enable Edit” if needed."
+      : "Desktop: Double click to enter EDIT.";
 
-    // enable/disable tools
+    // tools enable/disable
+    const toolsEnabled = (mode === "edit");
     document.querySelectorAll(".toolIcon").forEach(el => {
-      el.style.opacity = (mode === "edit") ? "1" : "0.55";
-      el.style.pointerEvents = (mode === "edit") ? "auto" : "none";
+      el.style.opacity = toolsEnabled ? "1" : "0.55";
+      el.style.pointerEvents = toolsEnabled ? "auto" : "none";
     });
-    document.getElementById("undoBtn").disabled = (mode !== "edit");
-    document.getElementById("clearBtn").disabled = (mode !== "edit");
-    document.getElementById("revertBtn").disabled = (mode !== "edit");
+    document.getElementById("undoBtn").disabled = !toolsEnabled;
+    document.getElementById("clearBtn").disabled = !toolsEnabled;
+    document.getElementById("revertBtn").disabled = !toolsEnabled;
+    document.getElementById("toolRow").style.display = toolsEnabled ? "" : "none";
   }
 
   async function openViewer(folder, idx, openAs){
@@ -1229,6 +1292,8 @@
     indexInFolder = Math.max(0, Math.min(idx, folderList.length - 1));
     currentId = folderList[indexInFolder]?.id || null;
     if (!currentId) return;
+
+    phoneEditsUnlocked = false;
 
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden","false");
@@ -1246,7 +1311,15 @@
     resetView();
     redraw();
 
-    setMode(openAs === "edit" ? "edit" : "view");
+    // Phone: ALWAYS start in VIEW (capture-first). Desktop: honor openAs.
+    if (isPhoneMode){
+      setMode("view");
+      document.getElementById("forceEditBtn").style.display = "";
+    } else {
+      setMode(openAs === "edit" ? "edit" : "view");
+      document.getElementById("forceEditBtn").style.display = "none";
+    }
+
     setArrows();
     setAngleHint();
     setTextHint();
@@ -1266,6 +1339,7 @@
     tempShape = null;
     clearTimeout(saveTimer);
     saveTimer = null;
+    phoneEditsUnlocked = false;
   }
 
   function setArrows(){
@@ -1762,12 +1836,12 @@
     }
     return null;
   }
-  let movingText = null; // {index, dx, dy}
-  let lastTapCanvas = 0;
+  let movingText = null;
 
   function setupCanvas(){
-    // Double click on canvas enters edit mode
+    // Desktop only: dblclick enters edit
     canvas.addEventListener("dblclick", () => {
+      if (isPhoneMode && !phoneEditsUnlocked) return;
       if (mode === "view"){
         setMode("edit");
         toast("EDIT mode");
@@ -1778,21 +1852,12 @@
       if (!baseBitmap) return;
       canvas.setPointerCapture(e.pointerId);
 
-      if (e.pointerType === "touch"){
-        const now = Date.now();
-        if (now - lastTapCanvas < 260 && mode === "view"){
-          setMode("edit");
-          toast("EDIT mode");
-        }
-        lastTapCanvas = now;
-      }
-
       isDown = true;
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
 
-      // pan always allowed
-      if (mode !== "edit"){
+      // If phone and edits locked: force pan only
+      if (isPhoneMode && !phoneEditsUnlocked){
         tool = "pan";
       }
 
@@ -1918,9 +1983,11 @@
       }
     });
 
-    // dblclick text to edit
+    // dblclick text to edit (desktop / or phone when unlocked)
     canvas.addEventListener("dblclick", (e) => {
       if (mode !== "edit") return;
+      if (isPhoneMode && !phoneEditsUnlocked) return;
+
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
       const hit = topmostTextAt(w);
@@ -1996,7 +2063,7 @@
     openViewer(folder, nextIndex, mode);
   }
 
-  // ---------- Export ZIP ----------
+  // ---------- Export / Import ----------
   function downloadBlob(filename, blob){
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -2008,22 +2075,24 @@
     URL.revokeObjectURL(url);
   }
 
-  async function getBestBlob(id){
+  async function getEditedBlob(id){
     try{
       const t = tx([STORE_EDIT], "readonly");
       const rec = await idbGet(t.objectStore(STORE_EDIT), id);
       if (rec?.blob) return rec.blob;
-    } catch {}
+    }catch{}
+    return null;
+  }
+
+  async function getOriginalBlob(id){
     const t2 = tx([STORE_ORIG], "readonly");
     const rec2 = await idbGet(t2.objectStore(STORE_ORIG), id);
     return rec2?.blob || null;
   }
 
-  async function exportZipAll(){
-    await exportZipFolders(FOLDERS);
-  }
+  async function exportZipFolders(folders, opts){
+    const { useEditedIfAvailable = true, promptClearAfter = false } = opts || {};
 
-  async function exportZipFolders(folders){
     if (!window.JSZip){
       alert("JSZip failed to load (offline?). Connect once and try again.");
       return;
@@ -2034,38 +2103,122 @@
     await refreshMeta();
 
     const zip = new JSZip();
-
     for (const folder of folders){
       const list = folderItems(folder);
       const zf = zip.folder(folder);
 
       for (let i=0; i<list.length; i++){
         const m = list[i];
-        const blob = await getBestBlob(m.id);
+        let blob = null;
+        if (useEditedIfAvailable){
+          blob = await getEditedBlob(m.id);
+          if (!blob) blob = await getOriginalBlob(m.id);
+        } else {
+          blob = await getOriginalBlob(m.id);
+        }
         if (!blob) continue;
         zf.file(`${pad3(i+1)}.jpg`, blob);
       }
     }
 
+    const rawName = (jobNameEl.value || "").trim();
+    const safeJob = rawName ? rawName.replace(/[^\w\- ]+/g, "").replace(/\s+/g,"_") : "Job";
+    const date = new Date().toISOString().slice(0,10);
+    const fileName = `Mitchell_${safeJob}_${date}.zip`;
+
     toast("Building ZIP…");
     const out = await zip.generateAsync({type:"blob"});
-    downloadBlob(`Mitchell_Photos_${new Date().toISOString().slice(0,10)}.zip`, out);
+    downloadBlob(fileName, out);
     toast("ZIP downloaded.");
+
+    if (promptClearAfter){
+      setTimeout(async () => {
+        if (confirm("Clear this job from this device now? (Recommended for phone capture)")){
+          await clearJob();
+          toast("Job cleared.");
+        }
+      }, 300);
+    }
   }
 
-  // ---------- Wipe ----------
-  async function wipeAllDevice(){
-    await new Promise((resolve) => {
-      const req = indexedDB.deleteDatabase(DB_NAME);
-      req.onsuccess = resolve;
-      req.onerror = resolve;
-      req.onblocked = resolve;
-    });
-    db = await openDB();
-    meta = [];
-    setHdrCount();
+  async function exportZipAll(){
+    // Desktop default: export edited if available
+    await exportZipFolders(FOLDERS, { useEditedIfAvailable: true, promptClearAfter: false });
   }
 
+  // Import ZIP: unpack into proper folders (desktop tool)
+  function normFolderName(s){
+    return (s || "").toLowerCase().replace(/[\s_\-]+/g,"").trim();
+  }
+  function mapToFolder(name){
+    const n = normFolderName(name);
+    if (n === "walkaround" || n === "walkarounds" || n === "walk") return "Walk Around";
+    if (n === "upd" || n === "updates") return "UPD";
+    if (n === "teardown" || n === "tear" || n === "teardowns") return "Teardown";
+    return null;
+  }
+  function parseLeadingNumber(filename){
+    const base = filename.split("/").pop() || filename;
+    const m = base.match(/^(\d{1,4})/);
+    return m ? parseInt(m[1],10) : null;
+  }
+
+  async function importZipFile(file){
+    if (!window.JSZip){
+      alert("JSZip failed to load (offline?). Connect once and try again.");
+      return;
+    }
+
+    await refreshMeta();
+    if (meta.length){
+      const ok = confirm("Importing a ZIP will REPLACE the current job on this device. Continue?");
+      if (!ok) return;
+      await clearJob();
+    }
+
+    toast("Reading ZIP…");
+    const buf = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+
+    const byFolder = new Map();
+    for (const f of FOLDERS) byFolder.set(f, []);
+
+    const entries = Object.keys(zip.files);
+
+    for (const path of entries){
+      const zf = zip.files[path];
+      if (zf.dir) continue;
+
+      const lower = path.toLowerCase();
+      if (!(/\.(jpg|jpeg|png|webp)$/i.test(lower))) continue;
+
+      const parts = path.split("/").filter(Boolean);
+      if (parts.length < 2) continue;
+
+      const folderGuess = mapToFolder(parts[0]);
+      if (!folderGuess) continue;
+
+      const blob = await zf.async("blob");
+      const name = parts[parts.length - 1] || `photo.jpg`;
+      const order = parseLeadingNumber(name);
+
+      byFolder.get(folderGuess).push({ name, blob, order: order ?? 999999 });
+    }
+
+    // Add them in order per folder
+    for (const folder of FOLDERS){
+      const list = byFolder.get(folder) || [];
+      list.sort((a,b) => (a.order - b.order) || a.name.localeCompare(b.name));
+      const files = list.map((x,i)=> new File([x.blob], x.name || `${pad3(i+1)}.jpg`, { type: x.blob.type || "image/jpeg" }));
+      if (files.length) await addFilesToFolder(folder, files);
+    }
+
+    toast("Import complete.");
+    await renderFolders();
+    showHome();
+  }
+
+  // ---------- Clear job (job-at-a-time) ----------
   async function wipeFolder(folder){
     await refreshMeta();
     const list = folderItems(folder);
@@ -2085,6 +2238,28 @@
     }
     await waitTxDone(t);
     await refreshMeta();
+  }
+
+  async function clearJob(){
+    for (const f of FOLDERS){
+      await wipeFolder(f);
+    }
+    await refreshMeta();
+    setHdrCount();
+    await renderFolders();
+    if (currentFolder) await openFolder(currentFolder);
+  }
+
+  async function wipeAllDevice(){
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = resolve;
+      req.onerror = resolve;
+      req.onblocked = resolve;
+    });
+    db = await openDB();
+    meta = [];
+    setHdrCount();
   }
 
   // ---------- Camera Mode (multi-shot) ----------
@@ -2126,7 +2301,7 @@
       await camVideo.play().catch(()=>{});
     }catch(err){
       console.error(err);
-      alert("Camera permission blocked. Allow camera access in Safari settings, then try again.");
+      alert("Camera permission blocked. Allow camera access in your browser settings, then try again.");
       camStop();
     }
   }
@@ -2139,7 +2314,6 @@
       camStream = null;
     }
     camVideo.srcObject = null;
-    // keep shots until user cancels/done
   }
 
   function renderCamThumbs(){
@@ -2158,7 +2332,6 @@
     c.width = camVideo.videoWidth;
     c.height = camVideo.videoHeight;
     const cctx = c.getContext("2d");
-    // draw normal (not mirrored)
     cctx.drawImage(camVideo, 0, 0, c.width, c.height);
     const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
     if (!blob) return;
@@ -2174,15 +2347,12 @@
       camStop();
       return;
     }
-    // convert to Files so existing pipeline works
     const files = camShots.map((s, i) => new File([s.blob], `camera_${Date.now()}_${i+1}.jpg`, {type:"image/jpeg"}));
-    // cleanup urls
     camShots.forEach(s => URL.revokeObjectURL(s.url));
-    const toAdd = files;
     camShots = [];
     renderCamThumbs();
     camStop();
-    await addFilesToFolder(currentFolder, toAdd);
+    await addFilesToFolder(currentFolder, files);
   }
 
   function camCancel(){
@@ -2220,8 +2390,34 @@
     });
 
     document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
-    document.getElementById("folderExportZipBtn").addEventListener("click", () => exportZipFolders([currentFolder]));
+    document.getElementById("folderExportZipBtn").addEventListener("click", exportZipAll);
 
+    document.getElementById("clearJobBtn").addEventListener("click", async () => {
+      if (!confirm("Clear this job (remove all photos on this device)?")) return;
+      await clearJob();
+      toast("Job cleared.");
+    });
+
+    // Phone quick buttons
+    document.getElementById("phoneGoTeardown").addEventListener("click", async () => {
+      await openFolder("Teardown");
+      await camStart();
+    });
+    document.getElementById("phoneSendOffice").addEventListener("click", async () => {
+      // Phone "Send to Office": ORIGINALS only + prompt clear
+      await exportZipFolders(FOLDERS, { useEditedIfAvailable: false, promptClearAfter: true });
+    });
+
+    // Desktop import ZIP
+    const zipInput = document.getElementById("zipInput");
+    zipInput.addEventListener("change", async (e) => {
+      const file = (e.target.files || [])[0];
+      e.target.value = "";
+      if (!file) return;
+      await importZipFile(file);
+    });
+
+    // Folder wipe
     document.getElementById("folderWipeBtn").addEventListener("click", async () => {
       if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
       await wipeFolder(currentFolder);
@@ -2266,6 +2462,13 @@
       if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
       if (e.key === "ArrowLeft") step(-1);
       if (e.key === "ArrowRight") step(+1);
+    });
+
+    // Force edit button (phone)
+    document.getElementById("forceEditBtn").addEventListener("click", () => {
+      phoneEditsUnlocked = true;
+      setMode("edit");
+      toast("Editing enabled");
     });
 
     // Tools
