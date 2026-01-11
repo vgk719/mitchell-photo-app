@@ -75,7 +75,6 @@
       padding: 12px;
     }
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .grow{ flex: 1 1 220px; min-width:200px; }
 
     input, textarea, button{ font:inherit; }
     textarea{
@@ -233,6 +232,8 @@
       text-overflow:ellipsis;
       white-space:nowrap;
     }
+
+    /* drag reorder */
     .ghost{
       position:fixed;
       z-index: 9999;
@@ -273,7 +274,7 @@
       text-overflow: ellipsis;
     }
 
-    /* View overlay (viewer) */
+    /* VIEW/EDIT overlay */
     .overlay{
       position:fixed;
       inset:0;
@@ -285,7 +286,7 @@
     .overlay.show{ display:block; }
     .viewer{
       position:absolute;
-      inset: 10px 10px 10px 10px;
+      inset: 10px;
       border-radius: 18px;
       border:1px solid rgba(255,255,255,.14);
       background: var(--panel2);
@@ -324,7 +325,7 @@
     }
     .topbar .group{ display:flex; gap:10px; pointer-events:auto; }
 
-    .arrow{
+    .arrowBtn{
       position:absolute;
       top:50%;
       transform: translateY(-50%);
@@ -340,11 +341,10 @@
       pointer-events:auto;
       z-index: 10;
     }
-    .arrow.left{ left:10px; }
-    .arrow.right{ right:10px; }
-    .arrow[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
+    .arrowBtn.left{ left:10px; }
+    .arrowBtn.right{ right:10px; }
+    .arrowBtn[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
 
-    /* tools as icons */
     .toolRow{
       display:flex;
       gap:8px;
@@ -389,6 +389,86 @@
       text-overflow: ellipsis;
     }
     .toast.show{ display:block; }
+
+    /* Camera modal */
+    .camOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(10px);
+      z-index: 80;
+      display:none;
+    }
+    .camOverlay.show{ display:block; }
+    .camPanel{
+      position:absolute;
+      inset: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(12,18,38,.92);
+      box-shadow: var(--shadow);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .camTop{
+      padding: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .camBody{
+      flex:1;
+      display:flex;
+      gap:10px;
+      padding: 10px;
+      overflow:hidden;
+    }
+    .camLive{
+      flex: 1.35;
+      border-radius: 16px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      position:relative;
+      min-width:0;
+    }
+    .camLive video{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      transform: scaleX(-1);
+    }
+    .camStrip{
+      flex: 0.65;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      overflow:auto;
+      padding: 10px;
+      min-width: 220px;
+    }
+    .camThumbs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .camThumbs img{
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+    }
+    @media (max-width: 900px){
+      .camBody{ flex-direction:column; }
+      .camStrip{ min-width:0; }
+      .camLive video{ transform:none; }
+    }
   </style>
 </head>
 
@@ -406,8 +486,7 @@
   <section id="homeView">
     <div class="card">
       <div style="font-weight:1000; font-size:16px;">Folders</div>
-      <div class="muted">Tap a folder. Drag to reorder. Single click = view. Double click = edit.</div>
-
+      <div class="muted">Tap a folder. Drag to reorder. Single tap = view. Double tap = edit.</div>
       <div class="folders" id="folders"></div>
 
       <div class="hr"></div>
@@ -426,7 +505,7 @@
       <div class="row" style="justify-content:space-between;">
         <div>
           <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
-          <div class="muted">Drag to reorder. Single click = view. Double click = edit.</div>
+          <div class="muted">Drag to reorder. Single tap = view. Double tap = edit.</div>
         </div>
         <div class="row">
           <button class="btn" id="backHomeBtn">← Folders</button>
@@ -439,10 +518,10 @@
           📷 Add Photos
           <input id="fileInput" type="file" accept="image/*" multiple hidden>
         </label>
-        <label class="btn" style="display:inline-flex; align-items:center; gap:8px;">
-          📸 Camera
-          <input id="camInput" type="file" accept="image/*" capture="environment" hidden>
-        </label>
+
+        <!-- NEW: in-app camera multi-shot -->
+        <button class="btn primary" id="openCamBtn">📸 Camera Mode</button>
+
         <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
       </div>
 
@@ -478,15 +557,15 @@
         </div>
       </div>
 
-      <div class="arrow left" id="bigPrev" aria-disabled="false">‹</div>
-      <div class="arrow right" id="bigNext" aria-disabled="false">›</div>
+      <div class="arrowBtn left" id="bigPrev" aria-disabled="false">‹</div>
+      <div class="arrowBtn right" id="bigNext" aria-disabled="false">›</div>
 
       <canvas id="canvas"></canvas>
     </div>
 
     <div class="vRight">
       <div style="font-weight:1000; margin-bottom:6px;" id="modeTitle">VIEW</div>
-      <div class="muted" id="modeSub">Single click opens VIEW. Double click opens EDIT.</div>
+      <div class="muted" id="modeSub">Single tap opens VIEW. Double tap opens EDIT.</div>
 
       <div class="hr"></div>
 
@@ -521,10 +600,38 @@
         Angle tool: draw <b>Line 1</b> (start→end), then draw <b>Line 2</b> (start→end). Angle shows between them.
       </div>
       <div class="hint" id="textHint" style="display:none;">
-        Text tool: click/tap to place. Drag to move. Double tap a text box to edit its content.
+        Text tool: tap to place. Drag to move. Double tap a text box to edit content.
       </div>
       <div class="hint" id="editHint">
-        You are in <b>VIEW</b>. Double click/tap the image to enter <b>EDIT</b>.
+        You are in <b>VIEW</b>. Double tap/click the image to enter <b>EDIT</b>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA MODAL -->
+<div class="camOverlay" id="camOverlay" aria-hidden="true">
+  <div class="camPanel">
+    <div class="camTop">
+      <div class="pill"><span id="camCount">0</span> captured</div>
+      <div class="row">
+        <button class="btn" id="camFlipBtn">Flip</button>
+        <button class="btn danger" id="camCancelBtn">Cancel</button>
+        <button class="btn ok" id="camDoneBtn">Done</button>
+      </div>
+    </div>
+
+    <div class="camBody">
+      <div class="camLive">
+        <video id="camVideo" playsinline autoplay muted></video>
+      </div>
+      <div class="camStrip">
+        <div class="row" style="justify-content:space-between;">
+          <button class="btn primary" id="camSnapBtn">Snap</button>
+          <button class="btn danger" id="camClearBtn">Clear</button>
+        </div>
+        <div class="hr"></div>
+        <div class="camThumbs" id="camThumbs"></div>
       </div>
     </div>
   </div>
@@ -538,7 +645,7 @@
 (() => {
   const FOLDERS = ["Walk Around","UPD","Teardown"];
 
-  const DB_NAME = "mitchell_app_pro_v3";
+  const DB_NAME = "mitchell_app_pro_v4";
   const DB_VER = 1;
   const STORE_ORIG  = "originals";
   const STORE_EDIT  = "edits";
@@ -549,9 +656,9 @@
   let meta = [];
   let currentFolder = null;
 
-  // drag reorder
-  let dragging = null;         // actual drag
-  let dragCandidate = null;    // possible drag waiting for threshold
+  // drag reorder (threshold-based)
+  let dragCandidate = null;
+  let dragging = null;
   let insertTarget = null;
   let suppressClickUntil = 0;
 
@@ -585,7 +692,7 @@
 
   // autosave
   let saveTimer = null;
-  const AUTOSAVE_MS = 350;
+  const AUTOSAVE_MS = 300;
 
   // colors
   const GREEN = "rgba(0,255,0,0.95)";
@@ -744,20 +851,21 @@
 
       const div = document.createElement("div");
       div.className = "folderCard";
-      div.dataset.folder = f;
+
+      div.innerHTML = `
+        <div class="folderTitle">${f}</div>
+        <div class="folderHint">${hint}</div>
+        <div class="pill"><span>${count}</span> photos</div>
+      `;
 
       const strip = document.createElement("div");
       strip.className = "miniStrip";
-
-      // show up to 10 tiny thumbs
       const preview = list.slice(0, 10);
       for (const m of preview){
         const img = document.createElement("img");
         img.className = "miniThumb";
         img.alt = "";
         strip.appendChild(img);
-
-        // load blob async
         getThumbBlob(m.id).then(blob => {
           if (!blob) return;
           const url = URL.createObjectURL(blob);
@@ -765,19 +873,12 @@
           img.onload = () => URL.revokeObjectURL(url);
         }).catch(()=>{});
       }
-
       if (count > preview.length){
         const more = document.createElement("div");
         more.className = "miniMore";
         more.textContent = `+${count - preview.length}`;
         strip.appendChild(more);
       }
-
-      div.innerHTML = `
-        <div class="folderTitle">${f}</div>
-        <div class="folderHint">${hint}</div>
-        <div class="pill"><span>${count}</span> photos</div>
-      `;
       div.appendChild(strip);
 
       div.addEventListener("click", () => openFolder(f));
@@ -843,7 +944,7 @@
       insertLine.className = "insertLine";
       div.appendChild(insertLine);
 
-      // SINGLE click = view (timer), DOUBLE click = edit
+      // Single click => VIEW, Double click => EDIT
       let clickTimer = null;
       div.addEventListener("click", () => {
         if (Date.now() < suppressClickUntil) return;
@@ -856,7 +957,7 @@
         openViewer(currentFolder, idx, "edit");
       });
 
-      // Touch double-tap -> edit (also keeps single tap -> view)
+      // Touch: double tap => edit
       let lastTap = 0;
       div.addEventListener("pointerup", (e) => {
         if (Date.now() < suppressClickUntil) return;
@@ -869,13 +970,12 @@
         lastTap = now;
       });
 
-      // DRAG REORDER: only start drag when pointer moves past threshold (fixes dblclick)
+      // Drag candidate (threshold so taps still work)
       div.addEventListener("pointerdown", (e) => {
         if (overlay.classList.contains("show")) return;
         if (e.button !== undefined && e.button !== 0) return;
 
         dragCandidate = {
-          pointerId: e.pointerId,
           startX: e.clientX,
           startY: e.clientY,
           el: div,
@@ -887,7 +987,6 @@
 
         const move = (ev) => dragCandidateMove(ev);
         const up = (ev) => dragCandidateUp(ev, move, up);
-
         window.addEventListener("pointermove", move, {passive:false});
         window.addEventListener("pointerup", up, {passive:false});
       });
@@ -897,55 +996,23 @@
     });
 
     async function loadThumbInto(id, imgEl){
-      try{
-        const t = tx([STORE_THUMB], "readonly");
-        const rec = await idbGet(t.objectStore(STORE_THUMB), id);
-        if (rec?.blob){
-          const url = URL.createObjectURL(rec.blob);
-          imgEl.src = url;
-          imgEl.onload = () => URL.revokeObjectURL(url);
-          return;
-        }
-      } catch {}
-      try{
-        const t2 = tx([STORE_EDIT], "readonly");
-        const rec2 = await idbGet(t2.objectStore(STORE_EDIT), id);
-        if (rec2?.blob){
-          const url = URL.createObjectURL(rec2.blob);
-          imgEl.src = url;
-          imgEl.onload = () => URL.revokeObjectURL(url);
-          return;
-        }
-      } catch {}
-      try{
-        const t3 = tx([STORE_ORIG], "readonly");
-        const rec3 = await idbGet(t3.objectStore(STORE_ORIG), id);
-        if (rec3?.blob){
-          const url = URL.createObjectURL(rec3.blob);
-          imgEl.src = url;
-          imgEl.onload = () => URL.revokeObjectURL(url);
-        }
-      } catch {}
+      let blob = await getThumbBlob(id);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      imgEl.src = url;
+      imgEl.onload = () => URL.revokeObjectURL(url);
     }
   }
 
   function dragCandidateMove(e){
     if (!dragCandidate) return;
-
-    // if already dragging, route to existing drag
     if (dragging){
       onDragMove(e, dragCandidate.grid, dragCandidate.badgeInner);
       return;
     }
-
     const dx = e.clientX - dragCandidate.startX;
     const dy = e.clientY - dragCandidate.startY;
-    const dist = Math.hypot(dx, dy);
-
-    // threshold to start drag (this is the key fix)
-    if (dist < 10) return;
-
-    // start actual drag
+    if (Math.hypot(dx,dy) < 10) return;
     beginDrag(e, dragCandidate.el, dragCandidate.idx, dragCandidate.badgeWrap, dragCandidate.badgeInner, dragCandidate.grid);
   }
 
@@ -954,15 +1021,12 @@
     window.removeEventListener("pointerup", upHandler);
 
     if (dragging){
-      // finish drag
-      onDragEnd(e, dragCandidate.grid, dragCandidate.badgeWrap, () => {}, () => {});
+      onDragEnd(e, dragCandidate.grid, dragCandidate.badgeWrap);
     }
-
     dragCandidate = null;
   }
 
   function beginDrag(e, el, fromIndex, badgeWrap, badgeInner, grid){
-    // now we prevent default only once drag truly starts
     e.preventDefault();
 
     const rect = el.getBoundingClientRect();
@@ -1036,7 +1100,6 @@
     badgeWrap.style.display = "none";
     dragging.ghost.remove();
 
-    // suppress accidental click after drag
     suppressClickUntil = Date.now() + 350;
 
     const from = dragging.fromIndex;
@@ -1047,7 +1110,6 @@
       if (to > from) to -= 1;
     }
 
-    const id = dragging.id;
     dragging = null;
     insertTarget = null;
 
@@ -1060,7 +1122,6 @@
 
     const item = listNow.splice(from, 1)[0];
     listNow.splice(to, 0, item);
-
     listNow.forEach((x,i)=> x.order = i+1);
 
     const t = tx([STORE_META], "readwrite");
@@ -1106,7 +1167,6 @@
       meta.push(m);
       added++;
     }
-
     await waitTxDone(t);
 
     const newOnes = folderItems(folder).slice(-added);
@@ -1126,17 +1186,7 @@
       if (rec?.blob) return;
     } catch {}
 
-    let blob = null;
-    try{
-      const t2 = tx([STORE_EDIT],"readonly");
-      const rec2 = await idbGet(t2.objectStore(STORE_EDIT), id);
-      if (rec2?.blob) blob = rec2.blob;
-    } catch {}
-    if (!blob){
-      const t3 = tx([STORE_ORIG],"readonly");
-      const rec3 = await idbGet(t3.objectStore(STORE_ORIG), id);
-      blob = rec3?.blob || null;
-    }
+    let blob = await getThumbBlob(id);
     if (!blob) return;
 
     const bmp = await createImageBitmap(blob);
@@ -1155,19 +1205,14 @@
     await waitTxDone(t4);
   }
 
-  // ---------- Viewer / Editor (rest of your app unchanged) ----------
-  // NOTE: For brevity this section is identical to your last working version’s viewer/editor.
-  // To keep everything working, we keep your existing overlay/editor logic exactly.
-  //
-  // Instead of re-pasting the entire (very long) editor again here, I kept it intact in the file:
-  // (In this environment you need the full file, so below is the full original viewer/editor section.)
-
+  // ---------- Viewer / Editor ----------
   function setMode(next){
     mode = next;
     document.getElementById("modeTitle").textContent = (mode === "edit") ? "EDIT" : "VIEW";
-    document.getElementById("modeSub").textContent = (mode === "edit") ? "Autosave ON" : "Viewing (double click to edit)";
+    document.getElementById("modeSub").textContent = (mode === "edit") ? "Autosave ON" : "Viewing (double tap to edit)";
     document.getElementById("editHint").style.display = (mode === "edit") ? "none" : "";
 
+    // enable/disable tools
     document.querySelectorAll(".toolIcon").forEach(el => {
       el.style.opacity = (mode === "edit") ? "1" : "0.55";
       el.style.pointerEvents = (mode === "edit") ? "auto" : "none";
@@ -1198,12 +1243,13 @@
     document.getElementById("notesInput").value = m.notes || "";
 
     await loadOriginalBitmap(currentId);
-
     resetView();
     redraw();
 
     setMode(openAs === "edit" ? "edit" : "view");
     setArrows();
+    setAngleHint();
+    setTextHint();
   }
 
   function closeViewer(){
@@ -1234,6 +1280,7 @@
   async function step(dir){
     const next = indexInFolder + dir;
     if (next < 0 || next >= folderList.length) return;
+    await flushAutosave();
     await openViewer(currentFolder, next, mode);
   }
 
@@ -1274,6 +1321,69 @@
     view.ty = (ch - dh) / 2;
   }
 
+  function pointerPos(e){
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function screenToWorld(x,y){
+    return { x: (x - view.tx) / view.scale, y: (y - view.ty) / view.scale };
+  }
+
+  function scheduleAutosave(){
+    if (mode !== "edit") return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => autosave().catch(console.error), AUTOSAVE_MS);
+  }
+  async function flushAutosave(){
+    if (saveTimer){
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      await autosave();
+    }
+  }
+
+  async function persistMetaPatch(id, patch){
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    const cur = await idbGet(s, id);
+    if (!cur){ t.abort(); return; }
+    await idbPut(s, {...cur, ...patch});
+    await waitTxDone(t);
+
+    const idx = meta.findIndex(m => m.id === id);
+    if (idx >= 0){
+      if (patch.notes !== undefined) meta[idx].notes = patch.notes;
+      if (patch.anno !== undefined) meta[idx].anno = patch.anno;
+    }
+  }
+
+  async function autosave(){
+    if (!currentId || mode !== "edit") return;
+    const notes = document.getElementById("notesInput").value || "";
+    await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
+    await renderAndStoreEdited(currentId);
+  }
+
+  function pushUndo(){
+    undoStack.push(structuredClone(anno));
+    if (undoStack.length > 60) undoStack.shift();
+  }
+
+  function setTool(next){
+    tool = next;
+    document.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
+    angleStage = 0;
+    angleLine1 = null;
+    setAngleHint();
+    setTextHint();
+  }
+  function setAngleHint(){
+    document.getElementById("angleHint").style.display = (tool === "angle") ? "" : "none";
+  }
+  function setTextHint(){
+    document.getElementById("textHint").style.display = (tool === "text") ? "" : "none";
+  }
+
   function redraw(){
     resizeCanvasToContainer();
     const cw = canvas.clientWidth;
@@ -1290,86 +1400,603 @@
       ctx.fillStyle = "rgba(255,255,255,0.08)";
       ctx.fillRect(0,0,cw,ch);
     }
+
+    drawShapes(anno, false);
+    if (tempShape) drawShapes([tempShape], true);
+    drawAngleLabelIfPresent();
   }
 
-  function wireUI(){
-    document.getElementById("backHomeBtn").addEventListener("click", () => {
+  function roundRect(ctx, x, y, w, h, r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+  }
+
+  function drawTextBox(s, dashed){
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+
+    const padding = 10;
+    const fontSize = 22;
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    const lines = (s.text || "").split("\n");
+    const lineH = fontSize * 1.2;
+    let maxW = 0;
+    for (const line of lines) maxW = Math.max(maxW, ctx.measureText(line).width);
+    const w = Math.max(40, maxW + padding*2);
+    const h = Math.max(28, lines.length * lineH + padding*2);
+    s.w = w; s.h = h;
+
+    ctx.setLineDash(dashed ? [10,8] : []);
+    ctx.fillStyle = "rgba(0,255,0,0.95)";
+    ctx.strokeStyle = "rgba(0,0,0,0.9)";
+    ctx.lineWidth = 3;
+    roundRect(ctx, s.x, s.y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "rgba(0,0,0,1)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const cx = s.x + w/2;
+    const cy = s.y + h/2;
+    const totalH = lines.length * lineH;
+    let y = cy - totalH/2 + lineH/2;
+    for (const line of lines){
+      ctx.fillText(line, cx, y);
+      y += lineH;
+    }
+    ctx.restore();
+  }
+
+  function drawShapeStroke(s, color, width, dashed){
+    if (s.type === "text"){
+      drawTextBox(s, dashed);
+      return;
+    }
+
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width / view.scale;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.setLineDash(dashed ? [8 / view.scale, 6 / view.scale] : []);
+
+    const label = (txt, x, y) => {
+      ctx.save();
+      ctx.setLineDash([]);
+      ctx.font = `${14 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "rgba(0,0,0,0.65)";
+      ctx.lineWidth = 4 / view.scale;
+      ctx.strokeText(txt, x, y);
+      ctx.fillText(txt, x, y);
+      ctx.restore();
+    };
+
+    if (["line","ruler","angleLine"].includes(s.type)){
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.stroke();
+      if (s.type === "ruler"){
+        const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+        label(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 8, (s.y1+s.y2)/2 - 8);
+      }
+    } else if (s.type === "rect"){
+      const x = Math.min(s.x1, s.x2);
+      const y = Math.min(s.y1, s.y2);
+      const w = Math.abs(s.x2 - s.x1);
+      const h = Math.abs(s.y2 - s.y1);
+      ctx.strokeRect(x,y,w,h);
+    } else if (s.type === "circle"){
+      const cx = (s.x1 + s.x2) / 2;
+      const cy = (s.y1 + s.y2) / 2;
+      const rx = Math.abs(s.x2 - s.x1) / 2;
+      const ry = Math.abs(s.y2 - s.y1) / 2;
+      ctx.beginPath();
+      if (ctx.ellipse) ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      else {
+        ctx.save();
+        ctx.translate(cx,cy);
+        ctx.scale(rx || 1, ry || 1);
+        ctx.arc(0,0,1,0,Math.PI*2);
+        ctx.restore();
+      }
+      ctx.stroke();
+    } else if (s.type === "arrow"){
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.stroke();
+      const dx = s.x2 - s.x1;
+      const dy = s.y2 - s.y1;
+      const ang = Math.atan2(dy, dx);
+      const headLen = 18 / view.scale;
+      const a1 = ang - Math.PI / 8;
+      const a2 = ang + Math.PI / 8;
+      ctx.beginPath();
+      ctx.moveTo(s.x2, s.y2);
+      ctx.lineTo(s.x2 - Math.cos(a1)*headLen, s.y2 - Math.sin(a1)*headLen);
+      ctx.moveTo(s.x2, s.y2);
+      ctx.lineTo(s.x2 - Math.cos(a2)*headLen, s.y2 - Math.sin(a2)*headLen);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawShapes(list, dashed){
+    for (const s of list){
+      drawShapeStroke(s, DARK, WIDTH+2, dashed);
+      drawShapeStroke(s, GREEN, WIDTH, dashed);
+    }
+  }
+
+  function drawAngleLabelIfPresent(){
+    const lines = anno.filter(s => s.type === "angleLine");
+    if (lines.length < 2) return;
+    const l2 = lines[lines.length - 1];
+    const l1 = lines[lines.length - 2];
+    const a = {x: l1.x2 - l1.x1, y: l1.y2 - l1.y1};
+    const b = {x: l2.x2 - l2.x1, y: l2.y2 - l2.y1};
+    const dot = a.x*b.x + a.y*b.y;
+    const la = Math.hypot(a.x,a.y);
+    const lb = Math.hypot(b.x,b.y);
+    if (!la || !lb) return;
+    const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
+
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+    ctx.font = `${16 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    ctx.fillStyle = GREEN;
+    ctx.strokeStyle = "rgba(0,0,0,0.65)";
+    ctx.lineWidth = 5 / view.scale;
+    const txt = `${deg.toFixed(1)}°`;
+    const x = l2.x1 + 10;
+    const y = l2.y1 - 10;
+    ctx.strokeText(txt, x, y);
+    ctx.fillText(txt, x, y);
+    ctx.restore();
+  }
+
+  async function renderAndStoreEdited(id){
+    if (!baseBitmap) return;
+
+    const w = baseBitmap.width;
+    const h = baseBitmap.height;
+
+    const off = document.createElement("canvas");
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext("2d");
+    octx.drawImage(baseBitmap, 0, 0);
+
+    const roundRect2 = (c, x, y, ww, hh, r) => {
+      const rr = Math.min(r, ww/2, hh/2);
+      c.beginPath();
+      c.moveTo(x+rr, y);
+      c.arcTo(x+ww, y, x+ww, y+hh, rr);
+      c.arcTo(x+ww, y+hh, x, y+hh, rr);
+      c.arcTo(x, y+hh, x, y, rr);
+      c.arcTo(x, y, x+ww, y, rr);
+      c.closePath();
+    };
+
+    const drawText = (s) => {
+      const padding = 10;
+      const fontSize = 22;
+      octx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      const lines = (s.text || "").split("\n");
+      const lineH = fontSize * 1.2;
+      let maxW = 0;
+      for (const line of lines) maxW = Math.max(maxW, octx.measureText(line).width);
+      const ww = Math.max(40, maxW + padding*2);
+      const hh = Math.max(28, lines.length * lineH + padding*2);
+      s.w = ww; s.h = hh;
+
+      octx.fillStyle = "rgba(0,255,0,0.95)";
+      octx.strokeStyle = "rgba(0,0,0,0.9)";
+      octx.lineWidth = 3;
+      roundRect2(octx, s.x, s.y, ww, hh, 10);
+      octx.fill();
+      octx.stroke();
+
+      octx.fillStyle = "rgba(0,0,0,1)";
+      octx.textAlign = "center";
+      octx.textBaseline = "middle";
+      const cx = s.x + ww/2;
+      const cy = s.y + hh/2;
+      const totalH = lines.length * lineH;
+      let y = cy - totalH/2 + lineH/2;
+      for (const line of lines){
+        octx.fillText(line, cx, y);
+        y += lineH;
+      }
+    };
+
+    const drawLine = (s, color, ww) => {
+      octx.save();
+      octx.strokeStyle = color;
+      octx.lineWidth = ww;
+      octx.lineCap = "round";
+      octx.lineJoin = "round";
+      octx.beginPath();
+      octx.moveTo(s.x1,s.y1);
+      octx.lineTo(s.x2,s.y2);
+      octx.stroke();
+      octx.restore();
+    };
+
+    const drawLabel = (txt, x, y, color) => {
+      octx.save();
+      octx.font = `18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      octx.fillStyle = color;
+      octx.strokeStyle = "rgba(0,0,0,0.65)";
+      octx.lineWidth = 6;
+      octx.strokeText(txt, x, y);
+      octx.fillText(txt, x, y);
+      octx.restore();
+    };
+
+    const drawShape = (s, color, ww) => {
+      if (s.type === "text"){ drawText(s); return; }
+      if (["line","ruler","angleLine"].includes(s.type)){
+        drawLine(s, color, ww);
+        if (s.type === "ruler"){
+          const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+          drawLabel(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 10, (s.y1+s.y2)/2 - 10, color);
+        }
+        return;
+      }
+      if (s.type === "rect"){
+        const x = Math.min(s.x1,s.x2), y=Math.min(s.y1,s.y2);
+        const ww2 = Math.abs(s.x2-s.x1), hh2=Math.abs(s.y2-s.y1);
+        octx.save();
+        octx.strokeStyle = color;
+        octx.lineWidth = ww;
+        octx.strokeRect(x,y,ww2,hh2);
+        octx.restore();
+        return;
+      }
+      if (s.type === "circle"){
+        const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2;
+        const rx=Math.abs(s.x2-s.x1)/2, ry=Math.abs(s.y2-s.y1)/2;
+        octx.save();
+        octx.strokeStyle = color;
+        octx.lineWidth = ww;
+        octx.beginPath();
+        if (octx.ellipse) octx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+        else {
+          octx.save(); octx.translate(cx,cy); octx.scale(rx||1,ry||1);
+          octx.arc(0,0,1,0,Math.PI*2); octx.restore();
+        }
+        octx.stroke();
+        octx.restore();
+        return;
+      }
+      if (s.type === "arrow"){
+        drawLine(s, color, ww);
+        const dx=s.x2-s.x1, dy=s.y2-s.y1;
+        const ang=Math.atan2(dy,dx);
+        const head=28;
+        const a1=ang-Math.PI/8, a2=ang+Math.PI/8;
+        octx.save();
+        octx.strokeStyle = color;
+        octx.lineWidth = ww;
+        octx.beginPath();
+        octx.moveTo(s.x2,s.y2);
+        octx.lineTo(s.x2-Math.cos(a1)*head, s.y2-Math.sin(a1)*head);
+        octx.moveTo(s.x2,s.y2);
+        octx.lineTo(s.x2-Math.cos(a2)*head, s.y2-Math.sin(a2)*head);
+        octx.stroke();
+        octx.restore();
+      }
+    };
+
+    for (const s of anno){
+      drawShape(s, DARK, WIDTH+2);
+      drawShape(s, GREEN, WIDTH);
+    }
+
+    const lines = anno.filter(s => s.type === "angleLine");
+    if (lines.length >= 2){
+      const l2 = lines[lines.length-1];
+      const l1 = lines[lines.length-2];
+      const a = {x: l1.x2 - l1.x1, y: l1.y2 - l1.y1};
+      const b = {x: l2.x2 - l2.x1, y: l2.y2 - l2.y1};
+      const dot = a.x*b.x + a.y*b.y;
+      const la = Math.hypot(a.x,a.y);
+      const lb = Math.hypot(b.x,b.y);
+      if (la && lb){
+        const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
+        drawLabel(`${deg.toFixed(1)}°`, l2.x1 + 12, l2.y1 - 12, GREEN);
+      }
+    }
+
+    const editedBlob = await new Promise(res => off.toBlob(res, "image/jpeg", 0.92));
+    if (!editedBlob) return;
+
+    const t = tx([STORE_EDIT], "readwrite");
+    await idbPut(t.objectStore(STORE_EDIT), {id, blob: editedBlob, type:"image/jpeg"});
+    await waitTxDone(t);
+
+    // thumb from edited
+    const max = 360;
+    const scale = Math.min(1, max / Math.max(w, h));
+    const tw = Math.max(1, Math.round(w * scale));
+    const th = Math.max(1, Math.round(h * scale));
+    const tc = document.createElement("canvas");
+    tc.width = tw; tc.height = th;
+    tc.getContext("2d").drawImage(off, 0, 0, tw, th);
+
+    const thumbBlob = await new Promise(res => tc.toBlob(res, "image/jpeg", 0.85));
+    if (thumbBlob){
+      const t2 = tx([STORE_THUMB], "readwrite");
+      await idbPut(t2.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
+      await waitTxDone(t2);
+    }
+  }
+
+  // Text moving/editing
+  function pointInText(s, p){
+    if (s.type !== "text") return false;
+    const w = s.w || 0, h = s.h || 0;
+    return p.x >= s.x && p.x <= s.x + w && p.y >= s.y && p.y <= s.y + h;
+  }
+  function topmostTextAt(p){
+    for (let i = anno.length - 1; i >= 0; i--){
+      const s = anno[i];
+      if (s.type === "text" && pointInText(s, p)) return {shape:s, index:i};
+    }
+    return null;
+  }
+  let movingText = null; // {index, dx, dy}
+  let lastTapCanvas = 0;
+
+  function setupCanvas(){
+    // Double click on canvas enters edit mode
+    canvas.addEventListener("dblclick", () => {
+      if (mode === "view"){
+        setMode("edit");
+        toast("EDIT mode");
+      }
+    });
+
+    canvas.addEventListener("pointerdown", (e) => {
+      if (!baseBitmap) return;
+      canvas.setPointerCapture(e.pointerId);
+
+      if (e.pointerType === "touch"){
+        const now = Date.now();
+        if (now - lastTapCanvas < 260 && mode === "view"){
+          setMode("edit");
+          toast("EDIT mode");
+        }
+        lastTapCanvas = now;
+      }
+
+      isDown = true;
+      const p = pointerPos(e);
+      const w = screenToWorld(p.x, p.y);
+
+      // pan always allowed
+      if (mode !== "edit"){
+        tool = "pan";
+      }
+
+      if (mode === "edit"){
+        const hitText = topmostTextAt(w);
+        if (hitText){
+          movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
+          tempShape = null;
+          redraw();
+          return;
+        }
+      }
+
+      startW = w;
+      tempShape = null;
+
+      if (tool === "pan"){
+        startW._sx = p.x; startW._sy = p.y;
+        startW._tx = view.tx; startW._ty = view.ty;
+      }
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (!isDown || !baseBitmap) return;
+      const p = pointerPos(e);
+
+      if (movingText && mode === "edit"){
+        const w = screenToWorld(p.x, p.y);
+        const s = anno[movingText.index];
+        if (s && s.type === "text"){
+          s.x = w.x - movingText.dx;
+          s.y = w.y - movingText.dy;
+          redraw();
+          scheduleAutosave();
+        }
+        return;
+      }
+
+      if (tool === "pan"){
+        const dx = p.x - (startW._sx || 0);
+        const dy = p.y - (startW._sy || 0);
+        view.tx = (startW._tx || 0) + dx;
+        view.ty = (startW._ty || 0) + dy;
+        redraw();
+        return;
+      }
+
+      if (mode !== "edit") return;
+
+      const w = screenToWorld(p.x, p.y);
+
+      if (tool === "rect") tempShape = {type:"rect", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "circle") tempShape = {type:"circle", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "line") tempShape = {type:"line", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "arrow") tempShape = {type:"arrow", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "ruler") tempShape = {type:"ruler", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "angle") tempShape = {type:"angleLine", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+
+      redraw();
+    });
+
+    canvas.addEventListener("pointerup", async (e) => {
+      if (!isDown) return;
+      isDown = false;
+
+      if (movingText){
+        movingText = null;
+        return;
+      }
+
+      if (tool === "pan"){ tempShape = null; return; }
+      if (mode !== "edit"){ tempShape = null; return; }
+
+      // Text tool: tap places text
+      if (tool === "text"){
+        const p = pointerPos(e);
+        const w = screenToWorld(p.x, p.y);
+        const existing = topmostTextAt(w);
+        if (!existing){
+          const content = prompt("Text:", "ADD NOTE");
+          if (content && content.trim()){
+            pushUndo();
+            anno.push({type:"text", x:w.x, y:w.y, text: content.trim(), w: 0, h: 0});
+            redraw();
+            scheduleAutosave();
+          }
+        }
+        tempShape = null;
+        return;
+      }
+
+      if (!tempShape) return;
+
+      if (tool !== "angle"){
+        pushUndo();
+        anno.push(tempShape);
+        tempShape = null;
+        redraw();
+        scheduleAutosave();
+        return;
+      }
+
+      // Angle tool: commit 2 lines
+      if (angleStage === 0){
+        angleLine1 = structuredClone(tempShape);
+        pushUndo();
+        anno.push(angleLine1);
+        angleStage = 1;
+        tempShape = null;
+        redraw();
+        scheduleAutosave();
+        return;
+      } else {
+        const line2 = structuredClone(tempShape);
+        pushUndo();
+        anno.push(line2);
+        angleStage = 0;
+        angleLine1 = null;
+        tempShape = null;
+        redraw();
+        scheduleAutosave();
+        return;
+      }
+    });
+
+    // dblclick text to edit
+    canvas.addEventListener("dblclick", (e) => {
+      if (mode !== "edit") return;
+      const p = pointerPos(e);
+      const w = screenToWorld(p.x, p.y);
+      const hit = topmostTextAt(w);
+      if (hit){
+        const next = prompt("Edit text:", hit.shape.text || "");
+        if (next != null){
+          pushUndo();
+          hit.shape.text = next.trim();
+          redraw();
+          scheduleAutosave();
+        }
+      }
+    });
+  }
+
+  // ---------- Revert/Delete ----------
+  async function revertToOriginal(){
+    if (!currentId) return;
+    if (mode !== "edit") return;
+    if (!confirm("Revert this photo back to ORIGINAL (remove all edits/markup)?")) return;
+
+    anno = [];
+    undoStack = [];
+    angleStage = 0;
+    angleLine1 = null;
+
+    const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
+    await idbDel(t.objectStore(STORE_EDIT), currentId).catch(()=>{});
+    await idbDel(t.objectStore(STORE_THUMB), currentId).catch(()=>{});
+    await waitTxDone(t);
+
+    await persistMetaPatch(currentId, { anno: [], notes: document.getElementById("notesInput").value || "" });
+    await ensureThumb(currentId);
+
+    redraw();
+    scheduleAutosave();
+    toast("Reverted.");
+    renderFolderGrid();
+    renderFolders();
+  }
+
+  async function deleteCurrent(){
+    if (!currentId) return;
+    if (!confirm(`Delete this photo?`)) return;
+
+    const id = currentId;
+    const folder = currentFolder;
+
+    const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
+    await idbDel(t.objectStore(STORE_ORIG), id).catch(()=>{});
+    await idbDel(t.objectStore(STORE_EDIT), id).catch(()=>{});
+    await idbDel(t.objectStore(STORE_THUMB), id).catch(()=>{});
+    await idbDel(t.objectStore(STORE_META), id).catch(()=>{});
+    await waitTxDone(t);
+
+    await refreshMeta();
+    if (folder === "Teardown"){
+      await ensureFolderOrder("Teardown");
+      await refreshMeta();
+    }
+
+    const list = folderItems(folder);
+    if (!list.length){
       closeViewer();
-      showHome();
-      renderFolders();
-    });
-
-    document.getElementById("wipeBtn").addEventListener("click", async () => {
-      if (!confirm("Wipe EVERYTHING on this device?")) return;
-      await wipeAllDevice();
-      toast("Wiped.");
-      showHome();
-      renderFolders();
-    });
-
-    document.getElementById("exportZipBtn").addEventListener("click", async () => {
-      await exportZipAll();
-    });
-
-    document.getElementById("folderExportZipBtn").addEventListener("click", async () => {
-      await exportZipFolders([currentFolder]);
-    });
-
-    document.getElementById("folderWipeBtn").addEventListener("click", async () => {
-      if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
-      await wipeFolder(currentFolder);
-      toast("Folder wiped.");
-      await openFolder(currentFolder);
-      await renderFolders();
-    });
-
-    const fileInput = document.getElementById("fileInput");
-    const camInput = document.getElementById("camInput");
-    fileInput.addEventListener("change", async (e) => {
-      const files = Array.from(e.target.files || []);
-      e.target.value = "";
-      if (files.length) await addFilesToFolder(currentFolder, files);
-    });
-    camInput.addEventListener("change", async (e) => {
-      const files = Array.from(e.target.files || []);
-      e.target.value = "";
-      if (files.length) await addFilesToFolder(currentFolder, files);
-    });
-
-    const dz = document.getElementById("dropZone");
-    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.add("drag");
-    }));
-    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.remove("drag");
-    }));
-    dz.addEventListener("drop", async (e) => {
-      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-      if (!files.length) return;
-      await addFilesToFolder(currentFolder, files);
-    });
-
-    document.getElementById("closeBtn").addEventListener("click", async () => closeViewer());
-    overlay.addEventListener("click", async (e) => {
-      if (e.target.id === "overlay") closeViewer();
-    });
-
-    document.getElementById("prevBtn").addEventListener("click", () => step(-1));
-    document.getElementById("nextBtn").addEventListener("click", () => step(+1));
-    document.getElementById("bigPrev").addEventListener("click", () => step(-1));
-    document.getElementById("bigNext").addEventListener("click", () => step(+1));
-
-    document.addEventListener("keydown", async (e) => {
-      if (!overlay.classList.contains("show")) return;
-      if (e.key === "Escape") closeViewer();
-      if (e.key === "ArrowLeft") step(-1);
-      if (e.key === "ArrowRight") step(+1);
-    });
+      await openFolder(folder);
+      toast("Deleted.");
+      return;
+    }
+    const nextIndex = Math.min(indexInFolder, list.length - 1);
+    closeViewer();
+    await openFolder(folder);
+    toast("Deleted.");
+    openViewer(folder, nextIndex, mode);
   }
 
-  // ---------- Export / Wipe (minimal for this patch) ----------
+  // ---------- Export ZIP ----------
   function downloadBlob(filename, blob){
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1380,6 +2007,7 @@
     a.remove();
     URL.revokeObjectURL(url);
   }
+
   async function getBestBlob(id){
     try{
       const t = tx([STORE_EDIT], "readonly");
@@ -1390,22 +2018,27 @@
     const rec2 = await idbGet(t2.objectStore(STORE_ORIG), id);
     return rec2?.blob || null;
   }
+
   async function exportZipAll(){
     await exportZipFolders(FOLDERS);
   }
+
   async function exportZipFolders(folders){
     if (!window.JSZip){
       alert("JSZip failed to load (offline?). Connect once and try again.");
       return;
     }
+
     await refreshMeta();
     await ensureFolderOrder("Teardown");
     await refreshMeta();
 
     const zip = new JSZip();
+
     for (const folder of folders){
       const list = folderItems(folder);
       const zf = zip.folder(folder);
+
       for (let i=0; i<list.length; i++){
         const m = list[i];
         const blob = await getBestBlob(m.id);
@@ -1413,12 +2046,14 @@
         zf.file(`${pad3(i+1)}.jpg`, blob);
       }
     }
+
     toast("Building ZIP…");
     const out = await zip.generateAsync({type:"blob"});
     downloadBlob(`Mitchell_Photos_${new Date().toISOString().slice(0,10)}.zip`, out);
     toast("ZIP downloaded.");
   }
 
+  // ---------- Wipe ----------
   async function wipeAllDevice(){
     await new Promise((resolve) => {
       const req = indexedDB.deleteDatabase(DB_NAME);
@@ -1430,6 +2065,7 @@
     meta = [];
     setHdrCount();
   }
+
   async function wipeFolder(folder){
     await refreshMeta();
     const list = folderItems(folder);
@@ -1451,18 +2087,236 @@
     await refreshMeta();
   }
 
+  // ---------- Camera Mode (multi-shot) ----------
+  const camOverlay = document.getElementById("camOverlay");
+  const camVideo = document.getElementById("camVideo");
+  const camThumbs = document.getElementById("camThumbs");
+  const camCount = document.getElementById("camCount");
+
+  let camStream = null;
+  let camFacing = "environment";
+  let camShots = []; // {blob, url}
+
+  async function camStart(){
+    camShots = [];
+    renderCamThumbs();
+    camOverlay.classList.add("show");
+    camOverlay.setAttribute("aria-hidden","false");
+
+    if (!navigator.mediaDevices?.getUserMedia){
+      alert("Camera Mode not supported on this browser. Use Add Photos instead.");
+      camStop();
+      return;
+    }
+
+    await camOpenStream();
+  }
+
+  async function camOpenStream(){
+    if (camStream){
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+    try{
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: camFacing },
+        audio: false
+      });
+      camVideo.srcObject = camStream;
+      await camVideo.play().catch(()=>{});
+    }catch(err){
+      console.error(err);
+      alert("Camera permission blocked. Allow camera access in Safari settings, then try again.");
+      camStop();
+    }
+  }
+
+  function camStop(){
+    camOverlay.classList.remove("show");
+    camOverlay.setAttribute("aria-hidden","true");
+    if (camStream){
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+    camVideo.srcObject = null;
+    // keep shots until user cancels/done
+  }
+
+  function renderCamThumbs(){
+    camThumbs.innerHTML = "";
+    camCount.textContent = String(camShots.length);
+    for (const s of camShots){
+      const img = document.createElement("img");
+      img.src = s.url;
+      camThumbs.appendChild(img);
+    }
+  }
+
+  async function camSnap(){
+    if (!camVideo.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = camVideo.videoWidth;
+    c.height = camVideo.videoHeight;
+    const cctx = c.getContext("2d");
+    // draw normal (not mirrored)
+    cctx.drawImage(camVideo, 0, 0, c.width, c.height);
+    const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+    camShots.push({blob, url});
+    renderCamThumbs();
+    toast(`Captured ${camShots.length}`);
+  }
+
+  async function camDone(){
+    if (!camShots.length){
+      camStop();
+      return;
+    }
+    // convert to Files so existing pipeline works
+    const files = camShots.map((s, i) => new File([s.blob], `camera_${Date.now()}_${i+1}.jpg`, {type:"image/jpeg"}));
+    // cleanup urls
+    camShots.forEach(s => URL.revokeObjectURL(s.url));
+    const toAdd = files;
+    camShots = [];
+    renderCamThumbs();
+    camStop();
+    await addFilesToFolder(currentFolder, toAdd);
+  }
+
+  function camCancel(){
+    camShots.forEach(s => URL.revokeObjectURL(s.url));
+    camShots = [];
+    renderCamThumbs();
+    camStop();
+  }
+
+  function camClear(){
+    camShots.forEach(s => URL.revokeObjectURL(s.url));
+    camShots = [];
+    renderCamThumbs();
+  }
+
+  async function camFlip(){
+    camFacing = (camFacing === "environment") ? "user" : "environment";
+    await camOpenStream();
+  }
+
+  // ---------- UI Wiring ----------
+  function wireUI(){
+    document.getElementById("backHomeBtn").addEventListener("click", () => {
+      closeViewer();
+      showHome();
+      renderFolders();
+    });
+
+    document.getElementById("wipeBtn").addEventListener("click", async () => {
+      if (!confirm("Wipe EVERYTHING on this device?")) return;
+      await wipeAllDevice();
+      toast("Wiped.");
+      showHome();
+      renderFolders();
+    });
+
+    document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
+    document.getElementById("folderExportZipBtn").addEventListener("click", () => exportZipFolders([currentFolder]));
+
+    document.getElementById("folderWipeBtn").addEventListener("click", async () => {
+      if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
+      await wipeFolder(currentFolder);
+      toast("Folder wiped.");
+      await openFolder(currentFolder);
+      await renderFolders();
+    });
+
+    // Add Photos
+    const fileInput = document.getElementById("fileInput");
+    fileInput.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (files.length) await addFilesToFolder(currentFolder, files);
+    });
+
+    // Drop zone
+    const dz = document.getElementById("dropZone");
+    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.add("drag");
+    }));
+    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.remove("drag");
+    }));
+    dz.addEventListener("drop", async (e) => {
+      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
+      if (!files.length) return;
+      await addFilesToFolder(currentFolder, files);
+    });
+
+    // Overlay
+    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
+    document.getElementById("prevBtn").addEventListener("click", () => step(-1));
+    document.getElementById("nextBtn").addEventListener("click", () => step(+1));
+    document.getElementById("bigPrev").addEventListener("click", () => step(-1));
+    document.getElementById("bigNext").addEventListener("click", () => step(+1));
+
+    document.addEventListener("keydown", async (e) => {
+      if (!overlay.classList.contains("show")) return;
+      if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
+      if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "ArrowRight") step(+1);
+    });
+
+    // Tools
+    document.getElementById("toolRow").addEventListener("click", (e) => {
+      const t = e.target.closest(".toolIcon");
+      if (!t) return;
+      if (mode !== "edit") return;
+      setTool(t.dataset.tool);
+    });
+
+    document.getElementById("notesInput").addEventListener("input", () => scheduleAutosave());
+
+    document.getElementById("undoBtn").addEventListener("click", () => {
+      if (mode !== "edit") return;
+      if (!undoStack.length) return;
+      anno = undoStack.pop();
+      angleStage = 0; angleLine1 = null;
+      redraw();
+      scheduleAutosave();
+    });
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (mode !== "edit") return;
+      if (!anno.length) return;
+      if (!confirm("Clear all markup on this photo?")) return;
+      pushUndo();
+      anno = [];
+      angleStage = 0; angleLine1 = null;
+      redraw();
+      scheduleAutosave();
+    });
+    document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
+    document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
+
+    // Camera Mode
+    document.getElementById("openCamBtn").addEventListener("click", camStart);
+    document.getElementById("camSnapBtn").addEventListener("click", camSnap);
+    document.getElementById("camDoneBtn").addEventListener("click", camDone);
+    document.getElementById("camCancelBtn").addEventListener("click", camCancel);
+    document.getElementById("camClearBtn").addEventListener("click", camClear);
+    document.getElementById("camFlipBtn").addEventListener("click", camFlip);
+  }
+
   // ---------- Boot ----------
   async function init(){
     db = await openDB();
     wireUI();
+    setupCanvas();
     showHome();
     await renderFolders();
   }
-
-  init().catch(err => {
-    console.error(err);
-    toast("Failed to load.");
-  });
+  init().catch(err => { console.error(err); toast("Failed to load."); });
 })();
 </script>
 </body>
