@@ -63,10 +63,9 @@
     }
 
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .row > *{ flex: 0 0 auto; }
     .grow{ flex: 1 1 220px; min-width:200px; }
 
-    input, select, textarea, button{
+    select, textarea, button{
       font: inherit;
     }
 
@@ -101,6 +100,13 @@
     }
     .btn:disabled{ opacity:.55; cursor:not-allowed; }
 
+    .btn.sm{
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
     .drop{
       border:2px dashed rgba(255,255,255,.16);
       border-radius: var(--radius);
@@ -134,12 +140,18 @@
       user-select:none;
       box-shadow: 0 10px 20px rgba(0,0,0,.25);
     }
-    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .thumb img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+      transform-origin: center center;
+    }
 
     .tagbar{
       position:absolute;
       left:8px; right:8px; bottom:8px;
       display:flex; flex-wrap:wrap; gap:6px;
+      pointer-events:none;
     }
     .chip{
       font-size:11px;
@@ -152,6 +164,14 @@
       overflow:hidden;
       text-overflow:ellipsis;
       white-space:nowrap;
+    }
+
+    /* Reorder controls (only in Custom sort) */
+    .reorderBar{
+      position:absolute;
+      top:8px; right:8px;
+      display:flex; gap:6px;
+      pointer-events:auto;
     }
 
     /* Viewer */
@@ -191,6 +211,7 @@
       object-fit:contain;
       user-select:none;
       -webkit-user-drag:none;
+      transform-origin:center center;
     }
     .vRight{
       flex: 0.85;
@@ -227,7 +248,7 @@
       user-select:none;
     }
 
-    /* Big side arrows (always clickable) */
+    /* Big side arrows */
     .arrow{
       position:absolute;
       top:50%;
@@ -287,7 +308,7 @@
   <header>
     <div>
       <h1>Mitchell Photos</h1>
-      <div class="muted">Add photos • Tag • Review</div>
+      <div class="muted">Add • Tag • Review • Rotate • Reorder</div>
     </div>
     <div class="pill"><span id="count">0</span> photos</div>
   </header>
@@ -311,18 +332,34 @@
 
       <div class="row" style="margin-bottom:10px;">
         <div class="grow">
-          <div class="small">Folder</div>
+          <div class="small">Default Folder (new photos)</div>
           <select id="folderSel"></select>
         </div>
         <div class="grow">
-          <div class="small">Category</div>
+          <div class="small">Default Category (new photos)</div>
           <select id="catSel"></select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-bottom:10px;">
+        <div class="grow">
+          <div class="small">Sort</div>
+          <select id="sortSel">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="name">Name</option>
+            <option value="custom">Custom (use ↑ ↓)</option>
+          </select>
+        </div>
+        <div class="grow">
+          <div class="small">Tip</div>
+          <div class="small">Choose <b>Custom</b> to show reorder buttons on each thumbnail.</div>
         </div>
       </div>
 
       <div class="drop" id="dropZone">
         <b>Drag & drop photos here</b>
-        <div class="small">Photos are saved on this device (offline). Tap a photo to review, swipe for next/prev.</div>
+        <div class="small">Saved offline on this device. Tap to view. Swipe for next/prev.</div>
       </div>
     </div>
 
@@ -354,7 +391,7 @@
       </div>
 
       <div class="vRight">
-        <div style="font-weight:900; margin-bottom:6px;">Tag this photo</div>
+        <div style="font-weight:900; margin-bottom:6px;">This photo</div>
         <div class="small" id="fileName">—</div>
 
         <div style="height:10px;"></div>
@@ -375,6 +412,14 @@
         <div style="height:10px;"></div>
 
         <div class="row">
+          <button class="btn sm" id="rotL">⟲ Rotate</button>
+          <button class="btn sm" id="rotR">Rotate ⟳</button>
+          <button class="btn sm" id="flipH">⇋ Flip</button>
+        </div>
+
+        <div style="height:10px;"></div>
+
+        <div class="row">
           <button class="btn primary" id="saveBtn">Save</button>
           <button class="btn danger" id="delBtn">Delete</button>
         </div>
@@ -390,29 +435,29 @@
 
 <script>
 (() => {
-  // --- IndexedDB ---
-  const DB_NAME = "mitchell_basic_photos_v1";
+  // IndexedDB
+  const DB_NAME = "mitchell_basic_photos_v2";
   const DB_VER = 1;
-  const STORE_PHOTOS = "photos";  // {id, blob, type}
-  const STORE_META   = "meta";    // {id, filename, created, folder, category, notes}
+  const STORE_PHOTOS = "photos"; // {id, blob, type}
+  const STORE_META   = "meta";   // {id, filename, created, folder, category, notes, rot, flip, order}
 
-  // simple defaults (edit later if you want)
+  // Simple defaults (edit these anytime)
   const FOLDERS = ["Unsorted","RO","Tear Down","Supplements","After Repair","Final"];
   const CATS    = ["Uncategorized","VIN","Odometer","Front","Rear","Left Side","Right Side","Damage","Repair Area","Parts"];
 
   let db;
-  let meta = [];         // [{id, filename, created, folder, category, notes}]
-  let filteredIds = [];  // in grid order
-  let viewerIndex = -1;  // index into filteredIds
+  let meta = [];         // list of records
+  let filtered = [];     // filtered list (same as meta for now)
+  let viewerIndex = -1;
 
-  // current defaults for NEW photos
+  // Defaults for new photos
   let defaultFolder = "Unsorted";
   let defaultCat = "Uncategorized";
+  let sortMode = "newest";
 
-  // --- Helpers ---
   const $ = (s) => document.querySelector(s);
-  const $$ = (s) => Array.from(document.querySelectorAll(s));
 
+  // Toast
   const toastEl = $("#toast");
   let toastTimer = null;
   function toast(msg){
@@ -425,6 +470,7 @@
   function uuid(){
     return crypto.randomUUID ? crypto.randomUUID() : ("id_" + Math.random().toString(16).slice(2) + Date.now());
   }
+  function nowISO(){ return new Date().toISOString(); }
 
   function openDB(){
     return new Promise((resolve, reject) => {
@@ -433,15 +479,12 @@
       req.onupgradeneeded = () => {
         const d = req.result;
         if (!d.objectStoreNames.contains(STORE_PHOTOS)) d.createObjectStore(STORE_PHOTOS, {keyPath:"id"});
-        if (!d.objectStoreNames.contains(STORE_META)) d.createObjectStore(STORE_META, {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_META))   d.createObjectStore(STORE_META,   {keyPath:"id"});
       };
       req.onsuccess = () => resolve(req.result);
     });
   }
-
-  function tx(stores, mode="readonly"){
-    return db.transaction(stores, mode);
-  }
+  function tx(stores, mode="readonly"){ return db.transaction(stores, mode); }
   function idbGet(store, key){
     return new Promise((resolve, reject) => {
       const req = store.get(key);
@@ -470,8 +513,8 @@
       req.onerror = () => reject(req.error);
     });
   }
-  function nowISO(){ return new Date().toISOString(); }
 
+  // CSV export
   function downloadText(filename, text, type="text/plain"){
     const blob = new Blob([text], {type});
     const url = URL.createObjectURL(blob);
@@ -482,52 +525,86 @@
     a.remove();
     URL.revokeObjectURL(url);
   }
-
-  // --- Init ---
-  async function init(){
-    db = await openDB();
-    const t = tx([STORE_META], "readonly");
-    const all = await idbGetAll(t.objectStore(STORE_META));
-    meta = all
-      .map(m => ({
-        id: m.id,
-        filename: m.filename || "photo.jpg",
-        created: m.created || nowISO(),
-        folder: m.folder || "Unsorted",
-        category: m.category || "Uncategorized",
-        notes: m.notes || ""
-      }))
-      .sort((a,b) => (b.created||"").localeCompare(a.created||""));
-
-    buildSelects();
-    wireUI();
-    render();
+  function csv(s){
+    const t = (s ?? "").toString().replaceAll('"','""');
+    return `"${t}"`;
+  }
+  function dateStamp(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}${m}${day}`;
   }
 
+  // Build selects
   function buildSelects(){
     $("#folderSel").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
     $("#catSel").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-
     $("#vFolder").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
     $("#vCat").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
 
     $("#folderSel").value = defaultFolder;
     $("#catSel").value = defaultCat;
+    $("#sortSel").value = sortMode;
   }
-
   function esc(s){
     return (s ?? "").toString()
       .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
       .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
 
-  // --- UI ---
+  // Sorting
+  function getSorted(list){
+    const arr = list.slice();
+    if (sortMode === "newest") arr.sort((a,b) => (b.created||"").localeCompare(a.created||""));
+    if (sortMode === "oldest") arr.sort((a,b) => (a.created||"").localeCompare(b.created||""));
+    if (sortMode === "name")   arr.sort((a,b) => (a.filename||"").localeCompare(b.filename||"", undefined, {sensitivity:"base"}));
+    if (sortMode === "custom") arr.sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+    return arr;
+  }
+
+  async function init(){
+    db = await openDB();
+    const all = await idbGetAll(tx([STORE_META], "readonly").objectStore(STORE_META));
+    // Migration-safe defaults
+    meta = all.map(m => ({
+      id: m.id,
+      filename: m.filename || "photo.jpg",
+      created: m.created || nowISO(),
+      folder: m.folder || "Unsorted",
+      category: m.category || "Uncategorized",
+      notes: m.notes || "",
+      rot: Number.isFinite(m.rot) ? m.rot : 0,       // 0,90,180,270
+      flip: !!m.flip,                                 // horizontal flip
+      order: Number.isFinite(m.order) ? m.order : 0   // custom ordering
+    }));
+
+    // If order is all zeros, initialize a stable custom order based on created time (oldest first)
+    if (meta.length && meta.every(x => x.order === 0)){
+      const byOldest = meta.slice().sort((a,b) => (a.created||"").localeCompare(b.created||""));
+      byOldest.forEach((x, i) => x.order = i+1);
+      await persistMany(byOldest.map(x => ({id:x.id, patch:{order:x.order}})));
+      meta = byOldest; // keep
+    }
+
+    buildSelects();
+    wireUI();
+    render();
+  }
+
   function wireUI(){
-    // defaults for new photos
+    // defaults
     $("#folderSel").addEventListener("change", (e) => defaultFolder = e.target.value);
     $("#catSel").addEventListener("change", (e) => defaultCat = e.target.value);
 
-    // add files
+    // sort
+    $("#sortSel").addEventListener("change", (e) => {
+      sortMode = e.target.value;
+      render();
+    });
+
+    // file add
     $("#fileInput").addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
       e.target.value = "";
@@ -558,7 +635,7 @@
     // export
     $("#exportCsv").addEventListener("click", exportCSV);
 
-    // wipe (device only)
+    // wipe device
     $("#wipeAll").addEventListener("click", async () => {
       if (!confirm("Wipe all photos on THIS device/browser?")) return;
       await wipeAll();
@@ -572,12 +649,11 @@
 
     const step = (dir) => {
       const next = viewerIndex + dir;
-      if (next < 0 || next >= filteredIds.length) return;
+      if (next < 0 || next >= filtered.length) return;
       viewerIndex = next;
       renderViewer();
     };
 
-    // both small + big arrows (always clickable)
     $("#prevBtn").addEventListener("click", () => step(-1));
     $("#nextBtn").addEventListener("click", () => step(+1));
     $("#bigPrev").addEventListener("click", () => step(-1));
@@ -595,8 +671,7 @@
       const dy = t.clientY - sy;
       const dt = Date.now() - st;
       if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2 && dt < 650){
-        if (dx < 0) step(+1);
-        else step(-1);
+        if (dx < 0) step(+1); else step(-1);
       }
     }, {passive:true});
 
@@ -608,40 +683,75 @@
       if (e.key === "ArrowRight") step(+1);
     });
 
-    // save / delete inside viewer
+    // viewer tagging
     $("#saveBtn").addEventListener("click", async () => {
-      const id = filteredIds[viewerIndex];
-      if (!id) return;
-      await updateMeta(id, {
+      const rec = filtered[viewerIndex];
+      if (!rec) return;
+      await updateMeta(rec.id, {
         folder: $("#vFolder").value,
         category: $("#vCat").value,
         notes: $("#vNotes").value || ""
       });
       toast("Saved.");
       render(false);
-      renderViewer(); // refresh chips/labels
+      renderViewer();
     });
 
     $("#delBtn").addEventListener("click", async () => {
-      const id = filteredIds[viewerIndex];
-      if (!id) return;
+      const rec = filtered[viewerIndex];
+      if (!rec) return;
       if (!confirm("Delete this photo?")) return;
-      await deleteOne(id);
+      await deleteOne(rec.id);
       toast("Deleted.");
       render(false);
-      if (!filteredIds.length) closeViewer();
+      if (!filtered.length) closeViewer();
       else {
-        viewerIndex = Math.min(viewerIndex, filteredIds.length - 1);
+        viewerIndex = Math.min(viewerIndex, filtered.length - 1);
         renderViewer();
       }
     });
+
+    // simple photo edit (visual + saved)
+    $("#rotL").addEventListener("click", async () => rotate(-90));
+    $("#rotR").addEventListener("click", async () => rotate(+90));
+    $("#flipH").addEventListener("click", async () => flip());
+
+    async function rotate(delta){
+      const rec = filtered[viewerIndex];
+      if (!rec) return;
+      const cur = meta.find(x => x.id === rec.id);
+      const nextRot = (((cur.rot || 0) + delta) % 360 + 360) % 360;
+      await updateMeta(rec.id, {rot: nextRot});
+      render(false);
+      renderViewer();
+    }
+    async function flip(){
+      const rec = filtered[viewerIndex];
+      if (!rec) return;
+      const cur = meta.find(x => x.id === rec.id);
+      await updateMeta(rec.id, {flip: !cur.flip});
+      render(false);
+      renderViewer();
+    }
   }
 
-  // --- Data actions ---
+  async function persistMany(items){
+    const t = tx([STORE_META], "readwrite");
+    const sM = t.objectStore(STORE_META);
+    for (const it of items){
+      const cur = await idbGet(sM, it.id);
+      if (!cur) continue;
+      await idbPut(sM, {...cur, ...it.patch});
+    }
+  }
+
   async function addFiles(files){
     const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
     const sP = t.objectStore(STORE_PHOTOS);
     const sM = t.objectStore(STORE_META);
+
+    // for custom ordering: append to end
+    const maxOrder = meta.reduce((m,x) => Math.max(m, x.order ?? 0), 0);
 
     let added = 0;
     for (const f of files){
@@ -654,10 +764,13 @@
         created: nowISO(),
         folder: defaultFolder,
         category: defaultCat,
-        notes: ""
+        notes: "",
+        rot: 0,
+        flip: false,
+        order: maxOrder + added + 1
       };
       await idbPut(sM, m);
-      meta.unshift(m);
+      meta.push(m);
       added++;
     }
     toast(`Added ${added} photo(s).`);
@@ -669,8 +782,8 @@
     const sM = t.objectStore(STORE_META);
     const cur = await idbGet(sM, id);
     if (!cur) return;
-    const next = {...cur, ...patch};
-    await idbPut(sM, next);
+    await idbPut(sM, {...cur, ...patch});
+
     const idx = meta.findIndex(x => x.id === id);
     if (idx >= 0) meta[idx] = {...meta[idx], ...patch};
   }
@@ -683,7 +796,6 @@
   }
 
   async function wipeAll(){
-    // easiest: delete db
     await new Promise((resolve) => {
       const req = indexedDB.deleteDatabase(DB_NAME);
       req.onsuccess = resolve;
@@ -692,19 +804,29 @@
     });
     db = await openDB();
     meta = [];
+    filtered = [];
+    viewerIndex = -1;
   }
 
-  // --- Render ---
-  function render(updateCounts=true){
-    if (updateCounts) $("#count").textContent = String(meta.length);
+  function applyTransform(el, rec){
+    const r = rec.rot || 0;
+    const flip = rec.flip ? -1 : 1;
+    // rotate + optional horizontal flip
+    el.style.transform = `rotate(${r}deg) scaleX(${flip})`;
+  }
+
+  function render(updateCount=true){
+    if (updateCount) $("#count").textContent = String(meta.length);
     $("#empty").style.display = meta.length ? "none" : "";
+
+    filtered = getSorted(meta);
 
     const grid = $("#grid");
     grid.innerHTML = "";
 
-    filteredIds = meta.map(m => m.id);
+    const showReorder = (sortMode === "custom");
 
-    meta.forEach(m => {
+    filtered.forEach((m, index) => {
       const div = document.createElement("div");
       div.className = "thumb";
       div.dataset.id = m.id;
@@ -715,42 +837,77 @@
 
       const tags = document.createElement("div");
       tags.className = "tagbar";
-      tags.appendChild(chip(m.folder));
-      tags.appendChild(chip(m.category));
+      tags.innerHTML = `<span class="chip">${esc(m.folder)}</span><span class="chip">${esc(m.category)}</span>`;
       div.appendChild(tags);
 
-      div.addEventListener("click", () => openViewerById(m.id));
-      grid.appendChild(div);
+      if (showReorder){
+        const rb = document.createElement("div");
+        rb.className = "reorderBar";
 
-      loadThumb(m.id, img);
+        const up = document.createElement("button");
+        up.className = "btn sm";
+        up.textContent = "↑";
+        up.title = "Move up";
+        up.disabled = (index === 0);
+
+        const down = document.createElement("button");
+        down.className = "btn sm";
+        down.textContent = "↓";
+        down.title = "Move down";
+        down.disabled = (index === filtered.length - 1);
+
+        up.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await move(index, index - 1);
+        });
+        down.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await move(index, index + 1);
+        });
+
+        rb.appendChild(up);
+        rb.appendChild(down);
+        div.appendChild(rb);
+      }
+
+      div.addEventListener("click", () => openViewerByIndex(index));
+
+      grid.appendChild(div);
+      loadThumb(m.id, img, m);
     });
   }
 
-  function chip(text){
-    const s = document.createElement("span");
-    s.className = "chip";
-    s.textContent = text;
-    return s;
+  async function move(fromIndex, toIndex){
+    if (toIndex < 0 || toIndex >= filtered.length) return;
+    // swap order values between the two records
+    const a = filtered[fromIndex];
+    const b = filtered[toIndex];
+    const ao = a.order ?? 0;
+    const bo = b.order ?? 0;
+
+    await updateMeta(a.id, {order: bo});
+    await updateMeta(b.id, {order: ao});
+
+    toast("Moved.");
+    render(false);
   }
 
-  async function loadThumb(id, imgEl){
+  async function loadThumb(id, imgEl, rec){
     try{
       const t = tx([STORE_PHOTOS], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_PHOTOS), id);
-      if (!rec?.blob) return;
-      const url = URL.createObjectURL(rec.blob);
+      const r = await idbGet(t.objectStore(STORE_PHOTOS), id);
+      if (!r?.blob) return;
+      const url = URL.createObjectURL(r.blob);
       imgEl.src = url;
       imgEl.onload = () => URL.revokeObjectURL(url);
+      applyTransform(imgEl, rec);
     } catch(e){
       console.error(e);
     }
   }
 
-  // --- Viewer ---
-  function openViewerById(id){
-    const idx = filteredIds.indexOf(id);
-    if (idx < 0) return;
-    viewerIndex = idx;
+  function openViewerByIndex(i){
+    viewerIndex = i;
     $("#overlay").classList.add("show");
     $("#overlay").setAttribute("aria-hidden", "false");
     renderViewer();
@@ -765,7 +922,7 @@
 
   function setArrowState(){
     const canPrev = viewerIndex > 0;
-    const canNext = viewerIndex < filteredIds.length - 1;
+    const canNext = viewerIndex < filtered.length - 1;
     $("#prevBtn").disabled = !canPrev;
     $("#nextBtn").disabled = !canNext;
     $("#bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
@@ -773,61 +930,49 @@
   }
 
   async function renderViewer(){
-    const id = filteredIds[viewerIndex];
-    const m = meta.find(x => x.id === id);
-    if (!m) return;
+    const rec = filtered[viewerIndex];
+    if (!rec) return;
 
-    $("#posPill").textContent = `${viewerIndex+1} / ${filteredIds.length}`;
-    $("#fileName").textContent = m.filename || "—";
-    $("#vFolder").value = m.folder || "Unsorted";
-    $("#vCat").value = m.category || "Uncategorized";
-    $("#vNotes").value = m.notes || "";
+    $("#posPill").textContent = `${viewerIndex+1} / ${filtered.length}`;
+    $("#fileName").textContent = rec.filename || "—";
+    $("#vFolder").value = rec.folder || "Unsorted";
+    $("#vCat").value = rec.category || "Uncategorized";
+    $("#vNotes").value = rec.notes || "";
 
     setArrowState();
 
-    // load full image
     try{
       const t = tx([STORE_PHOTOS], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_PHOTOS), id);
-      if (!rec?.blob) { $("#bigImg").src = ""; return; }
-      const url = URL.createObjectURL(rec.blob);
+      const r = await idbGet(t.objectStore(STORE_PHOTOS), rec.id);
+      if (!r?.blob) { $("#bigImg").src = ""; return; }
+      const url = URL.createObjectURL(r.blob);
       const img = $("#bigImg");
       img.src = url;
       img.onload = () => URL.revokeObjectURL(url);
+      applyTransform(img, rec);
     } catch(e){
       console.error(e);
     }
   }
 
-  // --- Export ---
   function exportCSV(){
-    const header = ["id","filename","created","folder","category","notes"].join(",");
-    const lines = meta.map(m => [
+    const header = ["id","filename","created","folder","category","rot","flip","order","notes"].join(",");
+    const lines = getSorted(meta).map(m => [
       m.id,
       csv(m.filename),
       m.created,
       csv(m.folder),
       csv(m.category),
+      String(m.rot||0),
+      m.flip ? "true" : "false",
+      String(m.order ?? 0),
       csv(m.notes)
     ].join(","));
     downloadText(`mitchell_photos_${dateStamp()}.csv`, [header, ...lines].join("\n"), "text/csv");
     toast("CSV exported.");
   }
 
-  function csv(s){
-    const t = (s ?? "").toString().replaceAll('"','""');
-    return `"${t}"`;
-  }
-
-  function dateStamp(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${y}${m}${day}`;
-  }
-
-  // boot
+  // Boot
   init().catch(err => {
     console.error(err);
     toast("Failed to load.");
