@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Mitchell Photos</title>
+  <title>Mitchell Photo App</title>
 
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,14 +13,15 @@
   <style>
     :root{
       --bg:#0b1020;
-      --card:#121c37;
-      --border:#26355f;
+      --panel: rgba(18,28,55,.78);
+      --border: rgba(255,255,255,.12);
       --text:#eef2ff;
       --muted:#a7b1d8;
       --primary:#3b82f6;
       --danger:#ef4444;
+      --ok:#22c55e;
       --radius:14px;
-      --shadow: 0 10px 26px rgba(0,0,0,.35);
+      --shadow: 0 14px 34px rgba(0,0,0,.40);
       --safe-b: env(safe-area-inset-bottom, 0px);
       --safe-t: env(safe-area-inset-top, 0px);
     }
@@ -30,9 +31,10 @@
       margin:0;
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
       color:var(--text);
-      background: radial-gradient(1200px 800px at 20% 10%, #1a2a66 0%, rgba(26,42,102,0) 55%),
-                  radial-gradient(900px 700px at 80% 0%, #173a7a 0%, rgba(23,58,122,0) 60%),
-                  var(--bg);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, #1a2a66 0%, rgba(26,42,102,0) 55%),
+        radial-gradient(900px 700px at 80% 0%, #173a7a 0%, rgba(23,58,122,0) 60%),
+        var(--bg);
       overflow:hidden;
       padding-top: var(--safe-t);
     }
@@ -44,7 +46,7 @@
       justify-content:space-between;
       gap:10px;
     }
-    h1{ margin:0; font-size:16px; font-weight:800; letter-spacing:.2px; }
+    h1{ margin:0; font-size:16px; font-weight:900; letter-spacing:.2px; }
     .muted{ color:var(--muted); font-size:12px; }
 
     main{
@@ -55,20 +57,16 @@
     }
 
     .card{
-      background: rgba(18,28,55,.78);
-      border:1px solid rgba(255,255,255,.10);
+      background: var(--panel);
+      border:1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 12px;
     }
-
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .grow{ flex: 1 1 220px; min-width:200px; }
 
-    select, textarea, button{
-      font: inherit;
-    }
-
+    select, textarea, button, input{ font:inherit; }
     select, textarea{
       width:100%;
       padding: 10px 12px;
@@ -86,25 +84,32 @@
       color: var(--text);
       padding: 10px 12px;
       border-radius: 12px;
-      font-weight: 800;
+      font-weight: 900;
       cursor:pointer;
       user-select:none;
     }
-    .btn.primary{
-      background: rgba(59,130,246,.20);
-      border-color: rgba(59,130,246,.35);
-    }
-    .btn.danger{
-      background: rgba(239,68,68,.20);
-      border-color: rgba(239,68,68,.35);
-    }
+    .btn.primary{ background: rgba(59,130,246,.20); border-color: rgba(59,130,246,.35); }
+    .btn.danger{ background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.35); }
+    .btn.ok{ background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.35); }
     .btn:disabled{ opacity:.55; cursor:not-allowed; }
 
     .btn.sm{
       padding: 8px 10px;
       border-radius: 10px;
       font-size: 12px;
+      font-weight: 1000;
+    }
+
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
       font-weight: 900;
+      font-size:12px;
+      color: var(--muted);
+      user-select:none;
     }
 
     .drop{
@@ -139,14 +144,13 @@
       cursor:pointer;
       user-select:none;
       box-shadow: 0 10px 20px rgba(0,0,0,.25);
+      touch-action: none; /* needed for custom drag on mobile */
     }
     .thumb img{
       width:100%; height:100%;
       object-fit:cover;
       display:block;
-      transform-origin: center center;
     }
-
     .tagbar{
       position:absolute;
       left:8px; right:8px; bottom:8px;
@@ -166,15 +170,52 @@
       white-space:nowrap;
     }
 
-    /* Reorder controls (only in Custom sort) */
-    .reorderBar{
+    /* number badge */
+    .num{
       position:absolute;
-      top:8px; right:8px;
-      display:flex; gap:6px;
-      pointer-events:auto;
+      top:8px; left:8px;
+      width:auto;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 1000;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
     }
 
-    /* Viewer */
+    /* reorder insert indicator */
+    .insertLine{
+      position:absolute;
+      top:0; bottom:0;
+      width: 0;
+      border-left: 3px solid rgba(59,130,246,.95);
+      filter: drop-shadow(0 0 10px rgba(59,130,246,.35));
+      pointer-events:none;
+      display:none;
+      z-index: 5;
+    }
+    .insertBadge{
+      position:absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-weight: 1000;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.55);
+      pointer-events:none;
+      display:none;
+      z-index: 6;
+      max-width: 92vw;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* Viewer / Markup */
     .overlay{
       position:fixed;
       inset:0;
@@ -190,37 +231,34 @@
       inset: 10px 10px 10px 10px;
       border-radius: 18px;
       border:1px solid rgba(255,255,255,.14);
-      background: rgba(12,18,38,.90);
+      background: rgba(12,18,38,.92);
       box-shadow: var(--shadow);
       display:flex;
       overflow:hidden;
     }
     .vLeft{
-      flex: 1.35;
+      flex: 1.5;
       position:relative;
       display:flex;
       align-items:center;
       justify-content:center;
       background: rgba(0,0,0,.18);
       min-width:0;
-      touch-action: pan-y;
+      touch-action: none;
     }
-    .vLeft img{
-      max-width:100%;
-      max-height:100%;
-      object-fit:contain;
-      user-select:none;
-      -webkit-user-drag:none;
-      transform-origin:center center;
+    canvas{
+      width:100%;
+      height:100%;
+      display:block;
     }
     .vRight{
-      flex: 0.85;
+      flex: 0.8;
       border-left:1px solid rgba(255,255,255,.10);
       padding:12px;
       overflow:auto;
-      min-width: 280px;
+      min-width: 300px;
     }
-    @media (max-width: 900px){
+    @media (max-width: 950px){
       .viewer{ flex-direction:column; }
       .vRight{ border-left:none; border-top:1px solid rgba(255,255,255,.10); min-width:0; }
     }
@@ -233,6 +271,7 @@
       justify-content:space-between;
       gap:10px;
       pointer-events:none;
+      z-index: 10;
     }
     .topbar .group{ display:flex; gap:10px; pointer-events:auto; }
 
@@ -243,7 +282,7 @@
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.08);
       color: var(--text);
-      font-weight: 900;
+      font-weight: 1000;
       cursor:pointer;
       user-select:none;
     }
@@ -261,25 +300,35 @@
       align-items:center;
       justify-content:center;
       font-size: 24px;
-      font-weight: 900;
+      font-weight: 1000;
       cursor:pointer;
       user-select:none;
       pointer-events:auto;
+      z-index: 10;
     }
     .arrow.left{ left:10px; }
     .arrow.right{ right:10px; }
     .arrow[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
 
-    .small{ font-size:12px; color: var(--muted); }
-    .pill{
-      display:inline-flex; gap:8px; align-items:center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      font-weight: 800;
-      font-size:12px;
-      color: var(--muted);
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top: 10px;
+    }
+    .toolbtn{
+      padding: 9px 10px;
+      border-radius: 12px;
+      font-weight: 1000;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.07);
+      cursor:pointer;
+      user-select:none;
+    }
+    .toolbtn.active{
+      background: rgba(59,130,246,.22);
+      border-color: rgba(59,130,246,.40);
     }
 
     .toast{
@@ -291,7 +340,7 @@
       border:1px solid rgba(255,255,255,.12);
       padding: 10px 12px;
       border-radius: 999px;
-      font-weight:800;
+      font-weight:1000;
       font-size:12px;
       z-index: 60;
       display:none;
@@ -301,14 +350,17 @@
       text-overflow: ellipsis;
     }
     .toast.show{ display:block; }
+
+    .small{ font-size:12px; color: var(--muted); }
+    .hr{ height:1px; background: rgba(255,255,255,.10); margin: 10px 0; }
   </style>
 </head>
 
 <body>
   <header>
     <div>
-      <h1>Mitchell Photos</h1>
-      <div class="muted">Add • Tag • Review • Rotate • Reorder</div>
+      <h1>Mitchell Photo App</h1>
+      <div class="muted">Numbered • Drag reorder • Markup tools • Offline</div>
     </div>
     <div class="pill"><span id="count">0</span> photos</div>
   </header>
@@ -343,26 +395,27 @@
 
       <div class="row" style="margin-bottom:10px;">
         <div class="grow">
-          <div class="small">Sort</div>
-          <select id="sortSel">
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="name">Name</option>
-            <option value="custom">Custom (use ↑ ↓)</option>
-          </select>
+          <div class="small">Tip</div>
+          <div class="small">
+            Drag a photo to reorder. While dragging, you'll see <b>BEFORE / AFTER</b> to know if it’s going in front or behind.
+          </div>
         </div>
         <div class="grow">
-          <div class="small">Tip</div>
-          <div class="small">Choose <b>Custom</b> to show reorder buttons on each thumbnail.</div>
+          <div class="small">Snap angles</div>
+          <div class="row">
+            <button class="btn sm" id="snapToggle">Snap: OFF</button>
+            <div class="small">Helps straight-edge / angles. (Desktop: hold Shift)</div>
+          </div>
         </div>
       </div>
 
       <div class="drop" id="dropZone">
         <b>Drag & drop photos here</b>
-        <div class="small">Saved offline on this device. Tap to view. Swipe for next/prev.</div>
+        <div class="small">Saved offline on this device. Tap a photo to view & markup.</div>
       </div>
     </div>
 
+    <div class="insertBadge" id="insertBadge"></div>
     <div id="grid" class="grid"></div>
     <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
       No photos yet. Add some above.
@@ -387,14 +440,14 @@
         <div class="arrow left" id="bigPrev" aria-disabled="false">‹</div>
         <div class="arrow right" id="bigNext" aria-disabled="false">›</div>
 
-        <img id="bigImg" alt="Photo" />
+        <canvas id="canvas"></canvas>
       </div>
 
       <div class="vRight">
-        <div style="font-weight:900; margin-bottom:6px;">This photo</div>
+        <div style="font-weight:1000; margin-bottom:6px;">Photo</div>
         <div class="small" id="fileName">—</div>
 
-        <div style="height:10px;"></div>
+        <div class="hr"></div>
 
         <div class="small">Folder</div>
         <select id="vFolder"></select>
@@ -406,26 +459,35 @@
 
         <div style="height:10px;"></div>
 
-        <div class="small">Notes (optional)</div>
+        <div class="small">Notes</div>
         <textarea id="vNotes" placeholder="Damage notes, parts notes, etc."></textarea>
 
-        <div style="height:10px;"></div>
+        <div class="hr"></div>
 
-        <div class="row">
-          <button class="btn sm" id="rotL">⟲ Rotate</button>
-          <button class="btn sm" id="rotR">Rotate ⟳</button>
-          <button class="btn sm" id="flipH">⇋ Flip</button>
+        <div style="font-weight:1000;">Markup tools</div>
+        <div class="toolbar" id="toolbar">
+          <button class="toolbtn" data-tool="arrow">Arrow</button>
+          <button class="toolbtn" data-tool="circle">Circle</button>
+          <button class="toolbtn" data-tool="rect">Square</button>
+          <button class="toolbtn" data-tool="line">Straight Edge</button>
+          <button class="toolbtn" data-tool="angle">Line Angle</button>
+          <button class="toolbtn" data-tool="ruler">Measure</button>
+          <button class="toolbtn" data-tool="pan">Pan</button>
         </div>
 
-        <div style="height:10px;"></div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn sm" id="undoBtn">Undo</button>
+          <button class="btn sm" id="clearBtn">Clear</button>
+          <button class="btn sm" id="resetViewBtn">Reset View</button>
+        </div>
 
-        <div class="row">
+        <div class="row" style="margin-top:10px;">
           <button class="btn primary" id="saveBtn">Save</button>
           <button class="btn danger" id="delBtn">Delete</button>
         </div>
 
         <div class="small" style="margin-top:10px;">
-          Tips: Swipe left/right • Arrow keys ←/→ • Esc closes
+          Tips: drag to pan (Pan tool) • pinch-zoom on iPhone/iPad works via browser zoom • Arrow keys ←/→ • Esc closes
         </div>
       </div>
     </div>
@@ -435,36 +497,56 @@
 
 <script>
 (() => {
+  // =======================
   // IndexedDB
-  const DB_NAME = "mitchell_basic_photos_v2";
+  // =======================
+  const DB_NAME = "mitchell_photo_app_full_v1";
   const DB_VER = 1;
   const STORE_PHOTOS = "photos"; // {id, blob, type}
-  const STORE_META   = "meta";   // {id, filename, created, folder, category, notes, rot, flip, order}
+  const STORE_META   = "meta";   // {id, filename, created, folder, category, notes, order, anno}
 
-  // Simple defaults (edit these anytime)
   const FOLDERS = ["Unsorted","RO","Tear Down","Supplements","After Repair","Final"];
   const CATS    = ["Uncategorized","VIN","Odometer","Front","Rear","Left Side","Right Side","Damage","Repair Area","Parts"];
 
   let db;
-  let meta = [];         // list of records
-  let filtered = [];     // filtered list (same as meta for now)
+  let meta = [];     // array of meta records sorted by order
   let viewerIndex = -1;
 
-  // Defaults for new photos
-  let defaultFolder = "Unsorted";
-  let defaultCat = "Uncategorized";
-  let sortMode = "newest";
+  // Drag reorder state
+  let dragging = null;   // {id, startIndex, ghost, offsetX, offsetY}
+  let insertTarget = null; // {index, side:'before'|'after'}
+  let snapAngles = false;
 
+  // Viewer / canvas state
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  let imgBitmap = null;        // ImageBitmap for current photo
+  let view = { scale: 1, tx: 0, ty: 0 };  // simple pan/scale
+  let tool = "arrow";
+  let isDown = false;
+  let start = {x:0,y:0};
+  let curr = {x:0,y:0};
+  let temp = null;
+  let anno = [];      // current photo annotations (array of shapes)
+  let undoStack = []; // for current photo
+
+  // Colors & stroke
+  const STROKE = "rgba(0,255,0,0.95)";
+  const STROKE2 = "rgba(0,0,0,0.55)";
+  const WIDTH = 4;
+
+  // =======================
+  // Helpers
+  // =======================
   const $ = (s) => document.querySelector(s);
-
-  // Toast
   const toastEl = $("#toast");
   let toastTimer = null;
+
   function toast(msg){
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2000);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
   }
 
   function uuid(){
@@ -485,6 +567,7 @@
     });
   }
   function tx(stores, mode="readonly"){ return db.transaction(stores, mode); }
+
   function idbGet(store, key){
     return new Promise((resolve, reject) => {
       const req = store.get(key);
@@ -513,8 +596,372 @@
       req.onerror = () => reject(req.error);
     });
   }
+  function waitTxDone(t){
+    return new Promise((resolve, reject) => {
+      t.oncomplete = () => resolve(true);
+      t.onerror = () => reject(t.error);
+      t.onabort = () => reject(t.error || new Error("tx aborted"));
+    });
+  }
 
-  // CSV export
+  function buildSelects(){
+    $("#folderSel").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
+    $("#catSel").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    $("#vFolder").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
+    $("#vCat").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    $("#folderSel").value = "Unsorted";
+    $("#catSel").value = "Uncategorized";
+  }
+  function esc(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  // =======================
+  // Load / Save meta
+  // =======================
+  async function loadMeta(){
+    const all = await idbGetAll(tx([STORE_META], "readonly").objectStore(STORE_META));
+    meta = all.map(m => ({
+      id: m.id,
+      filename: m.filename || "photo.jpg",
+      created: m.created || nowISO(),
+      folder: m.folder || "Unsorted",
+      category: m.category || "Uncategorized",
+      notes: m.notes || "",
+      order: Number.isFinite(m.order) ? m.order : 0,
+      anno: Array.isArray(m.anno) ? m.anno : []
+    }));
+
+    // Initialize order if missing
+    if (meta.length && meta.every(x => !x.order)){
+      // oldest first => 1..N
+      meta.sort((a,b) => (a.created||"").localeCompare(b.created||""));
+      meta.forEach((x,i) => x.order = i+1);
+      await persistOrderAll();
+    }
+    sortByOrder();
+    $("#count").textContent = String(meta.length);
+  }
+
+  function sortByOrder(){
+    meta.sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+
+  async function persistMetaPatch(id, patch){
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    const cur = await idbGet(s, id);
+    if (!cur) { t.abort(); return; }
+    await idbPut(s, {...cur, ...patch});
+    await waitTxDone(t);
+
+    const idx = meta.findIndex(x => x.id === id);
+    if (idx >= 0) meta[idx] = {...meta[idx], ...patch};
+  }
+
+  async function persistOrderAll(){
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    for (const m of meta){
+      const cur = await idbGet(s, m.id);
+      if (!cur) continue;
+      await idbPut(s, {...cur, order: m.order});
+    }
+    await waitTxDone(t);
+  }
+
+  // =======================
+  // Add photos
+  // =======================
+  async function addFiles(files){
+    const defaultFolder = $("#folderSel").value;
+    const defaultCat = $("#catSel").value;
+
+    const maxOrder = meta.reduce((mx, m) => Math.max(mx, m.order || 0), 0);
+
+    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
+    const sP = t.objectStore(STORE_PHOTOS);
+    const sM = t.objectStore(STORE_META);
+
+    let added = 0;
+    for (const f of files){
+      if (!f.type.startsWith("image/")) continue;
+      const id = uuid();
+      await idbPut(sP, {id, blob: f, type: f.type || "image/jpeg"});
+
+      const m = {
+        id,
+        filename: f.name || `photo_${added+1}.jpg`,
+        created: nowISO(),
+        folder: defaultFolder,
+        category: defaultCat,
+        notes: "",
+        order: maxOrder + added + 1,
+        anno: []
+      };
+      await idbPut(sM, m);
+      meta.push(m);
+      added++;
+    }
+
+    await waitTxDone(t);
+    sortByOrder();
+    toast(`Added ${added} photo(s).`);
+    renderGrid();
+  }
+
+  // =======================
+  // Delete (FIXED + reliable)
+  // =======================
+  async function deletePhoto(id){
+    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
+    await idbDel(t.objectStore(STORE_PHOTOS), id).catch(()=>{});
+    await idbDel(t.objectStore(STORE_META), id).catch(()=>{});
+    await waitTxDone(t);
+
+    meta = meta.filter(x => x.id !== id);
+
+    // re-number orders 1..N
+    meta.forEach((m,i) => m.order = i+1);
+    await persistOrderAll();
+
+    $("#count").textContent = String(meta.length);
+    renderGrid();
+
+    // fix viewer index safely
+    if ($("#overlay").classList.contains("show")){
+      if (!meta.length){
+        closeViewer();
+      } else {
+        viewerIndex = Math.min(viewerIndex, meta.length - 1);
+        await openViewerByIndex(viewerIndex, true);
+      }
+    }
+  }
+
+  // =======================
+  // Wipe
+  // =======================
+  async function wipeAll(){
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = resolve;
+      req.onerror = resolve;
+      req.onblocked = resolve;
+    });
+    db = await openDB();
+    meta = [];
+    $("#count").textContent = "0";
+    renderGrid();
+    closeViewer();
+  }
+
+  // =======================
+  // Thumbnails
+  // =======================
+  async function loadThumb(id, imgEl){
+    try{
+      const t = tx([STORE_PHOTOS], "readonly");
+      const rec = await idbGet(t.objectStore(STORE_PHOTOS), id);
+      if (!rec?.blob) return;
+      const url = URL.createObjectURL(rec.blob);
+      imgEl.src = url;
+      imgEl.onload = () => URL.revokeObjectURL(url);
+    } catch(e){
+      console.error(e);
+    }
+  }
+
+  function renderGrid(){
+    const grid = $("#grid");
+    grid.innerHTML = "";
+    $("#empty").style.display = meta.length ? "none" : "";
+
+    // ensure order -> numbering is correct
+    sortByOrder();
+    meta.forEach((m, idx) => m.order = idx + 1);
+
+    // insert indicator elements
+    const insertBadge = $("#insertBadge");
+
+    meta.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "thumb";
+      div.dataset.id = m.id;
+      div.dataset.index = String(idx);
+
+      const img = document.createElement("img");
+      img.alt = m.filename || "photo";
+      div.appendChild(img);
+
+      const num = document.createElement("div");
+      num.className = "num";
+      num.textContent = String(idx + 1);
+      div.appendChild(num);
+
+      const tags = document.createElement("div");
+      tags.className = "tagbar";
+      tags.innerHTML = `<span class="chip">${esc(m.folder)}</span><span class="chip">${esc(m.category)}</span>`;
+      div.appendChild(tags);
+
+      // insert line for this thumb (for before/after visuals)
+      const line = document.createElement("div");
+      line.className = "insertLine";
+      div.appendChild(line);
+
+      div.addEventListener("click", () => openViewerByIndex(idx, true));
+
+      // custom mobile-friendly drag reorder via pointer events
+      div.addEventListener("pointerdown", (e) => {
+        // left click / touch only
+        if (e.button !== undefined && e.button !== 0) return;
+        startDrag(e, div, idx);
+      });
+
+      grid.appendChild(div);
+      loadThumb(m.id, img);
+    });
+
+    // update badge hiding
+    if (!dragging){
+      insertBadge.style.display = "none";
+    }
+  }
+
+  function startDrag(e, el, index){
+    // don’t start drag if viewer is open
+    if ($("#overlay").classList.contains("show")) return;
+
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+
+    const rect = el.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    const ghost = el.cloneNode(true);
+    ghost.style.position = "fixed";
+    ghost.style.left = (e.clientX - offsetX) + "px";
+    ghost.style.top = (e.clientY - offsetY) + "px";
+    ghost.style.width = rect.width + "px";
+    ghost.style.height = rect.height + "px";
+    ghost.style.opacity = "0.92";
+    ghost.style.zIndex = "9999";
+    ghost.style.pointerEvents = "none";
+    ghost.style.boxShadow = "0 18px 40px rgba(0,0,0,.55)";
+    ghost.style.transform = "scale(1.02)";
+    document.body.appendChild(ghost);
+
+    dragging = { id: el.dataset.id, startIndex: index, ghost, offsetX, offsetY };
+
+    // show badge
+    const badge = $("#insertBadge");
+    badge.style.display = "block";
+    badge.textContent = "Dragging…";
+
+    const move = (ev) => onDragMove(ev);
+    const up = (ev) => onDragEnd(ev, move, up);
+
+    window.addEventListener("pointermove", move, {passive:false});
+    window.addEventListener("pointerup", up, {passive:false});
+  }
+
+  function clearInsertIndicators(){
+    $("#grid").querySelectorAll(".insertLine").forEach(l => l.style.display = "none");
+  }
+
+  function onDragMove(e){
+    if (!dragging) return;
+    e.preventDefault();
+
+    // move ghost
+    dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
+    dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
+
+    // find hovered thumb
+    const thumbs = Array.from($("#grid").querySelectorAll(".thumb"));
+    let best = null;
+
+    for (const t of thumbs){
+      const r = t.getBoundingClientRect();
+      // small padding to make it easier
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
+        best = { el: t, rect: r, index: Number(t.dataset.index) };
+        break;
+      }
+    }
+
+    clearInsertIndicators();
+    insertTarget = null;
+
+    const badge = $("#insertBadge");
+    if (!best){
+      badge.textContent = "Move to a position…";
+      return;
+    }
+
+    const midX = (best.rect.left + best.rect.right) / 2;
+    const side = (e.clientX < midX) ? "before" : "after";
+
+    // set insert line inside this thumb
+    const line = best.el.querySelector(".insertLine");
+    line.style.display = "block";
+    line.style.left = (side === "before" ? "8px" : "calc(100% - 8px)");
+
+    insertTarget = { index: best.index, side };
+
+    // BEFORE/AFTER label with numbering
+    const placeNum = best.index + 1;
+    badge.textContent = side === "before"
+      ? `Place BEFORE #${placeNum} (in front)`
+      : `Place AFTER #${placeNum} (behind)`;
+  }
+
+  async function onDragEnd(e, moveHandler, upHandler){
+    if (!dragging) return;
+    e.preventDefault();
+
+    window.removeEventListener("pointermove", moveHandler);
+    window.removeEventListener("pointerup", upHandler);
+
+    clearInsertIndicators();
+    $("#insertBadge").style.display = "none";
+
+    dragging.ghost.remove();
+
+    const from = dragging.startIndex;
+    let to = from;
+
+    if (insertTarget){
+      to = insertTarget.index + (insertTarget.side === "after" ? 1 : 0);
+      // if dragging forward in list, account for removal shift
+      if (to > from) to -= 1;
+      to = Math.max(0, Math.min(to, meta.length - 1));
+    }
+
+    const draggedId = dragging.id;
+    dragging = null;
+    insertTarget = null;
+
+    if (to === from) return;
+
+    // reorder array
+    const item = meta.splice(from, 1)[0];
+    meta.splice(to, 0, item);
+
+    // rewrite order 1..N and persist
+    meta.forEach((m,i) => m.order = i+1);
+    await persistOrderAll();
+
+    toast(`Moved to #${to+1}`);
+    renderGrid();
+  }
+
+  // =======================
+  // Export CSV
+  // =======================
   function downloadText(filename, text, type="text/plain"){
     const blob = new Blob([text], {type});
     const url = URL.createObjectURL(blob);
@@ -536,75 +983,321 @@
     const day = String(d.getDate()).padStart(2,"0");
     return `${y}${m}${day}`;
   }
-
-  // Build selects
-  function buildSelects(){
-    $("#folderSel").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
-    $("#catSel").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-    $("#vFolder").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
-    $("#vCat").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-
-    $("#folderSel").value = defaultFolder;
-    $("#catSel").value = defaultCat;
-    $("#sortSel").value = sortMode;
-  }
-  function esc(s){
-    return (s ?? "").toString()
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  function exportCSV(){
+    sortByOrder();
+    const header = ["order","filename","created","folder","category","notes","annoCount"].join(",");
+    const lines = meta.map(m => [
+      String(m.order || 0),
+      csv(m.filename),
+      m.created,
+      csv(m.folder),
+      csv(m.category),
+      csv(m.notes),
+      String((m.anno||[]).length)
+    ].join(","));
+    downloadText(`mitchell_photos_${dateStamp()}.csv`, [header, ...lines].join("\n"), "text/csv");
+    toast("CSV exported.");
   }
 
-  // Sorting
-  function getSorted(list){
-    const arr = list.slice();
-    if (sortMode === "newest") arr.sort((a,b) => (b.created||"").localeCompare(a.created||""));
-    if (sortMode === "oldest") arr.sort((a,b) => (a.created||"").localeCompare(b.created||""));
-    if (sortMode === "name")   arr.sort((a,b) => (a.filename||"").localeCompare(b.filename||"", undefined, {sensitivity:"base"}));
-    if (sortMode === "custom") arr.sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
-    return arr;
+  // =======================
+  // Viewer open/close + nav
+  // =======================
+  async function openViewerByIndex(i, refreshUI=false){
+    sortByOrder();
+    viewerIndex = Math.max(0, Math.min(i, meta.length - 1));
+    const m = meta[viewerIndex];
+    if (!m) return;
+
+    $("#overlay").classList.add("show");
+    $("#overlay").setAttribute("aria-hidden","false");
+    $("#posPill").textContent = `${viewerIndex+1} / ${meta.length}`;
+    $("#fileName").textContent = `#${viewerIndex+1} • ${m.filename || "—"}`;
+    $("#vFolder").value = m.folder || "Unsorted";
+    $("#vCat").value = m.category || "Uncategorized";
+    $("#vNotes").value = m.notes || "";
+
+    // load image into canvas
+    await loadImageToCanvas(m.id);
+
+    // load annotations
+    anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
+    undoStack = [];
+    resetView();
+    redraw();
+
+    setArrowState();
+
+    if (!refreshUI) return;
   }
 
-  async function init(){
-    db = await openDB();
-    const all = await idbGetAll(tx([STORE_META], "readonly").objectStore(STORE_META));
-    // Migration-safe defaults
-    meta = all.map(m => ({
-      id: m.id,
-      filename: m.filename || "photo.jpg",
-      created: m.created || nowISO(),
-      folder: m.folder || "Unsorted",
-      category: m.category || "Uncategorized",
-      notes: m.notes || "",
-      rot: Number.isFinite(m.rot) ? m.rot : 0,       // 0,90,180,270
-      flip: !!m.flip,                                 // horizontal flip
-      order: Number.isFinite(m.order) ? m.order : 0   // custom ordering
-    }));
+  function closeViewer(){
+    $("#overlay").classList.remove("show");
+    $("#overlay").setAttribute("aria-hidden","true");
+    imgBitmap = null;
+    anno = [];
+    undoStack = [];
+    viewerIndex = -1;
+  }
 
-    // If order is all zeros, initialize a stable custom order based on created time (oldest first)
-    if (meta.length && meta.every(x => x.order === 0)){
-      const byOldest = meta.slice().sort((a,b) => (a.created||"").localeCompare(b.created||""));
-      byOldest.forEach((x, i) => x.order = i+1);
-      await persistMany(byOldest.map(x => ({id:x.id, patch:{order:x.order}})));
-      meta = byOldest; // keep
+  function setArrowState(){
+    const canPrev = viewerIndex > 0;
+    const canNext = viewerIndex < meta.length - 1;
+    $("#prevBtn").disabled = !canPrev;
+    $("#nextBtn").disabled = !canNext;
+    $("#bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
+    $("#bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
+  }
+
+  function step(dir){
+    const next = viewerIndex + dir;
+    if (next < 0 || next >= meta.length) return;
+    openViewerByIndex(next, true);
+  }
+
+  // =======================
+  // Canvas / Markup drawing
+  // =======================
+  function resizeCanvasToContainer(){
+    const host = $("#vLeft").getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = Math.floor(host.width * dpr);
+    canvas.height = Math.floor(host.height * dpr);
+    canvas.style.width = host.width + "px";
+    canvas.style.height = host.height + "px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  async function loadImageToCanvas(photoId){
+    // fetch blob
+    const t = tx([STORE_PHOTOS], "readonly");
+    const rec = await idbGet(t.objectStore(STORE_PHOTOS), photoId);
+    if (!rec?.blob){
+      imgBitmap = null;
+      return;
+    }
+    // decode
+    imgBitmap = await createImageBitmap(rec.blob);
+    resizeCanvasToContainer();
+  }
+
+  function resetView(){
+    view.tx = 0; view.ty = 0; view.scale = 1;
+
+    if (!imgBitmap) return;
+
+    // fit image inside canvas (CSS pixels)
+    const cw = canvas.clientWidth;
+    const ch = canvas.clientHeight;
+    const iw = imgBitmap.width;
+    const ih = imgBitmap.height;
+
+    const s = Math.min(cw / iw, ch / ih);
+    view.scale = s;
+    // center
+    const dw = iw * s;
+    const dh = ih * s;
+    view.tx = (cw - dw) / 2;
+    view.ty = (ch - dh) / 2;
+  }
+
+  function screenToWorld(x,y){
+    // invert view transform
+    const wx = (x - view.tx) / view.scale;
+    const wy = (y - view.ty) / view.scale;
+    return {x: wx, y: wy};
+  }
+
+  function snapPoint(p){
+    if (!snapAngles) return p;
+    // snap relative to start point (for line-like tools)
+    const dx = p.x - start.x;
+    const dy = p.y - start.y;
+    const ang = Math.atan2(dy, dx);
+    const step = Math.PI / 12; // 15 degrees
+    const snapped = Math.round(ang / step) * step;
+    const len = Math.hypot(dx,dy);
+    return { x: start.x + Math.cos(snapped) * len, y: start.y + Math.sin(snapped) * len };
+  }
+
+  function redraw(){
+    resizeCanvasToContainer();
+
+    const cw = canvas.clientWidth;
+    const ch = canvas.clientHeight;
+
+    // clear
+    ctx.clearRect(0,0,cw,ch);
+
+    // draw image
+    if (imgBitmap){
+      ctx.save();
+      ctx.translate(view.tx, view.ty);
+      ctx.scale(view.scale, view.scale);
+      ctx.drawImage(imgBitmap, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,0.10)";
+      ctx.fillRect(0,0,cw,ch);
     }
 
+    // draw existing shapes
+    drawShapes(anno);
+
+    // draw temp shape
+    if (temp) drawShapes([temp], true);
+  }
+
+  function drawShapes(list, isTemp=false){
+    if (!imgBitmap) return;
+    for (const s of list){
+      // outer stroke (dark) + inner (green)
+      drawShapeStroke(s, STROKE2, WIDTH + 2, isTemp);
+      drawShapeStroke(s, STROKE,  WIDTH,     isTemp);
+    }
+  }
+
+  function drawShapeStroke(s, color, width, isTemp){
+    const cw = canvas.clientWidth;
+    const ch = canvas.clientHeight;
+
+    ctx.save();
+    // world->screen transform
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width / view.scale;
+    ctx.fillStyle = "transparent";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.setLineDash(isTemp ? [8 / view.scale, 6 / view.scale] : []);
+
+    const drawLabel = (txt, x, y) => {
+      ctx.save();
+      ctx.setLineDash([]);
+      ctx.font = `${14 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "rgba(0,0,0,0.6)";
+      ctx.lineWidth = 4 / view.scale;
+      ctx.strokeText(txt, x, y);
+      ctx.fillText(txt, x, y);
+      ctx.restore();
+    };
+
+    if (s.type === "line"){
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.stroke();
+    }
+    else if (s.type === "rect"){
+      const x = Math.min(s.x1, s.x2);
+      const y = Math.min(s.y1, s.y2);
+      const w = Math.abs(s.x2 - s.x1);
+      const h = Math.abs(s.y2 - s.y1);
+      ctx.strokeRect(x,y,w,h);
+    }
+    else if (s.type === "circle"){
+      const cx = (s.x1 + s.x2) / 2;
+      const cy = (s.y1 + s.y2) / 2;
+      const rx = Math.abs(s.x2 - s.x1) / 2;
+      const ry = Math.abs(s.y2 - s.y1) / 2;
+      ctx.beginPath();
+      // ellipse
+      if (ctx.ellipse) ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      else {
+        // fallback
+        ctx.save();
+        ctx.translate(cx,cy);
+        ctx.scale(rx || 1, ry || 1);
+        ctx.arc(0,0,1,0,Math.PI*2);
+        ctx.restore();
+      }
+      ctx.stroke();
+    }
+    else if (s.type === "arrow"){
+      // main line
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.stroke();
+      // arrow head
+      const dx = s.x2 - s.x1;
+      const dy = s.y2 - s.y1;
+      const ang = Math.atan2(dy, dx);
+      const headLen = 18 / view.scale;
+      const a1 = ang - Math.PI / 8;
+      const a2 = ang + Math.PI / 8;
+      ctx.beginPath();
+      ctx.moveTo(s.x2, s.y2);
+      ctx.lineTo(s.x2 - Math.cos(a1) * headLen, s.y2 - Math.sin(a1) * headLen);
+      ctx.moveTo(s.x2, s.y2);
+      ctx.lineTo(s.x2 - Math.cos(a2) * headLen, s.y2 - Math.sin(a2) * headLen);
+      ctx.stroke();
+    }
+    else if (s.type === "angle"){
+      // angle: p1->v and v->p2
+      ctx.beginPath();
+      ctx.moveTo(s.vx, s.vy);
+      ctx.lineTo(s.x1, s.y1);
+      ctx.moveTo(s.vx, s.vy);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.stroke();
+
+      // compute degrees
+      const a = {x: s.x1 - s.vx, y: s.y1 - s.vy};
+      const b = {x: s.x2 - s.vx, y: s.y2 - s.vy};
+      const dot = a.x*b.x + a.y*b.y;
+      const la = Math.hypot(a.x,a.y);
+      const lb = Math.hypot(b.x,b.y);
+      const deg = (la && lb) ? Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI : 0;
+      drawLabel(`${deg.toFixed(1)}°`, s.vx + 8, s.vy - 8);
+    }
+    else if (s.type === "ruler"){
+      // measure line + length (pixels)
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.stroke();
+      const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+      const mx = (s.x1 + s.x2) / 2;
+      const my = (s.y1 + s.y2) / 2;
+      drawLabel(`${len.toFixed(0)} px`, mx + 8, my - 8);
+    }
+
+    ctx.restore();
+  }
+
+  function pushUndo(){
+    undoStack.push(structuredClone(anno));
+    if (undoStack.length > 50) undoStack.shift();
+  }
+
+  function setTool(next){
+    tool = next;
+    document.querySelectorAll(".toolbtn").forEach(b => {
+      b.classList.toggle("active", b.dataset.tool === tool);
+    });
+  }
+
+  function pointerPos(e){
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  // =======================
+  // UI wiring
+  // =======================
+  async function init(){
+    db = await openDB();
     buildSelects();
+    await loadMeta();
+    renderGrid();
     wireUI();
-    render();
   }
 
   function wireUI(){
-    // defaults
-    $("#folderSel").addEventListener("change", (e) => defaultFolder = e.target.value);
-    $("#catSel").addEventListener("change", (e) => defaultCat = e.target.value);
-
-    // sort
-    $("#sortSel").addEventListener("change", (e) => {
-      sortMode = e.target.value;
-      render();
-    });
-
-    // file add
+    // Add files
     $("#fileInput").addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
       e.target.value = "";
@@ -616,7 +1309,7 @@
       if (files.length) await addFiles(files);
     });
 
-    // drop
+    // Drop zone
     const dz = $("#dropZone");
     ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -632,50 +1325,31 @@
       await addFiles(files);
     });
 
-    // export
+    // Export / wipe
     $("#exportCsv").addEventListener("click", exportCSV);
-
-    // wipe device
     $("#wipeAll").addEventListener("click", async () => {
       if (!confirm("Wipe all photos on THIS device/browser?")) return;
       await wipeAll();
       toast("Wiped.");
-      render();
     });
 
-    // viewer controls
+    // Snap toggle
+    $("#snapToggle").addEventListener("click", () => {
+      snapAngles = !snapAngles;
+      $("#snapToggle").textContent = `Snap: ${snapAngles ? "ON" : "OFF"}`;
+      $("#snapToggle").classList.toggle("ok", snapAngles);
+    });
+
+    // Viewer nav + close
     $("#closeBtn").addEventListener("click", closeViewer);
     $("#overlay").addEventListener("click", (e) => { if (e.target.id === "overlay") closeViewer(); });
-
-    const step = (dir) => {
-      const next = viewerIndex + dir;
-      if (next < 0 || next >= filtered.length) return;
-      viewerIndex = next;
-      renderViewer();
-    };
 
     $("#prevBtn").addEventListener("click", () => step(-1));
     $("#nextBtn").addEventListener("click", () => step(+1));
     $("#bigPrev").addEventListener("click", () => step(-1));
     $("#bigNext").addEventListener("click", () => step(+1));
 
-    // swipe
-    let sx=0, sy=0, st=0;
-    $("#vLeft").addEventListener("touchstart", (e) => {
-      const t = e.touches?.[0]; if (!t) return;
-      sx = t.clientX; sy = t.clientY; st = Date.now();
-    }, {passive:true});
-    $("#vLeft").addEventListener("touchend", (e) => {
-      const t = e.changedTouches?.[0]; if (!t) return;
-      const dx = t.clientX - sx;
-      const dy = t.clientY - sy;
-      const dt = Date.now() - st;
-      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2 && dt < 650){
-        if (dx < 0) step(+1); else step(-1);
-      }
-    }, {passive:true});
-
-    // keyboard
+    // Keyboard
     document.addEventListener("keydown", (e) => {
       if (!$("#overlay").classList.contains("show")) return;
       if (e.key === "Escape") closeViewer();
@@ -683,296 +1357,151 @@
       if (e.key === "ArrowRight") step(+1);
     });
 
-    // viewer tagging
+    // Save / delete
     $("#saveBtn").addEventListener("click", async () => {
-      const rec = filtered[viewerIndex];
-      if (!rec) return;
-      await updateMeta(rec.id, {
+      if (viewerIndex < 0) return;
+      const m = meta[viewerIndex];
+      if (!m) return;
+
+      const patch = {
         folder: $("#vFolder").value,
         category: $("#vCat").value,
-        notes: $("#vNotes").value || ""
-      });
+        notes: $("#vNotes").value || "",
+        anno: structuredClone(anno)
+      };
+      await persistMetaPatch(m.id, patch);
       toast("Saved.");
-      render(false);
-      renderViewer();
+      renderGrid();
+      // keep viewer labels in sync
+      $("#fileName").textContent = `#${viewerIndex+1} • ${m.filename || "—"}`;
     });
 
     $("#delBtn").addEventListener("click", async () => {
-      const rec = filtered[viewerIndex];
-      if (!rec) return;
-      if (!confirm("Delete this photo?")) return;
-      await deleteOne(rec.id);
+      if (viewerIndex < 0) return;
+      const m = meta[viewerIndex];
+      if (!m) return;
+      if (!confirm(`Delete photo #${viewerIndex+1}?`)) return;
+      await deletePhoto(m.id);
       toast("Deleted.");
-      render(false);
-      if (!filtered.length) closeViewer();
-      else {
-        viewerIndex = Math.min(viewerIndex, filtered.length - 1);
-        renderViewer();
+    });
+
+    // Tools
+    setTool("arrow");
+    $("#toolbar").addEventListener("click", (e) => {
+      const btn = e.target.closest(".toolbtn");
+      if (!btn) return;
+      setTool(btn.dataset.tool);
+    });
+
+    // Undo/clear/reset view
+    $("#undoBtn").addEventListener("click", () => {
+      if (!undoStack.length) return;
+      anno = undoStack.pop();
+      redraw();
+    });
+    $("#clearBtn").addEventListener("click", () => {
+      if (!anno.length) return;
+      if (!confirm("Clear all markup on this photo?")) return;
+      pushUndo();
+      anno = [];
+      redraw();
+    });
+    $("#resetViewBtn").addEventListener("click", () => {
+      resetView();
+      redraw();
+    });
+
+    // Canvas interaction
+    canvas.addEventListener("pointerdown", (e) => {
+      if (!imgBitmap) return;
+      canvas.setPointerCapture(e.pointerId);
+      isDown = true;
+
+      const p = pointerPos(e);
+      const w = screenToWorld(p.x, p.y);
+      start = w;
+      curr = w;
+      temp = null;
+
+      // Shift snap on desktop
+      if (e.shiftKey) snapAngles = true;
+
+      if (tool === "pan"){
+        // just pan using delta in screen coords
+        start._sx = p.x;
+        start._sy = p.y;
+        start._tx = view.tx;
+        start._ty = view.ty;
       }
     });
 
-    // simple photo edit (visual + saved)
-    $("#rotL").addEventListener("click", async () => rotate(-90));
-    $("#rotR").addEventListener("click", async () => rotate(+90));
-    $("#flipH").addEventListener("click", async () => flip());
+    canvas.addEventListener("pointermove", (e) => {
+      if (!isDown || !imgBitmap) return;
+      const p = pointerPos(e);
 
-    async function rotate(delta){
-      const rec = filtered[viewerIndex];
-      if (!rec) return;
-      const cur = meta.find(x => x.id === rec.id);
-      const nextRot = (((cur.rot || 0) + delta) % 360 + 360) % 360;
-      await updateMeta(rec.id, {rot: nextRot});
-      render(false);
-      renderViewer();
-    }
-    async function flip(){
-      const rec = filtered[viewerIndex];
-      if (!rec) return;
-      const cur = meta.find(x => x.id === rec.id);
-      await updateMeta(rec.id, {flip: !cur.flip});
-      render(false);
-      renderViewer();
-    }
-  }
-
-  async function persistMany(items){
-    const t = tx([STORE_META], "readwrite");
-    const sM = t.objectStore(STORE_META);
-    for (const it of items){
-      const cur = await idbGet(sM, it.id);
-      if (!cur) continue;
-      await idbPut(sM, {...cur, ...it.patch});
-    }
-  }
-
-  async function addFiles(files){
-    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
-    const sP = t.objectStore(STORE_PHOTOS);
-    const sM = t.objectStore(STORE_META);
-
-    // for custom ordering: append to end
-    const maxOrder = meta.reduce((m,x) => Math.max(m, x.order ?? 0), 0);
-
-    let added = 0;
-    for (const f of files){
-      if (!f.type.startsWith("image/")) continue;
-      const id = uuid();
-      await idbPut(sP, {id, blob: f, type: f.type || "image/jpeg"});
-      const m = {
-        id,
-        filename: f.name || `photo_${added+1}.jpg`,
-        created: nowISO(),
-        folder: defaultFolder,
-        category: defaultCat,
-        notes: "",
-        rot: 0,
-        flip: false,
-        order: maxOrder + added + 1
-      };
-      await idbPut(sM, m);
-      meta.push(m);
-      added++;
-    }
-    toast(`Added ${added} photo(s).`);
-    render();
-  }
-
-  async function updateMeta(id, patch){
-    const t = tx([STORE_META], "readwrite");
-    const sM = t.objectStore(STORE_META);
-    const cur = await idbGet(sM, id);
-    if (!cur) return;
-    await idbPut(sM, {...cur, ...patch});
-
-    const idx = meta.findIndex(x => x.id === id);
-    if (idx >= 0) meta[idx] = {...meta[idx], ...patch};
-  }
-
-  async function deleteOne(id){
-    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
-    await idbDel(t.objectStore(STORE_PHOTOS), id).catch(()=>{});
-    await idbDel(t.objectStore(STORE_META), id).catch(()=>{});
-    meta = meta.filter(x => x.id !== id);
-  }
-
-  async function wipeAll(){
-    await new Promise((resolve) => {
-      const req = indexedDB.deleteDatabase(DB_NAME);
-      req.onsuccess = resolve;
-      req.onerror = resolve;
-      req.onblocked = resolve;
-    });
-    db = await openDB();
-    meta = [];
-    filtered = [];
-    viewerIndex = -1;
-  }
-
-  function applyTransform(el, rec){
-    const r = rec.rot || 0;
-    const flip = rec.flip ? -1 : 1;
-    // rotate + optional horizontal flip
-    el.style.transform = `rotate(${r}deg) scaleX(${flip})`;
-  }
-
-  function render(updateCount=true){
-    if (updateCount) $("#count").textContent = String(meta.length);
-    $("#empty").style.display = meta.length ? "none" : "";
-
-    filtered = getSorted(meta);
-
-    const grid = $("#grid");
-    grid.innerHTML = "";
-
-    const showReorder = (sortMode === "custom");
-
-    filtered.forEach((m, index) => {
-      const div = document.createElement("div");
-      div.className = "thumb";
-      div.dataset.id = m.id;
-
-      const img = document.createElement("img");
-      img.alt = m.filename || "photo";
-      div.appendChild(img);
-
-      const tags = document.createElement("div");
-      tags.className = "tagbar";
-      tags.innerHTML = `<span class="chip">${esc(m.folder)}</span><span class="chip">${esc(m.category)}</span>`;
-      div.appendChild(tags);
-
-      if (showReorder){
-        const rb = document.createElement("div");
-        rb.className = "reorderBar";
-
-        const up = document.createElement("button");
-        up.className = "btn sm";
-        up.textContent = "↑";
-        up.title = "Move up";
-        up.disabled = (index === 0);
-
-        const down = document.createElement("button");
-        down.className = "btn sm";
-        down.textContent = "↓";
-        down.title = "Move down";
-        down.disabled = (index === filtered.length - 1);
-
-        up.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          await move(index, index - 1);
-        });
-        down.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          await move(index, index + 1);
-        });
-
-        rb.appendChild(up);
-        rb.appendChild(down);
-        div.appendChild(rb);
+      if (tool === "pan"){
+        // pan in screen space
+        const dx = p.x - (start._sx || 0);
+        const dy = p.y - (start._sy || 0);
+        view.tx = (start._tx || 0) + dx;
+        view.ty = (start._ty || 0) + dy;
+        redraw();
+        return;
       }
 
-      div.addEventListener("click", () => openViewerByIndex(index));
+      const w = screenToWorld(p.x, p.y);
+      curr = w;
 
-      grid.appendChild(div);
-      loadThumb(m.id, img, m);
+      // line-like snapping
+      let end = w;
+      if (snapAngles || e.shiftKey){
+        end = snapPoint(w);
+      }
+
+      if (tool === "rect") temp = {type:"rect", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
+      else if (tool === "circle") temp = {type:"circle", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
+      else if (tool === "line") temp = {type:"line", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
+      else if (tool === "arrow") temp = {type:"arrow", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
+      else if (tool === "ruler") temp = {type:"ruler", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
+      else if (tool === "angle"){
+        // angle uses 3 points: first click sets vertex, drag defines p1 and p2 using start as vertex
+        // Here: start is vertex; current drag defines p2; we keep p1 fixed as a short reference direction
+        const ref = { x: start.x + 120, y: start.y }; // default reference line
+        const snappedEnd = (snapAngles || e.shiftKey) ? snapPoint(w) : w;
+        temp = {type:"angle", vx:start.x, vy:start.y, x1:ref.x, y1:ref.y, x2:snappedEnd.x, y2:snappedEnd.y};
+      }
+
+      redraw();
+    });
+
+    canvas.addEventListener("pointerup", (e) => {
+      if (!isDown) return;
+      isDown = false;
+
+      if (tool === "pan"){
+        // nothing to commit
+        return;
+      }
+
+      if (temp){
+        pushUndo();
+        anno.push(temp);
+        temp = null;
+        redraw();
+      }
+    });
+
+    // Handle resize
+    window.addEventListener("resize", () => {
+      if (!$("#overlay").classList.contains("show")) return;
+      resizeCanvasToContainer();
+      redraw();
     });
   }
 
-  async function move(fromIndex, toIndex){
-    if (toIndex < 0 || toIndex >= filtered.length) return;
-    // swap order values between the two records
-    const a = filtered[fromIndex];
-    const b = filtered[toIndex];
-    const ao = a.order ?? 0;
-    const bo = b.order ?? 0;
-
-    await updateMeta(a.id, {order: bo});
-    await updateMeta(b.id, {order: ao});
-
-    toast("Moved.");
-    render(false);
-  }
-
-  async function loadThumb(id, imgEl, rec){
-    try{
-      const t = tx([STORE_PHOTOS], "readonly");
-      const r = await idbGet(t.objectStore(STORE_PHOTOS), id);
-      if (!r?.blob) return;
-      const url = URL.createObjectURL(r.blob);
-      imgEl.src = url;
-      imgEl.onload = () => URL.revokeObjectURL(url);
-      applyTransform(imgEl, rec);
-    } catch(e){
-      console.error(e);
-    }
-  }
-
-  function openViewerByIndex(i){
-    viewerIndex = i;
-    $("#overlay").classList.add("show");
-    $("#overlay").setAttribute("aria-hidden", "false");
-    renderViewer();
-  }
-
-  function closeViewer(){
-    $("#overlay").classList.remove("show");
-    $("#overlay").setAttribute("aria-hidden", "true");
-    $("#bigImg").src = "";
-    viewerIndex = -1;
-  }
-
-  function setArrowState(){
-    const canPrev = viewerIndex > 0;
-    const canNext = viewerIndex < filtered.length - 1;
-    $("#prevBtn").disabled = !canPrev;
-    $("#nextBtn").disabled = !canNext;
-    $("#bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
-    $("#bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
-  }
-
-  async function renderViewer(){
-    const rec = filtered[viewerIndex];
-    if (!rec) return;
-
-    $("#posPill").textContent = `${viewerIndex+1} / ${filtered.length}`;
-    $("#fileName").textContent = rec.filename || "—";
-    $("#vFolder").value = rec.folder || "Unsorted";
-    $("#vCat").value = rec.category || "Uncategorized";
-    $("#vNotes").value = rec.notes || "";
-
-    setArrowState();
-
-    try{
-      const t = tx([STORE_PHOTOS], "readonly");
-      const r = await idbGet(t.objectStore(STORE_PHOTOS), rec.id);
-      if (!r?.blob) { $("#bigImg").src = ""; return; }
-      const url = URL.createObjectURL(r.blob);
-      const img = $("#bigImg");
-      img.src = url;
-      img.onload = () => URL.revokeObjectURL(url);
-      applyTransform(img, rec);
-    } catch(e){
-      console.error(e);
-    }
-  }
-
-  function exportCSV(){
-    const header = ["id","filename","created","folder","category","rot","flip","order","notes"].join(",");
-    const lines = getSorted(meta).map(m => [
-      m.id,
-      csv(m.filename),
-      m.created,
-      csv(m.folder),
-      csv(m.category),
-      String(m.rot||0),
-      m.flip ? "true" : "false",
-      String(m.order ?? 0),
-      csv(m.notes)
-    ].join(","));
-    downloadText(`mitchell_photos_${dateStamp()}.csv`, [header, ...lines].join("\n"), "text/csv");
-    toast("CSV exported.");
-  }
-
+  // =======================
   // Boot
+  // =======================
   init().catch(err => {
     console.error(err);
     toast("Failed to load.");
