@@ -410,15 +410,17 @@
       gap:10px;
       padding: 10px;
       overflow:hidden;
+      min-height: 0;
     }
     .camLive{
-      flex: 1.35;
+      flex: 1.55;
       border-radius: 16px;
       overflow:hidden;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.25);
       position:relative;
       min-width:0;
+      min-height:0;
     }
     .camLive video{
       width:100%;
@@ -434,6 +436,7 @@
       overflow:auto;
       padding: 10px;
       min-width: 220px;
+      min-height:0;
     }
     .camThumbs{
       display:flex;
@@ -453,7 +456,7 @@
       .camStrip{ min-width:0; }
     }
 
-    /* Landscape shutter */
+    /* Draggable shutter (always visible) */
     .camShutter {
       position: absolute;
       left: 50%;
@@ -465,10 +468,10 @@
       border: 6px solid rgba(255,255,255,.85);
       background: rgba(255,255,255,.12);
       box-shadow: 0 18px 50px rgba(0,0,0,.55);
-      display: none; /* only landscape */
       cursor: pointer;
       user-select: none;
       z-index: 5;
+      touch-action: none; /* needed for drag on iOS */
     }
     .camShutter::after{
       content:"";
@@ -480,20 +483,25 @@
       background: rgba(255,255,255,.92);
     }
     .camShutter:active{
-      transform: translateX(-50%) scale(0.97);
       filter: brightness(1.05);
     }
+    .camShutter.dragging{
+      transform: translate(-50%,-50%) scale(0.98);
+      filter: brightness(1.08);
+    }
 
-    /* When we add .landscape on camOverlay (JS), make camera huge + shutter visible */
+    /* Better landscape layout (NOT cut in half) */
     .camOverlay.landscape .camBody{
-      flex-direction: column;
-      padding: 8px;
+      flex-direction: row;
+      padding: 10px;
+    }
+    .camOverlay.landscape .camLive{
+      flex: 1.85;
     }
     .camOverlay.landscape .camStrip{
-      display:none;
-    }
-    .camOverlay.landscape .camShutter{
+      flex: 0.45;
       display:block;
+      min-width: 260px;
     }
 
     .bigPhoneBtn{
@@ -702,9 +710,9 @@
     </div>
 
     <div class="camBody">
-      <div class="camLive">
+      <div class="camLive" id="camLive">
         <video id="camVideo" playsinline autoplay muted></video>
-        <div class="camShutter" id="camShutter" title="Snap"></div>
+        <div class="camShutter" id="camShutter" title="Tap to snap • Drag to move"></div>
       </div>
 
       <div class="camStrip">
@@ -714,6 +722,7 @@
         </div>
         <div class="hr"></div>
         <div class="camThumbs" id="camThumbs"></div>
+        <div class="hint" style="margin-top:10px;">Tip: You can drag the big shutter onto any spot you want.</div>
       </div>
     </div>
   </div>
@@ -750,7 +759,7 @@
   let insertTarget = null;
   let suppressClickUntil = 0;
 
-  // ✅ Drag perf (RAF + elementFromPoint)
+  // Drag perf (RAF + elementFromPoint)
   let dragRAF = 0;
   let lastDragEvent = null;
 
@@ -787,7 +796,7 @@
   let saveTimer = null;
   const AUTOSAVE_MS = 300;
 
-  // ✅ UI refresh debounce (instant thumb updates)
+  // UI refresh debounce (instant thumb updates)
   let uiRefreshTimer = null;
   function scheduleUIRefresh(){
     clearTimeout(uiRefreshTimer);
@@ -797,7 +806,7 @@
     }, 150);
   }
 
-  // ✅ Refresh/resume nav state
+  // Refresh/resume nav state
   const NAV_KEY = "mitchell_nav_state_v1";
   function saveNavState(){
     const state = {
@@ -1211,7 +1220,6 @@
     grid.querySelectorAll(".insertLine").forEach(l => l.style.display = "none");
   }
 
-  // ✅ PERF FIX: no scanning all thumbs; use elementFromPoint + RAF
   function onDragMove(e, grid, badgeInner){
     if (!dragging) return;
     e.preventDefault();
@@ -1262,7 +1270,6 @@
     if (!dragging) return;
     e.preventDefault();
 
-    // ✅ cancel pending RAF
     if (dragRAF){
       cancelAnimationFrame(dragRAF);
       dragRAF = 0;
@@ -1532,7 +1539,6 @@
     }
   }
 
-  // ✅ best-effort flush when tab hides / refreshes
   window.addEventListener("beforeunload", () => { try { flushAutosave(); } catch {} });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden){
@@ -1560,7 +1566,7 @@
     const notes = document.getElementById("notesInput").value || "";
     await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
     await renderAndStoreEdited(currentId);
-    scheduleUIRefresh(); // ✅ thumbnails update immediately
+    scheduleUIRefresh();
   }
 
   function pushUndo(){
@@ -2385,20 +2391,68 @@
     saveNavState();
   }
 
-  // ---------- Camera Mode (multi-shot + LANDSCAPE shutter) ----------
+  // ---------- Camera Mode (multi-shot + draggable shutter) ----------
   const camOverlay = document.getElementById("camOverlay");
   const camVideo = document.getElementById("camVideo");
   const camThumbs = document.getElementById("camThumbs");
   const camCount = document.getElementById("camCount");
+  const camShutter = document.getElementById("camShutter");
+  const camLive = document.getElementById("camLive");
 
   let camStream = null;
   let camFacing = "environment";
   let camShots = []; // {blob, url}
 
+  // shutter position persisted
+  const SHUTTER_POS_KEY = "mitchell_shutter_pos_v1"; // {rx, ry} in [0..1]
+  function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+  function getSavedShutterPos(){
+    try{
+      const raw = localStorage.getItem(SHUTTER_POS_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || typeof obj.rx !== "number" || typeof obj.ry !== "number") return null;
+      return { rx: clamp01(obj.rx), ry: clamp01(obj.ry) };
+    }catch{ return null; }
+  }
+  function saveShutterPos(rx, ry){
+    try{
+      localStorage.setItem(SHUTTER_POS_KEY, JSON.stringify({rx: clamp01(rx), ry: clamp01(ry)}));
+    }catch{}
+  }
+
+  function applyShutterPos(){
+    // default near bottom center
+    const def = { rx: 0.50, ry: 0.86 };
+    const pos = getSavedShutterPos() || def;
+
+    const r = camLive.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+
+    // keep button fully inside camLive
+    const size = 86;
+    const pad = 10;
+    const minX = pad + size/2;
+    const maxX = r.width - pad - size/2;
+    const minY = pad + size/2;
+    const maxY = r.height - pad - size/2;
+
+    const x = minX + pos.rx * (maxX - minX);
+    const y = minY + pos.ry * (maxY - minY);
+
+    camShutter.style.left = x + "px";
+    camShutter.style.top = y + "px";
+    camShutter.style.bottom = "auto";
+    camShutter.style.transform = "translate(-50%,-50%)";
+  }
+
   function updateCamLayout(){
     if (!camOverlay.classList.contains("show")) return;
     const landscape = window.matchMedia("(orientation: landscape)").matches || (window.innerWidth > window.innerHeight);
     camOverlay.classList.toggle("landscape", landscape);
+    // re-apply shutter position so it doesn't jump weird after rotation
+    requestAnimationFrame(() => applyShutterPos());
   }
 
   async function camStart(){
@@ -2406,8 +2460,6 @@
     renderCamThumbs();
     camOverlay.classList.add("show");
     camOverlay.setAttribute("aria-hidden","false");
-
-    try{ playSnapSound(); }catch{}
 
     updateCamLayout();
     window.addEventListener("resize", updateCamLayout, {passive:true});
@@ -2420,6 +2472,8 @@
     }
 
     await camOpenStream();
+    // after video starts, place shutter
+    setTimeout(() => applyShutterPos(), 60);
   }
 
   async function camOpenStream(){
@@ -2514,7 +2568,95 @@
   async function camFlip(){
     camFacing = (camFacing === "environment") ? "user" : "environment";
     await camOpenStream();
+    setTimeout(() => applyShutterPos(), 60);
   }
+
+  // --- Draggable shutter behavior ---
+  let shutterDrag = null;
+  camShutter.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    camShutter.setPointerCapture(e.pointerId);
+
+    const liveRect = camLive.getBoundingClientRect();
+    const size = 86;
+    const pad = 10;
+    const minX = pad + size/2;
+    const maxX = liveRect.width - pad - size/2;
+    const minY = pad + size/2;
+    const maxY = liveRect.height - pad - size/2;
+
+    // current center of shutter (relative to camLive)
+    const shRect = camShutter.getBoundingClientRect();
+    const curX = (shRect.left + shRect.right)/2 - liveRect.left;
+    const curY = (shRect.top + shRect.bottom)/2 - liveRect.top;
+
+    shutterDrag = {
+      id: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      moved: false,
+      // pointer offset from current center
+      offX: e.clientX - (liveRect.left + curX),
+      offY: e.clientY - (liveRect.top + curY),
+      minX, maxX, minY, maxY,
+      liveRect
+    };
+    camShutter.classList.add("dragging");
+  });
+
+  window.addEventListener("pointermove", (e) => {
+    if (!shutterDrag) return;
+    if (e.pointerId !== shutterDrag.id) return;
+
+    const dx = e.clientX - shutterDrag.startClientX;
+    const dy = e.clientY - shutterDrag.startClientY;
+    if (Math.hypot(dx,dy) > 6) shutterDrag.moved = true;
+
+    // compute desired center inside camLive
+    const liveRect = camLive.getBoundingClientRect();
+    const cx = (e.clientX - liveRect.left) - shutterDrag.offX;
+    const cy = (e.clientY - liveRect.top) - shutterDrag.offY;
+
+    const x = Math.max(shutterDrag.minX, Math.min(shutterDrag.maxX, cx));
+    const y = Math.max(shutterDrag.minY, Math.min(shutterDrag.maxY, cy));
+
+    camShutter.style.left = x + "px";
+    camShutter.style.top = y + "px";
+    camShutter.style.bottom = "auto";
+    camShutter.style.transform = "translate(-50%,-50%)";
+  }, {passive:false});
+
+  window.addEventListener("pointerup", async (e) => {
+    if (!shutterDrag) return;
+    if (e.pointerId !== shutterDrag.id) return;
+
+    camShutter.classList.remove("dragging");
+
+    // save position as ratios
+    const liveRect = camLive.getBoundingClientRect();
+    const size = 86;
+    const pad = 10;
+    const minX = pad + size/2;
+    const maxX = liveRect.width - pad - size/2;
+    const minY = pad + size/2;
+    const maxY = liveRect.height - pad - size/2;
+
+    const shRect = camShutter.getBoundingClientRect();
+    const cx = (shRect.left + shRect.right)/2 - liveRect.left;
+    const cy = (shRect.top + shRect.bottom)/2 - liveRect.top;
+
+    const rx = (cx - minX) / Math.max(1, (maxX - minX));
+    const ry = (cy - minY) / Math.max(1, (maxY - minY));
+    saveShutterPos(rx, ry);
+
+    const wasTap = !shutterDrag.moved;
+    shutterDrag = null;
+
+    // If it was basically a tap, snap a photo
+    if (wasTap){
+      await camSnap();
+    }
+  }, {passive:false});
 
   // ---------- UI Wiring ----------
   function wireUI(){
@@ -2651,7 +2793,6 @@
     // Camera Mode
     document.getElementById("openCamBtn").addEventListener("click", camStart);
     document.getElementById("camSnapBtn").addEventListener("click", camSnap);
-    document.getElementById("camShutter").addEventListener("click", camSnap);
     document.getElementById("camDoneBtn").addEventListener("click", camDone);
     document.getElementById("camCancelBtn").addEventListener("click", camCancel);
     document.getElementById("camClearBtn").addEventListener("click", camClear);
@@ -2664,14 +2805,12 @@
     wireUI();
     setupCanvas();
 
-    // ✅ restore last state
     await renderFolders();
     const st = loadNavState();
 
     if (st?.folder){
       await openFolder(st.folder);
       if (st.overlay && Number.isFinite(st.index)){
-        // restore into viewer (view mode on restore)
         await openViewer(st.folder, st.index, "view");
       }
     } else {
