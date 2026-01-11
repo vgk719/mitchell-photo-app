@@ -5,23 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Mitchell Photo App</title>
 
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0b1020">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mitchell Photos">
 
   <style>
     :root{
-      --bg:#0b1020;
+      --bg:#070b16;
       --panel: rgba(18,28,55,.78);
+      --panel2: rgba(12,18,38,.92);
       --border: rgba(255,255,255,.12);
       --text:#eef2ff;
       --muted:#a7b1d8;
       --primary:#3b82f6;
       --danger:#ef4444;
       --ok:#22c55e;
-      --radius:14px;
-      --shadow: 0 14px 34px rgba(0,0,0,.40);
+      --radius:16px;
+      --shadow: 0 18px 44px rgba(0,0,0,.45);
       --safe-b: env(safe-area-inset-bottom, 0px);
       --safe-t: env(safe-area-inset-top, 0px);
     }
@@ -32,30 +33,43 @@
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
       color:var(--text);
       background:
-        radial-gradient(1200px 800px at 20% 10%, #1a2a66 0%, rgba(26,42,102,0) 55%),
-        radial-gradient(900px 700px at 80% 0%, #173a7a 0%, rgba(23,58,122,0) 60%),
+        radial-gradient(1200px 800px at 18% 10%, #1a2a66 0%, rgba(26,42,102,0) 55%),
+        radial-gradient(900px 700px at 82% 0%, #173a7a 0%, rgba(23,58,122,0) 60%),
         var(--bg);
       overflow:hidden;
       padding-top: var(--safe-t);
     }
-
+    .app{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+    }
     header{
       padding: 14px 14px 10px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      user-select:none;
     }
-    h1{ margin:0; font-size:16px; font-weight:900; letter-spacing:.2px; }
+    h1{ margin:0; font-size:16px; font-weight:1000; letter-spacing:.2px; }
     .muted{ color:var(--muted); font-size:12px; }
-
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      font-weight: 900;
+      font-size:12px;
+      color: var(--muted);
+    }
     main{
-      height: calc(100% - 58px);
+      flex:1;
       overflow:auto;
       padding: 0 14px calc(18px + var(--safe-b)) 14px;
       -webkit-overflow-scrolling: touch;
     }
-
     .card{
       background: var(--panel);
       border:1px solid var(--border);
@@ -66,17 +80,17 @@
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .grow{ flex: 1 1 220px; min-width:200px; }
 
-    select, textarea, button, input{ font:inherit; }
-    select, textarea{
+    input, select, textarea, button{ font:inherit; }
+    input, select, textarea{
       width:100%;
-      padding: 10px 12px;
+      padding: 12px 12px;
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(10,16,34,.55);
       color: var(--text);
       outline:none;
     }
-    textarea{ min-height: 86px; resize: vertical; }
+    textarea{ min-height: 90px; resize: vertical; }
 
     .btn{
       border: 1px solid rgba(255,255,255,.14);
@@ -84,7 +98,7 @@
       color: var(--text);
       padding: 10px 12px;
       border-radius: 12px;
-      font-weight: 900;
+      font-weight: 1000;
       cursor:pointer;
       user-select:none;
     }
@@ -92,25 +106,14 @@
     .btn.danger{ background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.35); }
     .btn.ok{ background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.35); }
     .btn:disabled{ opacity:.55; cursor:not-allowed; }
-
-    .btn.sm{
-      padding: 8px 10px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 1000;
+    .btn.icon{
+      width:44px; height:44px;
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:0;
+      border-radius: 14px;
+      font-size: 18px;
     }
-
-    .pill{
-      display:inline-flex; gap:8px; align-items:center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      font-weight: 900;
-      font-size:12px;
-      color: var(--muted);
-      user-select:none;
-    }
+    .btn.sm{ padding: 8px 10px; border-radius: 10px; font-size: 12px; }
 
     .drop{
       border:2px dashed rgba(255,255,255,.16);
@@ -124,6 +127,30 @@
       background: rgba(59,130,246,.10);
     }
 
+    /* Folder cards */
+    .folders{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px){ .folders{ grid-template-columns: 1fr; } }
+    .folderCard{
+      padding: 16px;
+      border-radius: var(--radius);
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(12,18,38,.70);
+      box-shadow: 0 18px 44px rgba(0,0,0,.35);
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .folderTitle{ font-weight:1000; font-size: 16px; }
+    .folderHint{ color: var(--muted); font-size: 12px; }
+
+    /* Grid */
     .grid{
       margin-top: 12px;
       display:grid;
@@ -144,18 +171,27 @@
       cursor:pointer;
       user-select:none;
       box-shadow: 0 10px 20px rgba(0,0,0,.25);
-      touch-action: none; /* needed for custom drag on mobile */
+      touch-action:none; /* custom drag */
     }
-    .thumb img{
-      width:100%; height:100%;
-      object-fit:cover;
-      display:block;
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .num{
+      position:absolute;
+      top:8px; left:8px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 1000;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      z-index: 3;
     }
-    .tagbar{
+    .thumbBar{
       position:absolute;
       left:8px; right:8px; bottom:8px;
-      display:flex; flex-wrap:wrap; gap:6px;
+      display:flex; justify-content:space-between; gap:8px;
       pointer-events:none;
+      z-index: 3;
     }
     .chip{
       font-size:11px;
@@ -169,53 +205,47 @@
       text-overflow:ellipsis;
       white-space:nowrap;
     }
-
-    /* number badge */
-    .num{
-      position:absolute;
-      top:8px; left:8px;
-      width:auto;
-      padding: 6px 9px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 1000;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
+    .ghost{
+      position:fixed;
+      z-index: 9999;
+      pointer-events:none;
+      opacity:.92;
+      transform: scale(1.02);
+      box-shadow: 0 18px 40px rgba(0,0,0,.55);
     }
-
-    /* reorder insert indicator */
     .insertLine{
-      position:absolute;
-      top:0; bottom:0;
-      width: 0;
+      position:absolute; top:0; bottom:0;
+      width:0;
       border-left: 3px solid rgba(59,130,246,.95);
       filter: drop-shadow(0 0 10px rgba(59,130,246,.35));
       pointer-events:none;
       display:none;
-      z-index: 5;
+      z-index: 2;
     }
     .insertBadge{
-      position:absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 8px 10px;
+      position: sticky;
+      top: 6px;
+      z-index: 10;
+      margin-top: 8px;
+      display:none;
+    }
+    .insertBadgeInner{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 10px 12px;
       border-radius: 999px;
-      font-weight: 1000;
-      font-size: 12px;
       border:1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.55);
-      pointer-events:none;
-      display:none;
-      z-index: 6;
-      max-width: 92vw;
+      font-weight: 1000;
+      font-size: 12px;
+      max-width: 100%;
       white-space: nowrap;
       overflow:hidden;
-      text-overflow:ellipsis;
+      text-overflow: ellipsis;
     }
 
-    /* Viewer / Markup */
+    /* Overlay editor */
     .overlay{
       position:fixed;
       inset:0;
@@ -225,34 +255,26 @@
       display:none;
     }
     .overlay.show{ display:block; }
-
     .viewer{
       position:absolute;
       inset: 10px 10px 10px 10px;
       border-radius: 18px;
       border:1px solid rgba(255,255,255,.14);
-      background: rgba(12,18,38,.92);
+      background: var(--panel2);
       box-shadow: var(--shadow);
       display:flex;
       overflow:hidden;
     }
     .vLeft{
-      flex: 1.5;
+      flex: 1.55;
       position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
       background: rgba(0,0,0,.18);
       min-width:0;
-      touch-action: none;
+      touch-action:none;
     }
-    canvas{
-      width:100%;
-      height:100%;
-      display:block;
-    }
+    canvas{ width:100%; height:100%; display:block; }
     .vRight{
-      flex: 0.8;
+      flex: 0.75;
       border-left:1px solid rgba(255,255,255,.10);
       padding:12px;
       overflow:auto;
@@ -262,7 +284,6 @@
       .viewer{ flex-direction:column; }
       .vRight{ border-left:none; border-top:1px solid rgba(255,255,255,.10); min-width:0; }
     }
-
     .topbar{
       position:absolute;
       top:10px; left:10px; right:10px;
@@ -275,19 +296,6 @@
     }
     .topbar .group{ display:flex; gap:10px; pointer-events:auto; }
 
-    .iconBtn{
-      width:44px; height:44px;
-      display:inline-flex; align-items:center; justify-content:center;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.08);
-      color: var(--text);
-      font-weight: 1000;
-      cursor:pointer;
-      user-select:none;
-    }
-
-    /* Big side arrows */
     .arrow{
       position:absolute;
       top:50%;
@@ -296,9 +304,7 @@
       border-radius: 16px;
       border:1px solid rgba(255,255,255,.18);
       background: rgba(0,0,0,.35);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display:flex; align-items:center; justify-content:center;
       font-size: 24px;
       font-weight: 1000;
       cursor:pointer;
@@ -310,26 +316,30 @@
     .arrow.right{ right:10px; }
     .arrow[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
 
-    .toolbar{
+    /* “quick logo” tools: icon buttons */
+    .toolRow{
       display:flex;
-      flex-wrap:wrap;
       gap:8px;
+      flex-wrap:wrap;
       margin-top: 10px;
     }
-    .toolbtn{
-      padding: 9px 10px;
-      border-radius: 12px;
-      font-weight: 1000;
-      font-size: 12px;
+    .toolIcon{
+      width:48px; height:48px;
+      border-radius: 14px;
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.07);
       cursor:pointer;
       user-select:none;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:1000;
+      font-size: 18px;
     }
-    .toolbtn.active{
+    .toolIcon.active{
       background: rgba(59,130,246,.22);
       border-color: rgba(59,130,246,.40);
     }
+    .hint{ color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .hr{ height:1px; background: rgba(255,255,255,.10); margin: 10px 0; }
 
     .toast{
       position:fixed;
@@ -351,89 +361,159 @@
     }
     .toast.show{ display:block; }
 
-    .small{ font-size:12px; color: var(--muted); }
-    .hr{ height:1px; background: rgba(255,255,255,.10); margin: 10px 0; }
+    /* Login */
+    .loginWrap{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      min-height: calc(100vh - 80px);
+      gap:12px;
+      padding: 12px;
+    }
+    .loginBox{
+      width: min(520px, 100%);
+      padding: 16px;
+    }
+    .logoMark{
+      width:68px; height:68px;
+      border-radius: 20px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000;
+      font-size: 22px;
+      box-shadow: 0 18px 44px rgba(0,0,0,.35);
+    }
   </style>
 </head>
 
 <body>
+<div class="app">
   <header>
     <div>
       <h1>Mitchell Photo App</h1>
-      <div class="muted">Numbered • Drag reorder • Markup tools • Offline</div>
+      <div class="muted" id="subtitle">Login</div>
     </div>
-    <div class="pill"><span id="count">0</span> photos</div>
+    <div class="pill" id="hdrPill" style="display:none;"><span id="hdrCount">0</span> photos</div>
   </header>
 
   <main>
-    <div class="card" style="margin-bottom:12px;">
-      <div class="row" style="margin-bottom:10px;">
-        <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
-          📷 Add Photos
-          <input id="fileInput" type="file" accept="image/*" multiple hidden>
-        </label>
+    <!-- LOGIN -->
+    <section id="loginView" class="loginWrap">
+      <div class="logoMark">MP</div>
+      <div class="card loginBox">
+        <div style="font-weight:1000; font-size:16px; margin-bottom:6px;">Login</div>
+        <div class="muted" style="margin-bottom:12px;">Opens your folders (Walk Around / UPD / Teardown).</div>
 
-        <label class="btn" style="display:inline-flex; align-items:center; gap:8px;">
-          📸 Camera
-          <input id="camInput" type="file" accept="image/*" capture="environment" hidden>
-        </label>
-
-        <button class="btn" id="exportCsv">Export CSV</button>
-        <button class="btn danger" id="wipeAll" title="Clears this device only">Wipe</button>
-      </div>
-
-      <div class="row" style="margin-bottom:10px;">
-        <div class="grow">
-          <div class="small">Default Folder (new photos)</div>
-          <select id="folderSel"></select>
-        </div>
-        <div class="grow">
-          <div class="small">Default Category (new photos)</div>
-          <select id="catSel"></select>
-        </div>
-      </div>
-
-      <div class="row" style="margin-bottom:10px;">
-        <div class="grow">
-          <div class="small">Tip</div>
-          <div class="small">
-            Drag a photo to reorder. While dragging, you'll see <b>BEFORE / AFTER</b> to know if it’s going in front or behind.
+        <div class="row">
+          <div class="grow">
+            <div class="muted" style="margin-bottom:6px;">Passcode</div>
+            <input id="passInput" type="password" inputmode="numeric" placeholder="Enter passcode" autocomplete="off" />
           </div>
         </div>
-        <div class="grow">
-          <div class="small">Snap angles</div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn primary" id="loginBtn">Enter</button>
+          <button class="btn" id="setPassBtn" title="Set a new passcode on this device">Set/Change Passcode</button>
+        </div>
+
+        <div class="hint">Tip: On iPhone/iPad, use Safari → Share → Add to Home Screen to make it feel like a real app.</div>
+      </div>
+    </section>
+
+    <!-- HOME -->
+    <section id="homeView" style="display:none;">
+      <div class="card">
+        <div style="font-weight:1000; font-size:16px;">Folders</div>
+        <div class="muted">Tap a folder to add photos, reorder, edit, and export to Mitchell in your exact order.</div>
+
+        <div class="folders">
+          <div class="folderCard" data-folder="Walk Around">
+            <div class="folderTitle">Walk Around</div>
+            <div class="folderHint">Approach / overall / wide shots</div>
+            <div class="pill"><span class="folderCount" data-folder-count="Walk Around">0</span> photos</div>
+          </div>
+          <div class="folderCard" data-folder="UPD">
+            <div class="folderTitle">UPD</div>
+            <div class="folderHint">Updates / supplemental / progress</div>
+            <div class="pill"><span class="folderCount" data-folder-count="UPD">0</span> photos</div>
+          </div>
+          <div class="folderCard" data-folder="Teardown">
+            <div class="folderTitle">Teardown</div>
+            <div class="folderHint">Tear-down / hidden damage</div>
+            <div class="pill"><span class="folderCount" data-folder-count="Teardown">0</span> photos</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="row">
+          <button class="btn ok" id="exportZipBtn">Export ZIP (Mitchell Order)</button>
+          <button class="btn" id="exportCsvBtn">Export CSV</button>
+          <button class="btn danger" id="wipeBtn">Wipe This Device</button>
+          <button class="btn" id="logoutBtn">Logout</button>
+        </div>
+
+        <div class="hint" id="zipHint">ZIP export uses JSZip (loaded from CDN). First time may take a second.</div>
+      </div>
+    </section>
+
+    <!-- FOLDER -->
+    <section id="folderView" style="display:none;">
+      <div class="card" style="margin-bottom:12px;">
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
+            <div class="muted">Add / drop photos here, then drag to reorder. Numbers = Mitchell order.</div>
+          </div>
           <div class="row">
-            <button class="btn sm" id="snapToggle">Snap: OFF</button>
-            <div class="small">Helps straight-edge / angles. (Desktop: hold Shift)</div>
+            <button class="btn" id="backHomeBtn">← Folders</button>
+            <button class="btn ok" id="folderExportZipBtn">Export ZIP</button>
           </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+            📷 Add Photos
+            <input id="fileInput" type="file" accept="image/*" multiple hidden>
+          </label>
+          <label class="btn" style="display:inline-flex; align-items:center; gap:8px;">
+            📸 Camera
+            <input id="camInput" type="file" accept="image/*" capture="environment" hidden>
+          </label>
+          <button class="btn" id="folderClearBadgesBtn" title="Renumber cleanly (usually not needed)">Renumber</button>
+          <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
+        </div>
+
+        <div class="drop" id="dropZone" style="margin-top:10px;">
+          <b>Drop photos into “<span id="dropFolderName"></span>”</b>
+          <div class="muted">Drag a thumbnail to reorder. Tap to edit. All edits autosave.</div>
+        </div>
+
+        <div class="insertBadge" id="insertBadge">
+          <div class="insertBadgeInner" id="insertBadgeInner">Dragging…</div>
         </div>
       </div>
 
-      <div class="drop" id="dropZone">
-        <b>Drag & drop photos here</b>
-        <div class="small">Saved offline on this device. Tap a photo to view & markup.</div>
+      <div id="grid" class="grid"></div>
+      <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
+        No photos yet. Add some above.
       </div>
-    </div>
-
-    <div class="insertBadge" id="insertBadge"></div>
-    <div id="grid" class="grid"></div>
-    <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
-      No photos yet. Add some above.
-    </div>
+    </section>
   </main>
 
-  <!-- Viewer -->
+  <!-- EDITOR -->
   <div class="overlay" id="overlay" aria-hidden="true">
     <div class="viewer">
       <div class="vLeft" id="vLeft">
         <div class="topbar">
           <div class="group">
-            <button class="iconBtn" id="closeBtn" title="Close">✕</button>
+            <button class="btn icon" id="closeBtn" title="Close">✕</button>
             <div class="pill" id="posPill">0 / 0</div>
           </div>
           <div class="group">
-            <button class="iconBtn" id="prevBtn" title="Prev">←</button>
-            <button class="iconBtn" id="nextBtn" title="Next">→</button>
+            <button class="btn icon" id="prevBtn" title="Prev">←</button>
+            <button class="btn icon" id="nextBtn" title="Next">→</button>
           </div>
         </div>
 
@@ -444,104 +524,124 @@
       </div>
 
       <div class="vRight">
-        <div style="font-weight:1000; margin-bottom:6px;">Photo</div>
-        <div class="small" id="fileName">—</div>
+        <div style="font-weight:1000; margin-bottom:6px;" id="editTitle">Photo</div>
+        <div class="muted" id="editSub">Autosave ON</div>
 
         <div class="hr"></div>
 
-        <div class="small">Folder</div>
-        <select id="vFolder"></select>
-
-        <div style="height:10px;"></div>
-
-        <div class="small">Category</div>
-        <select id="vCat"></select>
-
-        <div style="height:10px;"></div>
-
-        <div class="small">Notes</div>
-        <textarea id="vNotes" placeholder="Damage notes, parts notes, etc."></textarea>
+        <div class="muted" style="margin-bottom:6px;">Notes (optional)</div>
+        <textarea id="notesInput" placeholder="Damage notes…"></textarea>
 
         <div class="hr"></div>
 
-        <div style="font-weight:1000;">Markup tools</div>
-        <div class="toolbar" id="toolbar">
-          <button class="toolbtn" data-tool="arrow">Arrow</button>
-          <button class="toolbtn" data-tool="circle">Circle</button>
-          <button class="toolbtn" data-tool="rect">Square</button>
-          <button class="toolbtn" data-tool="line">Straight Edge</button>
-          <button class="toolbtn" data-tool="angle">Line Angle</button>
-          <button class="toolbtn" data-tool="ruler">Measure</button>
-          <button class="toolbtn" data-tool="pan">Pan</button>
+        <div style="font-weight:1000;">Tools</div>
+        <div class="toolRow" id="toolRow" aria-label="Tools">
+          <div class="toolIcon active" data-tool="arrow" title="Arrow">➤</div>
+          <div class="toolIcon" data-tool="circle" title="Circle">◯</div>
+          <div class="toolIcon" data-tool="rect" title="Square">▢</div>
+          <div class="toolIcon" data-tool="line" title="Straight Line">／</div>
+          <div class="toolIcon" data-tool="angle" title="Angle (2 lines)">∠</div>
+          <div class="toolIcon" data-tool="ruler" title="Measure">📏</div>
+          <div class="toolIcon" data-tool="pan" title="Pan">✋</div>
         </div>
 
         <div class="row" style="margin-top:10px;">
           <button class="btn sm" id="undoBtn">Undo</button>
           <button class="btn sm" id="clearBtn">Clear</button>
-          <button class="btn sm" id="resetViewBtn">Reset View</button>
+          <button class="btn sm" id="revertBtn">Revert Original</button>
         </div>
 
         <div class="row" style="margin-top:10px;">
-          <button class="btn primary" id="saveBtn">Save</button>
-          <button class="btn danger" id="delBtn">Delete</button>
+          <button class="btn danger" id="deleteBtn">Delete</button>
         </div>
 
-        <div class="small" style="margin-top:10px;">
-          Tips: drag to pan (Pan tool) • pinch-zoom on iPhone/iPad works via browser zoom • Arrow keys ←/→ • Esc closes
+        <div class="hint" id="angleHint" style="display:none;">
+          Angle tool: add <b>Line 1</b>, then add <b>Line 2</b>. The angle between them will display.
         </div>
       </div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
+</div>
+
+<!-- JSZip for real ZIP folders & numbering -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script>
 (() => {
-  // =======================
-  // IndexedDB
-  // =======================
-  const DB_NAME = "mitchell_photo_app_full_v1";
-  const DB_VER = 1;
-  const STORE_PHOTOS = "photos"; // {id, blob, type}
-  const STORE_META   = "meta";   // {id, filename, created, folder, category, notes, order, anno}
+  // =========================================
+  // “App” model
+  // =========================================
+  const FOLDERS = ["Walk Around","UPD","Teardown"];
 
-  const FOLDERS = ["Unsorted","RO","Tear Down","Supplements","After Repair","Final"];
-  const CATS    = ["Uncategorized","VIN","Odometer","Front","Rear","Left Side","Right Side","Damage","Repair Area","Parts"];
+  // Passcode stored locally (device-level, not a real security system)
+  const PASS_KEY = "mitchell_app_pass_v1";
+
+  // IndexedDB stores:
+  //  - originals: original uploaded blobs
+  //  - edits: rendered edited blobs (image + markup burned in)
+  //  - thumbs: small preview blobs (edited if present)
+  //  - meta: {id, folder, order, filename, created, notes, anno, anglePairs}
+  const DB_NAME = "mitchell_app_pro_v1";
+  const DB_VER = 1;
+  const STORE_ORIG  = "originals"; // {id, blob, type}
+  const STORE_EDIT  = "edits";     // {id, blob, type}
+  const STORE_THUMB = "thumbs";    // {id, blob, type}
+  const STORE_META  = "meta";      // {id, folder, order, filename, created, notes, anno}
 
   let db;
-  let meta = [];     // array of meta records sorted by order
-  let viewerIndex = -1;
 
-  // Drag reorder state
-  let dragging = null;   // {id, startIndex, ghost, offsetX, offsetY}
+  // In-memory cache of meta records for faster UI
+  let meta = []; // all photos across folders
+
+  // UI routing
+  let currentFolder = null;
+
+  // Drag reorder
+  let dragging = null; // {id, fromIndex, ghost, offsetX, offsetY}
   let insertTarget = null; // {index, side:'before'|'after'}
-  let snapAngles = false;
 
-  // Viewer / canvas state
+  // Editor
+  const overlay = document.getElementById("overlay");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
-  let imgBitmap = null;        // ImageBitmap for current photo
-  let view = { scale: 1, tx: 0, ty: 0 };  // simple pan/scale
+
+  let editorFolder = null;
+  let editorList = [];    // meta items for that folder, ordered
+  let editorIndex = -1;   // position within editorList
+  let editorId = null;    // current photo id
+  let baseBitmap = null;  // ImageBitmap from original
+  let view = { scale: 1, tx: 0, ty: 0 };
   let tool = "arrow";
   let isDown = false;
-  let start = {x:0,y:0};
-  let curr = {x:0,y:0};
-  let temp = null;
-  let anno = [];      // current photo annotations (array of shapes)
-  let undoStack = []; // for current photo
+  let startW = {x:0,y:0};
+  let currW = {x:0,y:0};
+  let tempShape = null;
 
-  // Colors & stroke
-  const STROKE = "rgba(0,255,0,0.95)";
-  const STROKE2 = "rgba(0,0,0,0.55)";
+  // Annotation model:
+  // shapes: {type, ...coords}
+  // We autosave by burning shapes onto edited image blob.
+  let anno = [];          // shapes
+  let undoStack = [];     // snapshot stack
+
+  // Angle tool = 2 separate line shapes; we show angle between last two angle-lines
+  // We implement angle tool as two sequential line placements (line1 then line2).
+  let angleStage = 0;     // 0 => expecting line1, 1 => expecting line2
+  let angleLine1 = null;
+
+  // Autosave (debounced)
+  let saveTimer = null;
+  const AUTOSAVE_MS = 450;
+
+  // Drawing style
+  const GREEN = "rgba(0,255,0,0.95)";
+  const DARK  = "rgba(0,0,0,0.55)";
   const WIDTH = 4;
 
-  // =======================
-  // Helpers
-  // =======================
-  const $ = (s) => document.querySelector(s);
-  const toastEl = $("#toast");
+  // Toast
+  const toastEl = document.getElementById("toast");
   let toastTimer = null;
-
   function toast(msg){
     toastEl.textContent = msg;
     toastEl.classList.add("show");
@@ -549,25 +649,24 @@
     toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
   }
 
-  function uuid(){
-    return crypto.randomUUID ? crypto.randomUUID() : ("id_" + Math.random().toString(16).slice(2) + Date.now());
-  }
-  function nowISO(){ return new Date().toISOString(); }
-
+  // =========================================
+  // IndexedDB helpers
+  // =========================================
   function openDB(){
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VER);
       req.onerror = () => reject(req.error);
       req.onupgradeneeded = () => {
         const d = req.result;
-        if (!d.objectStoreNames.contains(STORE_PHOTOS)) d.createObjectStore(STORE_PHOTOS, {keyPath:"id"});
-        if (!d.objectStoreNames.contains(STORE_META))   d.createObjectStore(STORE_META,   {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_ORIG))  d.createObjectStore(STORE_ORIG,  {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_EDIT))  d.createObjectStore(STORE_EDIT,  {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_THUMB)) d.createObjectStore(STORE_THUMB, {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_META))  d.createObjectStore(STORE_META,  {keyPath:"id"});
       };
       req.onsuccess = () => resolve(req.result);
     });
   }
   function tx(stores, mode="readonly"){ return db.transaction(stores, mode); }
-
   function idbGet(store, key){
     return new Promise((resolve, reject) => {
       const req = store.get(key);
@@ -604,189 +703,136 @@
     });
   }
 
-  function buildSelects(){
-    $("#folderSel").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
-    $("#catSel").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-    $("#vFolder").innerHTML = FOLDERS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
-    $("#vCat").innerHTML = CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-    $("#folderSel").value = "Unsorted";
-    $("#catSel").value = "Uncategorized";
+  // =========================================
+  // Utility
+  // =========================================
+  function uuid(){
+    return crypto.randomUUID ? crypto.randomUUID() : ("id_" + Math.random().toString(16).slice(2) + Date.now());
   }
-  function esc(s){
-    return (s ?? "").toString()
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  }
+  function nowISO(){ return new Date().toISOString(); }
+  function pad3(n){ return String(n).padStart(3,"0"); }
 
-  // =======================
-  // Load / Save meta
-  // =======================
-  async function loadMeta(){
-    const all = await idbGetAll(tx([STORE_META], "readonly").objectStore(STORE_META));
+  function folderItems(folder){
+    return meta
+      .filter(m => m.folder === folder)
+      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+  async function refreshMeta(){
+    const all = await idbGetAll(tx([STORE_META],"readonly").objectStore(STORE_META));
     meta = all.map(m => ({
       id: m.id,
+      folder: m.folder,
+      order: Number.isFinite(m.order) ? m.order : 0,
       filename: m.filename || "photo.jpg",
       created: m.created || nowISO(),
-      folder: m.folder || "Unsorted",
-      category: m.category || "Uncategorized",
       notes: m.notes || "",
-      order: Number.isFinite(m.order) ? m.order : 0,
       anno: Array.isArray(m.anno) ? m.anno : []
     }));
 
-    // Initialize order if missing
-    if (meta.length && meta.every(x => !x.order)){
-      // oldest first => 1..N
-      meta.sort((a,b) => (a.created||"").localeCompare(b.created||""));
-      meta.forEach((x,i) => x.order = i+1);
-      await persistOrderAll();
-    }
-    sortByOrder();
-    $("#count").textContent = String(meta.length);
-  }
-
-  function sortByOrder(){
-    meta.sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
-  }
-
-  async function persistMetaPatch(id, patch){
-    const t = tx([STORE_META], "readwrite");
-    const s = t.objectStore(STORE_META);
-    const cur = await idbGet(s, id);
-    if (!cur) { t.abort(); return; }
-    await idbPut(s, {...cur, ...patch});
-    await waitTxDone(t);
-
-    const idx = meta.findIndex(x => x.id === id);
-    if (idx >= 0) meta[idx] = {...meta[idx], ...patch};
-  }
-
-  async function persistOrderAll(){
-    const t = tx([STORE_META], "readwrite");
-    const s = t.objectStore(STORE_META);
-    for (const m of meta){
-      const cur = await idbGet(s, m.id);
-      if (!cur) continue;
-      await idbPut(s, {...cur, order: m.order});
-    }
-    await waitTxDone(t);
-  }
-
-  // =======================
-  // Add photos
-  // =======================
-  async function addFiles(files){
-    const defaultFolder = $("#folderSel").value;
-    const defaultCat = $("#catSel").value;
-
-    const maxOrder = meta.reduce((mx, m) => Math.max(mx, m.order || 0), 0);
-
-    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
-    const sP = t.objectStore(STORE_PHOTOS);
-    const sM = t.objectStore(STORE_META);
-
-    let added = 0;
-    for (const f of files){
-      if (!f.type.startsWith("image/")) continue;
-      const id = uuid();
-      await idbPut(sP, {id, blob: f, type: f.type || "image/jpeg"});
-
-      const m = {
-        id,
-        filename: f.name || `photo_${added+1}.jpg`,
-        created: nowISO(),
-        folder: defaultFolder,
-        category: defaultCat,
-        notes: "",
-        order: maxOrder + added + 1,
-        anno: []
-      };
-      await idbPut(sM, m);
-      meta.push(m);
-      added++;
-    }
-
-    await waitTxDone(t);
-    sortByOrder();
-    toast(`Added ${added} photo(s).`);
-    renderGrid();
-  }
-
-  // =======================
-  // Delete (FIXED + reliable)
-  // =======================
-  async function deletePhoto(id){
-    const t = tx([STORE_PHOTOS, STORE_META], "readwrite");
-    await idbDel(t.objectStore(STORE_PHOTOS), id).catch(()=>{});
-    await idbDel(t.objectStore(STORE_META), id).catch(()=>{});
-    await waitTxDone(t);
-
-    meta = meta.filter(x => x.id !== id);
-
-    // re-number orders 1..N
-    meta.forEach((m,i) => m.order = i+1);
-    await persistOrderAll();
-
-    $("#count").textContent = String(meta.length);
-    renderGrid();
-
-    // fix viewer index safely
-    if ($("#overlay").classList.contains("show")){
-      if (!meta.length){
-        closeViewer();
-      } else {
-        viewerIndex = Math.min(viewerIndex, meta.length - 1);
-        await openViewerByIndex(viewerIndex, true);
+    // Ensure orders are 1..N per folder
+    for (const f of FOLDERS){
+      const list = folderItems(f);
+      let needs = false;
+      list.forEach((x,i) => { if ((x.order||0) !== i+1) needs = true; });
+      if (needs){
+        list.forEach((x,i)=> x.order = i+1);
+        await persistOrdersForFolder(f, list);
       }
     }
   }
+  async function persistOrdersForFolder(folder, list){
+    // list must be folder-only and already sorted in desired order
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    for (const item of list){
+      const cur = await idbGet(s, item.id);
+      if (!cur) continue;
+      await idbPut(s, {...cur, order: item.order});
+    }
+    await waitTxDone(t);
 
-  // =======================
-  // Wipe
-  // =======================
-  async function wipeAll(){
-    await new Promise((resolve) => {
-      const req = indexedDB.deleteDatabase(DB_NAME);
-      req.onsuccess = resolve;
-      req.onerror = resolve;
-      req.onblocked = resolve;
-    });
-    db = await openDB();
-    meta = [];
-    $("#count").textContent = "0";
-    renderGrid();
-    closeViewer();
-  }
-
-  // =======================
-  // Thumbnails
-  // =======================
-  async function loadThumb(id, imgEl){
-    try{
-      const t = tx([STORE_PHOTOS], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_PHOTOS), id);
-      if (!rec?.blob) return;
-      const url = URL.createObjectURL(rec.blob);
-      imgEl.src = url;
-      imgEl.onload = () => URL.revokeObjectURL(url);
-    } catch(e){
-      console.error(e);
+    // reflect in memory
+    for (const item of list){
+      const idx = meta.findIndex(m => m.id === item.id);
+      if (idx >= 0) meta[idx].order = item.order;
     }
   }
 
-  function renderGrid(){
-    const grid = $("#grid");
+  function setSubtitle(text){
+    document.getElementById("subtitle").textContent = text;
+  }
+  function showPill(show){
+    document.getElementById("hdrPill").style.display = show ? "" : "none";
+  }
+  function setHdrCount(n){
+    document.getElementById("hdrCount").textContent = String(n);
+  }
+
+  // =========================================
+  // Routing / Views
+  // =========================================
+  const loginView  = document.getElementById("loginView");
+  const homeView   = document.getElementById("homeView");
+  const folderView = document.getElementById("folderView");
+
+  function goLogin(){
+    loginView.style.display = "";
+    homeView.style.display = "none";
+    folderView.style.display = "none";
+    setSubtitle("Login");
+    showPill(false);
+  }
+  async function goHome(){
+    loginView.style.display = "none";
+    homeView.style.display = "";
+    folderView.style.display = "none";
+    setSubtitle("Folders");
+    showPill(true);
+
+    await refreshMeta();
+    renderFolderCounts();
+    setHdrCount(meta.length);
+  }
+  async function goFolder(folder){
+    currentFolder = folder;
+    loginView.style.display = "none";
+    homeView.style.display = "none";
+    folderView.style.display = "";
+    setSubtitle(folder);
+    showPill(true);
+
+    document.getElementById("folderTitle").textContent = folder;
+    document.getElementById("dropFolderName").textContent = folder;
+
+    await refreshMeta();
+    setHdrCount(meta.length);
+    renderFolderGrid();
+  }
+
+  function renderFolderCounts(){
+    for (const f of FOLDERS){
+      const count = folderItems(f).length;
+      const el = document.querySelector(`[data-folder-count="${CSS.escape(f)}"]`);
+      if (el) el.textContent = String(count);
+    }
+  }
+
+  // =========================================
+  // Folder grid (numbered thumbnails + drag reorder)
+  // =========================================
+  async function renderFolderGrid(){
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    const badgeWrap = document.getElementById("insertBadge");
+    const badgeInner = document.getElementById("insertBadgeInner");
+
     grid.innerHTML = "";
-    $("#empty").style.display = meta.length ? "none" : "";
+    badgeWrap.style.display = "none";
 
-    // ensure order -> numbering is correct
-    sortByOrder();
-    meta.forEach((m, idx) => m.order = idx + 1);
+    const list = folderItems(currentFolder);
+    empty.style.display = list.length ? "none" : "";
 
-    // insert indicator elements
-    const insertBadge = $("#insertBadge");
-
-    meta.forEach((m, idx) => {
+    list.forEach((m, idx) => {
       const div = document.createElement("div");
       div.className = "thumb";
       div.dataset.id = m.id;
@@ -801,264 +847,340 @@
       num.textContent = String(idx + 1);
       div.appendChild(num);
 
-      const tags = document.createElement("div");
-      tags.className = "tagbar";
-      tags.innerHTML = `<span class="chip">${esc(m.folder)}</span><span class="chip">${esc(m.category)}</span>`;
-      div.appendChild(tags);
+      const bar = document.createElement("div");
+      bar.className = "thumbBar";
+      bar.innerHTML = `<span class="chip">${currentFolder}</span><span class="chip">${pad3(idx+1)}</span>`;
+      div.appendChild(bar);
 
-      // insert line for this thumb (for before/after visuals)
-      const line = document.createElement("div");
-      line.className = "insertLine";
-      div.appendChild(line);
+      const insertLine = document.createElement("div");
+      insertLine.className = "insertLine";
+      div.appendChild(insertLine);
 
-      div.addEventListener("click", () => openViewerByIndex(idx, true));
+      div.addEventListener("click", () => openEditor(currentFolder, idx));
 
-      // custom mobile-friendly drag reorder via pointer events
+      // pointer-based drag reorder
       div.addEventListener("pointerdown", (e) => {
-        // left click / touch only
+        if (overlay.classList.contains("show")) return;
         if (e.button !== undefined && e.button !== 0) return;
+        e.preventDefault();
         startDrag(e, div, idx);
       });
 
       grid.appendChild(div);
-      loadThumb(m.id, img);
+      loadThumbInto(m.id, img);
     });
 
-    // update badge hiding
-    if (!dragging){
-      insertBadge.style.display = "none";
+    async function loadThumbInto(id, imgEl){
+      // prefer edited thumb, else create a thumb from edited blob, else original
+      try{
+        const t = tx([STORE_THUMB], "readonly");
+        const rec = await idbGet(t.objectStore(STORE_THUMB), id);
+        if (rec?.blob){
+          const url = URL.createObjectURL(rec.blob);
+          imgEl.src = url;
+          imgEl.onload = () => URL.revokeObjectURL(url);
+          return;
+        }
+      } catch {}
+
+      // fallback: if edited exists but thumb missing, generate a thumb from edited blob
+      try{
+        const t2 = tx([STORE_EDIT], "readonly");
+        const rec2 = await idbGet(t2.objectStore(STORE_EDIT), id);
+        if (rec2?.blob){
+          const url = URL.createObjectURL(rec2.blob);
+          imgEl.src = url;
+          imgEl.onload = () => URL.revokeObjectURL(url);
+          return;
+        }
+      } catch {}
+
+      // fallback: original
+      try{
+        const t3 = tx([STORE_ORIG], "readonly");
+        const rec3 = await idbGet(t3.objectStore(STORE_ORIG), id);
+        if (rec3?.blob){
+          const url = URL.createObjectURL(rec3.blob);
+          imgEl.src = url;
+          imgEl.onload = () => URL.revokeObjectURL(url);
+        }
+      } catch {}
     }
-  }
 
-  function startDrag(e, el, index){
-    // don’t start drag if viewer is open
-    if ($("#overlay").classList.contains("show")) return;
+    function clearInsertIndicators(){
+      grid.querySelectorAll(".insertLine").forEach(l => l.style.display = "none");
+    }
 
-    e.preventDefault();
-    el.setPointerCapture(e.pointerId);
+    function startDrag(e, el, fromIndex){
+      el.setPointerCapture(e.pointerId);
+      const rect = el.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
 
-    const rect = el.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
+      const ghost = el.cloneNode(true);
+      ghost.classList.add("ghost");
+      ghost.style.left = (e.clientX - offsetX) + "px";
+      ghost.style.top  = (e.clientY - offsetY) + "px";
+      ghost.style.width = rect.width + "px";
+      ghost.style.height = rect.height + "px";
+      document.body.appendChild(ghost);
 
-    const ghost = el.cloneNode(true);
-    ghost.style.position = "fixed";
-    ghost.style.left = (e.clientX - offsetX) + "px";
-    ghost.style.top = (e.clientY - offsetY) + "px";
-    ghost.style.width = rect.width + "px";
-    ghost.style.height = rect.height + "px";
-    ghost.style.opacity = "0.92";
-    ghost.style.zIndex = "9999";
-    ghost.style.pointerEvents = "none";
-    ghost.style.boxShadow = "0 18px 40px rgba(0,0,0,.55)";
-    ghost.style.transform = "scale(1.02)";
-    document.body.appendChild(ghost);
+      dragging = { id: el.dataset.id, fromIndex, ghost, offsetX, offsetY };
+      insertTarget = null;
 
-    dragging = { id: el.dataset.id, startIndex: index, ghost, offsetX, offsetY };
+      badgeWrap.style.display = "";
+      badgeInner.textContent = "Dragging…";
 
-    // show badge
-    const badge = $("#insertBadge");
-    badge.style.display = "block";
-    badge.textContent = "Dragging…";
+      const move = (ev) => onDragMove(ev);
+      const up = (ev) => onDragEnd(ev, move, up);
 
-    const move = (ev) => onDragMove(ev);
-    const up = (ev) => onDragEnd(ev, move, up);
+      window.addEventListener("pointermove", move, {passive:false});
+      window.addEventListener("pointerup", up, {passive:false});
+    }
 
-    window.addEventListener("pointermove", move, {passive:false});
-    window.addEventListener("pointerup", up, {passive:false});
-  }
+    function onDragMove(e){
+      if (!dragging) return;
+      e.preventDefault();
 
-  function clearInsertIndicators(){
-    $("#grid").querySelectorAll(".insertLine").forEach(l => l.style.display = "none");
-  }
+      dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
+      dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
 
-  function onDragMove(e){
-    if (!dragging) return;
-    e.preventDefault();
-
-    // move ghost
-    dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
-    dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
-
-    // find hovered thumb
-    const thumbs = Array.from($("#grid").querySelectorAll(".thumb"));
-    let best = null;
-
-    for (const t of thumbs){
-      const r = t.getBoundingClientRect();
-      // small padding to make it easier
-      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
-        best = { el: t, rect: r, index: Number(t.dataset.index) };
-        break;
+      const thumbs = Array.from(grid.querySelectorAll(".thumb"));
+      let hit = null;
+      for (const t of thumbs){
+        const r = t.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
+          hit = { el:t, rect:r, index:Number(t.dataset.index) };
+          break;
+        }
       }
+
+      clearInsertIndicators();
+      insertTarget = null;
+
+      if (!hit){
+        badgeInner.textContent = "Move to a position…";
+        return;
+      }
+
+      const midX = (hit.rect.left + hit.rect.right) / 2;
+      const side = (e.clientX < midX) ? "before" : "after";
+
+      const line = hit.el.querySelector(".insertLine");
+      line.style.display = "block";
+      line.style.left = (side === "before") ? "8px" : "calc(100% - 8px)";
+
+      insertTarget = { index: hit.index, side };
+
+      const placeNum = hit.index + 1;
+      badgeInner.textContent = side === "before"
+        ? `Place BEFORE #${placeNum} (in front)`
+        : `Place AFTER #${placeNum} (behind)`;
     }
 
-    clearInsertIndicators();
-    insertTarget = null;
+    async function onDragEnd(e, moveHandler, upHandler){
+      if (!dragging) return;
+      e.preventDefault();
 
-    const badge = $("#insertBadge");
-    if (!best){
-      badge.textContent = "Move to a position…";
-      return;
+      window.removeEventListener("pointermove", moveHandler);
+      window.removeEventListener("pointerup", upHandler);
+
+      clearInsertIndicators();
+      badgeWrap.style.display = "none";
+      dragging.ghost.remove();
+
+      const from = dragging.fromIndex;
+      let to = from;
+
+      if (insertTarget){
+        to = insertTarget.index + (insertTarget.side === "after" ? 1 : 0);
+        if (to > from) to -= 1;
+      }
+
+      const id = dragging.id;
+      dragging = null;
+      insertTarget = null;
+
+      const listNow = folderItems(currentFolder);
+      if (!listNow.length) return;
+
+      to = Math.max(0, Math.min(to, listNow.length - 1));
+      if (to === from) return;
+
+      const item = listNow.splice(from, 1)[0];
+      listNow.splice(to, 0, item);
+      listNow.forEach((x,i)=> x.order = i+1);
+
+      await persistOrdersForFolder(currentFolder, listNow);
+      toast(`Moved to #${to+1}`);
+      await refreshMeta();
+      renderFolderGrid();
+    }
+  }
+
+  // =========================================
+  // Add / Drop photos to folder
+  // =========================================
+  async function addFilesToFolder(folder, files){
+    const list = folderItems(folder);
+    const maxOrder = list.reduce((mx, x) => Math.max(mx, x.order || 0), 0);
+
+    const t = tx([STORE_ORIG, STORE_META], "readwrite");
+    const sO = t.objectStore(STORE_ORIG);
+    const sM = t.objectStore(STORE_META);
+
+    let added = 0;
+    for (const f of files){
+      if (!f.type.startsWith("image/")) continue;
+      const id = uuid();
+      await idbPut(sO, {id, blob: f, type: f.type || "image/jpeg"});
+
+      const m = {
+        id,
+        folder,
+        order: maxOrder + added + 1,
+        filename: f.name || `photo_${added+1}.jpg`,
+        created: nowISO(),
+        notes: "",
+        anno: []
+      };
+      await idbPut(sM, m);
+      meta.push(m);
+      added++;
     }
 
-    const midX = (best.rect.left + best.rect.right) / 2;
-    const side = (e.clientX < midX) ? "before" : "after";
+    await waitTxDone(t);
+    toast(`Added ${added} photo(s).`);
 
-    // set insert line inside this thumb
-    const line = best.el.querySelector(".insertLine");
-    line.style.display = "block";
-    line.style.left = (side === "before" ? "8px" : "calc(100% - 8px)");
-
-    insertTarget = { index: best.index, side };
-
-    // BEFORE/AFTER label with numbering
-    const placeNum = best.index + 1;
-    badge.textContent = side === "before"
-      ? `Place BEFORE #${placeNum} (in front)`
-      : `Place AFTER #${placeNum} (behind)`;
-  }
-
-  async function onDragEnd(e, moveHandler, upHandler){
-    if (!dragging) return;
-    e.preventDefault();
-
-    window.removeEventListener("pointermove", moveHandler);
-    window.removeEventListener("pointerup", upHandler);
-
-    clearInsertIndicators();
-    $("#insertBadge").style.display = "none";
-
-    dragging.ghost.remove();
-
-    const from = dragging.startIndex;
-    let to = from;
-
-    if (insertTarget){
-      to = insertTarget.index + (insertTarget.side === "after" ? 1 : 0);
-      // if dragging forward in list, account for removal shift
-      if (to > from) to -= 1;
-      to = Math.max(0, Math.min(to, meta.length - 1));
+    // Generate thumbs quickly in background-ish (sync loop, but small)
+    for (const f of folderItems(folder).slice(-added)){
+      await ensureThumb(f.id);
     }
 
-    const draggedId = dragging.id;
-    dragging = null;
-    insertTarget = null;
-
-    if (to === from) return;
-
-    // reorder array
-    const item = meta.splice(from, 1)[0];
-    meta.splice(to, 0, item);
-
-    // rewrite order 1..N and persist
-    meta.forEach((m,i) => m.order = i+1);
-    await persistOrderAll();
-
-    toast(`Moved to #${to+1}`);
-    renderGrid();
+    await refreshMeta();
+    renderFolderGrid();
+    renderFolderCounts();
+    setHdrCount(meta.length);
   }
 
-  // =======================
-  // Export CSV
-  // =======================
-  function downloadText(filename, text, type="text/plain"){
-    const blob = new Blob([text], {type});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-  function csv(s){
-    const t = (s ?? "").toString().replaceAll('"','""');
-    return `"${t}"`;
-  }
-  function dateStamp(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${y}${m}${day}`;
-  }
-  function exportCSV(){
-    sortByOrder();
-    const header = ["order","filename","created","folder","category","notes","annoCount"].join(",");
-    const lines = meta.map(m => [
-      String(m.order || 0),
-      csv(m.filename),
-      m.created,
-      csv(m.folder),
-      csv(m.category),
-      csv(m.notes),
-      String((m.anno||[]).length)
-    ].join(","));
-    downloadText(`mitchell_photos_${dateStamp()}.csv`, [header, ...lines].join("\n"), "text/csv");
-    toast("CSV exported.");
+  // =========================================
+  // Thumb generation (edited preferred)
+  // =========================================
+  async function ensureThumb(id){
+    // if thumb exists, do nothing
+    try{
+      const t = tx([STORE_THUMB],"readonly");
+      const rec = await idbGet(t.objectStore(STORE_THUMB), id);
+      if (rec?.blob) return;
+    } catch {}
+
+    // choose source: edited if exists else original
+    let blob = null;
+    try{
+      const t2 = tx([STORE_EDIT],"readonly");
+      const rec2 = await idbGet(t2.objectStore(STORE_EDIT), id);
+      if (rec2?.blob) blob = rec2.blob;
+    } catch {}
+    if (!blob){
+      try{
+        const t3 = tx([STORE_ORIG],"readonly");
+        const rec3 = await idbGet(t3.objectStore(STORE_ORIG), id);
+        if (rec3?.blob) blob = rec3.blob;
+      } catch {}
+    }
+    if (!blob) return;
+
+    const bmp = await createImageBitmap(blob);
+    const max = 360;
+    const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const cctx = c.getContext("2d");
+    cctx.drawImage(bmp, 0, 0, w, h);
+
+    const thumbBlob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.85));
+    if (!thumbBlob) return;
+
+    const t4 = tx([STORE_THUMB], "readwrite");
+    await idbPut(t4.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
+    await waitTxDone(t4);
   }
 
-  // =======================
-  // Viewer open/close + nav
-  // =======================
-  async function openViewerByIndex(i, refreshUI=false){
-    sortByOrder();
-    viewerIndex = Math.max(0, Math.min(i, meta.length - 1));
-    const m = meta[viewerIndex];
-    if (!m) return;
+  // =========================================
+  // Editor open/close + navigation
+  // =========================================
+  async function openEditor(folder, index){
+    editorFolder = folder;
+    editorList = folderItems(folder);
+    editorIndex = Math.max(0, Math.min(index, editorList.length - 1));
+    editorId = editorList[editorIndex]?.id || null;
+    if (!editorId) return;
 
-    $("#overlay").classList.add("show");
-    $("#overlay").setAttribute("aria-hidden","false");
-    $("#posPill").textContent = `${viewerIndex+1} / ${meta.length}`;
-    $("#fileName").textContent = `#${viewerIndex+1} • ${m.filename || "—"}`;
-    $("#vFolder").value = m.folder || "Unsorted";
-    $("#vCat").value = m.category || "Uncategorized";
-    $("#vNotes").value = m.notes || "";
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden","false");
 
-    // load image into canvas
-    await loadImageToCanvas(m.id);
+    document.getElementById("posPill").textContent = `${editorIndex+1} / ${editorList.length}`;
+    document.getElementById("editTitle").textContent = `${folder} • #${pad3(editorIndex+1)}`;
+    document.getElementById("editSub").textContent = `Autosave ON • ${editorList[editorIndex].filename || ""}`;
 
-    // load annotations
+    // Load meta
+    const m = editorList[editorIndex];
     anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
     undoStack = [];
+    angleStage = 0;
+    angleLine1 = null;
+    setAngleHint();
+
+    document.getElementById("notesInput").value = m.notes || "";
+
+    await loadOriginalBitmap(editorId);
     resetView();
     redraw();
 
     setArrowState();
-
-    if (!refreshUI) return;
   }
 
-  function closeViewer(){
-    $("#overlay").classList.remove("show");
-    $("#overlay").setAttribute("aria-hidden","true");
-    imgBitmap = null;
+  function closeEditor(){
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden","true");
+    baseBitmap = null;
+    editorFolder = null;
+    editorList = [];
+    editorIndex = -1;
+    editorId = null;
     anno = [];
     undoStack = [];
-    viewerIndex = -1;
+    angleStage = 0;
+    angleLine1 = null;
+    clearTimeout(saveTimer);
+    saveTimer = null;
   }
 
   function setArrowState(){
-    const canPrev = viewerIndex > 0;
-    const canNext = viewerIndex < meta.length - 1;
-    $("#prevBtn").disabled = !canPrev;
-    $("#nextBtn").disabled = !canNext;
-    $("#bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
-    $("#bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
+    const canPrev = editorIndex > 0;
+    const canNext = editorIndex < editorList.length - 1;
+    document.getElementById("prevBtn").disabled = !canPrev;
+    document.getElementById("nextBtn").disabled = !canNext;
+    document.getElementById("bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
+    document.getElementById("bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
   }
 
-  function step(dir){
-    const next = viewerIndex + dir;
-    if (next < 0 || next >= meta.length) return;
-    openViewerByIndex(next, true);
+  async function stepEditor(dir){
+    const next = editorIndex + dir;
+    if (next < 0 || next >= editorList.length) return;
+    // autosave already debounced; but force save now so next image reflects latest changes
+    await flushAutosave();
+    await openEditor(editorFolder, next);
   }
 
-  // =======================
-  // Canvas / Markup drawing
-  // =======================
+  // =========================================
+  // Canvas + drawing
+  // =========================================
   function resizeCanvasToContainer(){
-    const host = $("#vLeft").getBoundingClientRect();
+    const host = document.getElementById("vLeft").getBoundingClientRect();
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     canvas.width = Math.floor(host.width * dpr);
     canvas.height = Math.floor(host.height * dpr);
@@ -1067,33 +1189,27 @@
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
 
-  async function loadImageToCanvas(photoId){
-    // fetch blob
-    const t = tx([STORE_PHOTOS], "readonly");
-    const rec = await idbGet(t.objectStore(STORE_PHOTOS), photoId);
+  async function loadOriginalBitmap(id){
+    const t = tx([STORE_ORIG], "readonly");
+    const rec = await idbGet(t.objectStore(STORE_ORIG), id);
     if (!rec?.blob){
-      imgBitmap = null;
+      baseBitmap = null;
       return;
     }
-    // decode
-    imgBitmap = await createImageBitmap(rec.blob);
+    baseBitmap = await createImageBitmap(rec.blob);
     resizeCanvasToContainer();
   }
 
   function resetView(){
     view.tx = 0; view.ty = 0; view.scale = 1;
+    if (!baseBitmap) return;
 
-    if (!imgBitmap) return;
-
-    // fit image inside canvas (CSS pixels)
     const cw = canvas.clientWidth;
     const ch = canvas.clientHeight;
-    const iw = imgBitmap.width;
-    const ih = imgBitmap.height;
-
+    const iw = baseBitmap.width;
+    const ih = baseBitmap.height;
     const s = Math.min(cw / iw, ch / ih);
     view.scale = s;
-    // center
     const dw = iw * s;
     const dh = ih * s;
     view.tx = (cw - dw) / 2;
@@ -1101,94 +1217,91 @@
   }
 
   function screenToWorld(x,y){
-    // invert view transform
-    const wx = (x - view.tx) / view.scale;
-    const wy = (y - view.ty) / view.scale;
-    return {x: wx, y: wy};
+    return { x: (x - view.tx) / view.scale, y: (y - view.ty) / view.scale };
+  }
+  function pointerPos(e){
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
 
-  function snapPoint(p){
-    if (!snapAngles) return p;
-    // snap relative to start point (for line-like tools)
-    const dx = p.x - start.x;
-    const dy = p.y - start.y;
-    const ang = Math.atan2(dy, dx);
-    const step = Math.PI / 12; // 15 degrees
-    const snapped = Math.round(ang / step) * step;
-    const len = Math.hypot(dx,dy);
-    return { x: start.x + Math.cos(snapped) * len, y: start.y + Math.sin(snapped) * len };
+  function pushUndo(){
+    undoStack.push(structuredClone(anno));
+    if (undoStack.length > 60) undoStack.shift();
   }
 
   function redraw(){
     resizeCanvasToContainer();
-
     const cw = canvas.clientWidth;
     const ch = canvas.clientHeight;
 
-    // clear
     ctx.clearRect(0,0,cw,ch);
 
-    // draw image
-    if (imgBitmap){
+    // base image
+    if (baseBitmap){
       ctx.save();
       ctx.translate(view.tx, view.ty);
       ctx.scale(view.scale, view.scale);
-      ctx.drawImage(imgBitmap, 0, 0);
+      ctx.drawImage(baseBitmap, 0, 0);
       ctx.restore();
     } else {
-      ctx.fillStyle = "rgba(255,255,255,0.10)";
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
       ctx.fillRect(0,0,cw,ch);
     }
 
-    // draw existing shapes
+    // shapes
     drawShapes(anno);
+    if (tempShape) drawShapes([tempShape], true);
 
-    // draw temp shape
-    if (temp) drawShapes([temp], true);
-  }
-
-  function drawShapes(list, isTemp=false){
-    if (!imgBitmap) return;
-    for (const s of list){
-      // outer stroke (dark) + inner (green)
-      drawShapeStroke(s, STROKE2, WIDTH + 2, isTemp);
-      drawShapeStroke(s, STROKE,  WIDTH,     isTemp);
+    // If angle tool has line1 set but waiting for line2, show a tiny hint line label
+    if (tool === "angle" && angleStage === 1 && angleLine1){
+      // draw a subtle label at vertex
+      drawAngleLabel(angleLine1, null, true);
     }
   }
 
-  function drawShapeStroke(s, color, width, isTemp){
-    const cw = canvas.clientWidth;
-    const ch = canvas.clientHeight;
+  function drawShapes(list, dashed=false){
+    if (!baseBitmap) return;
+    for (const s of list){
+      drawShapeStroke(s, DARK,  WIDTH+2, dashed);
+      drawShapeStroke(s, GREEN, WIDTH,   dashed);
+    }
+  }
 
+  function drawShapeStroke(s, color, width, dashed){
     ctx.save();
-    // world->screen transform
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
 
     ctx.strokeStyle = color;
     ctx.lineWidth = width / view.scale;
-    ctx.fillStyle = "transparent";
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.setLineDash(isTemp ? [8 / view.scale, 6 / view.scale] : []);
+    ctx.setLineDash(dashed ? [8 / view.scale, 6 / view.scale] : []);
 
-    const drawLabel = (txt, x, y) => {
+    const label = (txt, x, y) => {
       ctx.save();
       ctx.setLineDash([]);
       ctx.font = `${14 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
       ctx.fillStyle = color;
-      ctx.strokeStyle = "rgba(0,0,0,0.6)";
+      ctx.strokeStyle = "rgba(0,0,0,0.65)";
       ctx.lineWidth = 4 / view.scale;
       ctx.strokeText(txt, x, y);
       ctx.fillText(txt, x, y);
       ctx.restore();
     };
 
-    if (s.type === "line"){
+    if (s.type === "line" || s.type === "ruler"){
       ctx.beginPath();
       ctx.moveTo(s.x1, s.y1);
       ctx.lineTo(s.x2, s.y2);
       ctx.stroke();
+
+      if (s.type === "ruler"){
+        const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+        const mx = (s.x1 + s.x2) / 2;
+        const my = (s.y1 + s.y2) / 2;
+        label(`${len.toFixed(0)} px`, mx + 8, my - 8);
+      }
     }
     else if (s.type === "rect"){
       const x = Math.min(s.x1, s.x2);
@@ -1203,10 +1316,8 @@
       const rx = Math.abs(s.x2 - s.x1) / 2;
       const ry = Math.abs(s.y2 - s.y1) / 2;
       ctx.beginPath();
-      // ellipse
       if (ctx.ellipse) ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
       else {
-        // fallback
         ctx.save();
         ctx.translate(cx,cy);
         ctx.scale(rx || 1, ry || 1);
@@ -1216,12 +1327,12 @@
       ctx.stroke();
     }
     else if (s.type === "arrow"){
-      // main line
+      // main
       ctx.beginPath();
       ctx.moveTo(s.x1, s.y1);
       ctx.lineTo(s.x2, s.y2);
       ctx.stroke();
-      // arrow head
+      // head
       const dx = s.x2 - s.x1;
       const dy = s.y2 - s.y1;
       const ang = Math.atan2(dy, dx);
@@ -1230,87 +1341,629 @@
       const a2 = ang + Math.PI / 8;
       ctx.beginPath();
       ctx.moveTo(s.x2, s.y2);
-      ctx.lineTo(s.x2 - Math.cos(a1) * headLen, s.y2 - Math.sin(a1) * headLen);
+      ctx.lineTo(s.x2 - Math.cos(a1)*headLen, s.y2 - Math.sin(a1)*headLen);
       ctx.moveTo(s.x2, s.y2);
-      ctx.lineTo(s.x2 - Math.cos(a2) * headLen, s.y2 - Math.sin(a2) * headLen);
+      ctx.lineTo(s.x2 - Math.cos(a2)*headLen, s.y2 - Math.sin(a2)*headLen);
       ctx.stroke();
     }
-    else if (s.type === "angle"){
-      // angle: p1->v and v->p2
-      ctx.beginPath();
-      ctx.moveTo(s.vx, s.vy);
-      ctx.lineTo(s.x1, s.y1);
-      ctx.moveTo(s.vx, s.vy);
-      ctx.lineTo(s.x2, s.y2);
-      ctx.stroke();
-
-      // compute degrees
-      const a = {x: s.x1 - s.vx, y: s.y1 - s.vy};
-      const b = {x: s.x2 - s.vx, y: s.y2 - s.vy};
-      const dot = a.x*b.x + a.y*b.y;
-      const la = Math.hypot(a.x,a.y);
-      const lb = Math.hypot(b.x,b.y);
-      const deg = (la && lb) ? Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI : 0;
-      drawLabel(`${deg.toFixed(1)}°`, s.vx + 8, s.vy - 8);
-    }
-    else if (s.type === "ruler"){
-      // measure line + length (pixels)
+    else if (s.type === "angleLine"){
+      // angle is composed of 2 lines; we only draw the line itself here
       ctx.beginPath();
       ctx.moveTo(s.x1, s.y1);
       ctx.lineTo(s.x2, s.y2);
       ctx.stroke();
-      const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
-      const mx = (s.x1 + s.x2) / 2;
-      const my = (s.y1 + s.y2) / 2;
-      drawLabel(`${len.toFixed(0)} px`, mx + 8, my - 8);
+    }
+
+    // If there are last two angle lines, draw angle label
+    // We do this *after* drawing shapes in redraw() as a separate pass (see below)
+    ctx.restore();
+  }
+
+  function drawAngleLabel(line1, line2, ghost=false){
+    if (!line1) return;
+    // label at shared vertex = line1.x1,y1 (we enforce)
+    const vx = line1.x1, vy = line1.y1;
+
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+
+    const label = (txt, x, y, color) => {
+      ctx.save();
+      ctx.font = `${14 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "rgba(0,0,0,0.65)";
+      ctx.lineWidth = 4 / view.scale;
+      ctx.strokeText(txt, x, y);
+      ctx.fillText(txt, x, y);
+      ctx.restore();
+    };
+
+    let txt = ghost ? "Angle: add line 2…" : "";
+    if (!ghost && line2){
+      const a = {x: line1.x2 - vx, y: line1.y2 - vy};
+      const b = {x: line2.x2 - vx, y: line2.y2 - vy};
+      const dot = a.x*b.x + a.y*b.y;
+      const la = Math.hypot(a.x,a.y);
+      const lb = Math.hypot(b.x,b.y);
+      const deg = (la && lb) ? Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI : 0;
+      txt = `${deg.toFixed(1)}°`;
+    }
+
+    if (txt){
+      label(txt, vx + 8, vy - 8, ghost ? "rgba(255,255,255,0.75)" : GREEN);
     }
 
     ctx.restore();
   }
 
-  function pushUndo(){
-    undoStack.push(structuredClone(anno));
-    if (undoStack.length > 50) undoStack.shift();
+  function redrawAngleLabels(){
+    // find last two angleLine shapes that share same vertex
+    const angleLines = anno.filter(s => s.type === "angleLine");
+    if (angleLines.length >= 2){
+      const l2 = angleLines[angleLines.length - 1];
+      const l1 = angleLines[angleLines.length - 2];
+      // Only label if same vertex (x1,y1)
+      if (Math.abs(l1.x1 - l2.x1) < 0.001 && Math.abs(l1.y1 - l2.y1) < 0.001){
+        drawAngleLabel(l1, l2, false);
+      }
+    }
   }
 
+  function scheduleAutosave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { autosave().catch(console.error); }, AUTOSAVE_MS);
+  }
+
+  async function flushAutosave(){
+    if (saveTimer){
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      await autosave();
+    }
+  }
+
+  async function autosave(){
+    if (!editorId) return;
+    // 1) persist meta (notes + anno)
+    const notes = document.getElementById("notesInput").value || "";
+    await persistMetaForEditor(editorId, { notes, anno: structuredClone(anno) });
+
+    // 2) burn edited image blob + thumb blob
+    await renderAndStoreEdited(editorId);
+
+    // 3) update folder grid thumbnails if you go back
+    // (we update thumb store; grid reloads from thumb store)
+  }
+
+  async function persistMetaForEditor(id, patch){
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    const cur = await idbGet(s, id);
+    if (!cur){ t.abort(); return; }
+    await idbPut(s, {...cur, ...patch});
+    await waitTxDone(t);
+
+    // memory
+    const idx = meta.findIndex(m => m.id === id);
+    if (idx >= 0){
+      if (patch.notes !== undefined) meta[idx].notes = patch.notes;
+      if (patch.anno !== undefined) meta[idx].anno = patch.anno;
+    }
+  }
+
+  async function renderAndStoreEdited(id){
+    if (!baseBitmap) return;
+
+    // render full-resolution edited image (original pixel size)
+    const w = baseBitmap.width;
+    const h = baseBitmap.height;
+
+    const off = document.createElement("canvas");
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext("2d");
+
+    // draw base
+    octx.drawImage(baseBitmap, 0, 0);
+
+    // draw shapes in original pixel coordinates (anno already is in original pixel coords)
+    // so just draw them at scale 1.
+    const drawShape = (s, color, width) => {
+      octx.save();
+      octx.strokeStyle = color;
+      octx.lineWidth = width;
+      octx.lineCap = "round";
+      octx.lineJoin = "round";
+      octx.setLineDash([]);
+
+      const label = (txt, x, y, col) => {
+        octx.save();
+        octx.font = `18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+        octx.fillStyle = col;
+        octx.strokeStyle = "rgba(0,0,0,0.65)";
+        octx.lineWidth = 6;
+        octx.strokeText(txt, x, y);
+        octx.fillText(txt, x, y);
+        octx.restore();
+      };
+
+      if (s.type === "line"){
+        octx.beginPath(); octx.moveTo(s.x1,s.y1); octx.lineTo(s.x2,s.y2); octx.stroke();
+      } else if (s.type === "ruler"){
+        octx.beginPath(); octx.moveTo(s.x1,s.y1); octx.lineTo(s.x2,s.y2); octx.stroke();
+        const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+        label(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 10, (s.y1+s.y2)/2 - 10, color);
+      } else if (s.type === "rect"){
+        const x = Math.min(s.x1,s.x2), y=Math.min(s.y1,s.y2);
+        const ww = Math.abs(s.x2-s.x1), hh=Math.abs(s.y2-s.y1);
+        octx.strokeRect(x,y,ww,hh);
+      } else if (s.type === "circle"){
+        const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2;
+        const rx=Math.abs(s.x2-s.x1)/2, ry=Math.abs(s.y2-s.y1)/2;
+        octx.beginPath();
+        if (octx.ellipse) octx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+        else {
+          octx.save(); octx.translate(cx,cy); octx.scale(rx||1,ry||1);
+          octx.arc(0,0,1,0,Math.PI*2); octx.restore();
+        }
+        octx.stroke();
+      } else if (s.type === "arrow"){
+        octx.beginPath(); octx.moveTo(s.x1,s.y1); octx.lineTo(s.x2,s.y2); octx.stroke();
+        const dx=s.x2-s.x1, dy=s.y2-s.y1;
+        const ang=Math.atan2(dy,dx);
+        const head=28;
+        const a1=ang-Math.PI/8, a2=ang+Math.PI/8;
+        octx.beginPath();
+        octx.moveTo(s.x2,s.y2);
+        octx.lineTo(s.x2-Math.cos(a1)*head, s.y2-Math.sin(a1)*head);
+        octx.moveTo(s.x2,s.y2);
+        octx.lineTo(s.x2-Math.cos(a2)*head, s.y2-Math.sin(a2)*head);
+        octx.stroke();
+      } else if (s.type === "angleLine"){
+        octx.beginPath(); octx.moveTo(s.x1,s.y1); octx.lineTo(s.x2,s.y2); octx.stroke();
+      }
+      octx.restore();
+    };
+
+    // two-stroke (dark then green)
+    for (const s of anno){
+      drawShape(s, DARK,  WIDTH+2);
+      drawShape(s, GREEN, WIDTH);
+    }
+
+    // Angle label between last two angleLine shapes (same vertex)
+    const angleLines = anno.filter(s => s.type === "angleLine");
+    if (angleLines.length >= 2){
+      const l2 = angleLines[angleLines.length - 1];
+      const l1 = angleLines[angleLines.length - 2];
+      if (Math.abs(l1.x1 - l2.x1) < 0.001 && Math.abs(l1.y1 - l2.y1) < 0.001){
+        const vx = l1.x1, vy = l1.y1;
+        const a = {x: l1.x2 - vx, y: l1.y2 - vy};
+        const b = {x: l2.x2 - vx, y: l2.y2 - vy};
+        const dot = a.x*b.x + a.y*b.y;
+        const la = Math.hypot(a.x,a.y);
+        const lb = Math.hypot(b.x,b.y);
+        const deg = (la && lb) ? Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI : 0;
+
+        // label
+        octx.save();
+        octx.font = `18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+        octx.fillStyle = GREEN;
+        octx.strokeStyle = "rgba(0,0,0,0.65)";
+        octx.lineWidth = 6;
+        const txt = `${deg.toFixed(1)}°`;
+        octx.strokeText(txt, vx + 12, vy - 12);
+        octx.fillText(txt, vx + 12, vy - 12);
+        octx.restore();
+      }
+    }
+
+    const editedBlob = await new Promise(res => off.toBlob(res, "image/jpeg", 0.92));
+    if (!editedBlob) return;
+
+    // Store edited blob
+    const t = tx([STORE_EDIT], "readwrite");
+    await idbPut(t.objectStore(STORE_EDIT), {id, blob: editedBlob, type:"image/jpeg"});
+    await waitTxDone(t);
+
+    // Thumb
+    const max = 360;
+    const scale = Math.min(1, max / Math.max(w, h));
+    const tw = Math.max(1, Math.round(w * scale));
+    const th = Math.max(1, Math.round(h * scale));
+    const tc = document.createElement("canvas");
+    tc.width = tw; tc.height = th;
+    tc.getContext("2d").drawImage(off, 0, 0, tw, th);
+    const thumbBlob = await new Promise(res => tc.toBlob(res, "image/jpeg", 0.85));
+    if (thumbBlob){
+      const t2 = tx([STORE_THUMB], "readwrite");
+      await idbPut(t2.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
+      await waitTxDone(t2);
+    }
+  }
+
+  // =========================================
+  // Tools
+  // =========================================
   function setTool(next){
     tool = next;
-    document.querySelectorAll(".toolbtn").forEach(b => {
-      b.classList.toggle("active", b.dataset.tool === tool);
+    document.querySelectorAll(".toolIcon").forEach(el => {
+      el.classList.toggle("active", el.dataset.tool === tool);
+    });
+    angleStage = 0;
+    angleLine1 = null;
+    setAngleHint();
+  }
+
+  function setAngleHint(){
+    const hint = document.getElementById("angleHint");
+    hint.style.display = (tool === "angle") ? "" : "none";
+  }
+
+  function commitShape(shape){
+    pushUndo();
+    anno.push(shape);
+    tempShape = null;
+    redraw();
+    redrawAngleLabels();
+    scheduleAutosave();
+  }
+
+  // =========================================
+  // Editor interactions
+  // =========================================
+  function setupCanvasEvents(){
+    canvas.addEventListener("pointerdown", (e) => {
+      if (!baseBitmap) return;
+      canvas.setPointerCapture(e.pointerId);
+      isDown = true;
+
+      const p = pointerPos(e);
+      const w = screenToWorld(p.x, p.y);
+      startW = w;
+      currW = w;
+      tempShape = null;
+
+      if (tool === "pan"){
+        startW._sx = p.x; startW._sy = p.y;
+        startW._tx = view.tx; startW._ty = view.ty;
+      }
+
+      // Angle tool is special: first click-drag makes line1, second makes line2
+      if (tool === "angle" && angleStage === 0){
+        // line1 will be created on pointerup
+      }
+      if (tool === "angle" && angleStage === 1){
+        // line2 shares the same vertex as line1.x1,y1
+        // enforce vertex = line1 start
+        startW = {x: angleLine1.x1, y: angleLine1.y1};
+      }
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (!isDown || !baseBitmap) return;
+
+      const p = pointerPos(e);
+
+      if (tool === "pan"){
+        const dx = p.x - (startW._sx || 0);
+        const dy = p.y - (startW._sy || 0);
+        view.tx = (startW._tx || 0) + dx;
+        view.ty = (startW._ty || 0) + dy;
+        redraw();
+        redrawAngleLabels();
+        return;
+      }
+
+      const w = screenToWorld(p.x, p.y);
+      currW = w;
+
+      if (tool === "rect") tempShape = {type:"rect", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "circle") tempShape = {type:"circle", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "line") tempShape = {type:"line", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "arrow") tempShape = {type:"arrow", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "ruler") tempShape = {type:"ruler", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "angle"){
+        // show a temp angleLine during drag
+        tempShape = {type:"angleLine", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      }
+
+      redraw();
+      redrawAngleLabels();
+    });
+
+    canvas.addEventListener("pointerup", async (e) => {
+      if (!isDown) return;
+      isDown = false;
+
+      if (!tempShape || tool === "pan"){
+        tempShape = null;
+        return;
+      }
+
+      if (tool !== "angle"){
+        commitShape(tempShape);
+        return;
+      }
+
+      // Angle tool: stage 0 => line1, stage 1 => line2 then reset
+      if (tool === "angle" && angleStage === 0){
+        angleLine1 = structuredClone(tempShape);
+        commitShape(angleLine1);
+        angleStage = 1;
+        tempShape = null;
+        redraw();
+        redrawAngleLabels();
+        scheduleAutosave();
+        return;
+      }
+      if (tool === "angle" && angleStage === 1){
+        const line2 = structuredClone(tempShape);
+        // enforce same vertex as line1
+        line2.x1 = angleLine1.x1; line2.y1 = angleLine1.y1;
+        commitShape(line2);
+        // reset
+        angleStage = 0;
+        angleLine1 = null;
+        tempShape = null;
+        redraw();
+        redrawAngleLabels();
+        scheduleAutosave();
+        return;
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (!overlay.classList.contains("show")) return;
+      resizeCanvasToContainer();
+      redraw();
+      redrawAngleLabels();
     });
   }
 
-  function pointerPos(e){
-    const r = canvas.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  // =========================================
+  // Delete / Revert / Undo / Clear
+  // =========================================
+  async function deleteCurrent(){
+    if (!editorId) return;
+    const m = editorList[editorIndex];
+    if (!m) return;
+
+    if (!confirm(`Delete ${editorFolder} #${pad3(editorIndex+1)}?`)) return;
+
+    // delete from stores
+    const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
+    await idbDel(t.objectStore(STORE_ORIG), editorId).catch(()=>{});
+    await idbDel(t.objectStore(STORE_EDIT), editorId).catch(()=>{});
+    await idbDel(t.objectStore(STORE_THUMB), editorId).catch(()=>{});
+    await idbDel(t.objectStore(STORE_META), editorId).catch(()=>{});
+    await waitTxDone(t);
+
+    // refresh
+    await refreshMeta();
+
+    // rebuild list & renumber
+    const list = folderItems(editorFolder);
+    list.forEach((x,i)=> x.order = i+1);
+    await persistOrdersForFolder(editorFolder, list);
+    await refreshMeta();
+
+    // update folder page
+    setHdrCount(meta.length);
+    renderFolderCounts();
+
+    // close or move to next/prev
+    const newList = folderItems(editorFolder);
+    if (!newList.length){
+      closeEditor();
+      await goFolder(editorFolder);
+      toast("Deleted.");
+      return;
+    }
+    const nextIndex = Math.min(editorIndex, newList.length - 1);
+    closeEditor();
+    await goFolder(editorFolder);
+    toast("Deleted.");
+    await openEditor(editorFolder, nextIndex);
   }
 
-  // =======================
-  // UI wiring
-  // =======================
-  async function init(){
-    db = await openDB();
-    buildSelects();
-    await loadMeta();
-    renderGrid();
-    wireUI();
+  async function revertToOriginal(){
+    if (!editorId) return;
+    if (!confirm("Revert this photo back to ORIGINAL (remove all edits/markup)?")) return;
+
+    // Clear anno + notes? (notes we keep)
+    anno = [];
+    undoStack = [];
+    angleStage = 0;
+    angleLine1 = null;
+
+    // Remove edited + thumb
+    const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
+    await idbDel(t.objectStore(STORE_EDIT), editorId).catch(()=>{});
+    await idbDel(t.objectStore(STORE_THUMB), editorId).catch(()=>{});
+    await waitTxDone(t);
+
+    // Persist anno empty (autosave)
+    await persistMetaForEditor(editorId, { anno: [], notes: document.getElementById("notesInput").value || "" });
+
+    // Regenerate thumb from original
+    await ensureThumb(editorId);
+
+    redraw();
+    scheduleAutosave(); // will store empty anno and also recreate edited if you add shapes later
+    toast("Reverted.");
   }
 
+  // =========================================
+  // Export ZIP / CSV
+  // =========================================
+  function downloadBlob(filename, blob){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportCSVAll(){
+    const header = ["folder","order","filename","created","notes","annoCount"].join(",");
+    const lines = [];
+    for (const f of FOLDERS){
+      const list = folderItems(f);
+      for (const m of list){
+        lines.push([
+          `"${f.replaceAll('"','""')}"`,
+          String(m.order || 0),
+          `"${(m.filename||"").replaceAll('"','""')}"`,
+          m.created,
+          `"${(m.notes||"").replaceAll('"','""')}"`,
+          String((m.anno||[]).length)
+        ].join(","));
+      }
+    }
+    const csv = [header, ...lines].join("\n");
+    downloadBlob(`mitchell_photos.csv`, new Blob([csv], {type:"text/csv"}));
+    toast("CSV exported.");
+  }
+
+  async function getBestBlobForExport(id){
+    // if edited exists, export edited; else original
+    try{
+      const t = tx([STORE_EDIT], "readonly");
+      const rec = await idbGet(t.objectStore(STORE_EDIT), id);
+      if (rec?.blob) return {blob: rec.blob, ext:"jpg"};
+    } catch {}
+    const t2 = tx([STORE_ORIG], "readonly");
+    const rec2 = await idbGet(t2.objectStore(STORE_ORIG), id);
+    if (rec2?.blob) return {blob: rec2.blob, ext:"jpg"};
+    return null;
+  }
+
+  async function exportZipForFolders(folders){
+    if (!window.JSZip){
+      alert("JSZip failed to load. If you're offline, ZIP won't work. Try again with internet once.");
+      return;
+    }
+    await refreshMeta();
+
+    const zip = new JSZip();
+    for (const folder of folders){
+      const list = folderItems(folder);
+      const zf = zip.folder(folder);
+      for (let i=0; i<list.length; i++){
+        const m = list[i];
+        const best = await getBestBlobForExport(m.id);
+        if (!best) continue;
+        const name = `${pad3(i+1)}.jpg`;
+        zf.file(name, best.blob);
+      }
+    }
+    toast("Building ZIP…");
+    const out = await zip.generateAsync({type:"blob"});
+    downloadBlob(`Mitchell_Photos_${new Date().toISOString().slice(0,10)}.zip`, out);
+    toast("ZIP downloaded.");
+  }
+
+  // =========================================
+  // Login / passcode
+  // =========================================
+  function getPass(){
+    return localStorage.getItem(PASS_KEY) || "";
+  }
+  function setPass(p){
+    localStorage.setItem(PASS_KEY, p);
+  }
+
+  // =========================================
+  // Wiring buttons
+  // =========================================
   function wireUI(){
-    // Add files
-    $("#fileInput").addEventListener("change", async (e) => {
-      const files = Array.from(e.target.files || []);
-      e.target.value = "";
-      if (files.length) await addFiles(files);
-    });
-    $("#camInput").addEventListener("change", async (e) => {
-      const files = Array.from(e.target.files || []);
-      e.target.value = "";
-      if (files.length) await addFiles(files);
+    // login
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const pass = document.getElementById("passInput").value || "";
+      const saved = getPass();
+      if (!saved){
+        alert("No passcode set yet. Click Set/Change Passcode first.");
+        return;
+      }
+      if (pass !== saved){
+        alert("Wrong passcode.");
+        return;
+      }
+      document.getElementById("passInput").value = "";
+      await goHome();
     });
 
-    // Drop zone
-    const dz = $("#dropZone");
+    document.getElementById("setPassBtn").addEventListener("click", () => {
+      const p = prompt("Set a passcode (numbers recommended):");
+      if (!p) return;
+      setPass(p.trim());
+      toast("Passcode set.");
+    });
+
+    // folder cards
+    document.querySelectorAll(".folderCard").forEach(card => {
+      card.addEventListener("click", async () => {
+        const folder = card.dataset.folder;
+        await goFolder(folder);
+      });
+    });
+
+    // home
+    document.getElementById("logoutBtn").addEventListener("click", () => goLogin());
+    document.getElementById("wipeBtn").addEventListener("click", async () => {
+      if (!confirm("Wipe EVERYTHING on this device (all folders/photos/edits)?")) return;
+      await wipeAllDevice();
+      toast("Wiped.");
+      goLogin();
+    });
+    document.getElementById("exportCsvBtn").addEventListener("click", exportCSVAll);
+    document.getElementById("exportZipBtn").addEventListener("click", async () => {
+      await exportZipForFolders(FOLDERS);
+    });
+
+    // folder view controls
+    document.getElementById("backHomeBtn").addEventListener("click", async () => goHome());
+    document.getElementById("folderExportZipBtn").addEventListener("click", async () => {
+      await exportZipForFolders([currentFolder]);
+    });
+
+    document.getElementById("folderWipeBtn").addEventListener("click", async () => {
+      if (!confirm(`Wipe ONLY folder "${currentFolder}" on this device?`)) return;
+      await wipeFolder(currentFolder);
+      toast("Folder wiped.");
+      await goFolder(currentFolder);
+    });
+
+    document.getElementById("folderClearBadgesBtn").addEventListener("click", async () => {
+      const list = folderItems(currentFolder);
+      list.forEach((x,i)=> x.order = i+1);
+      await persistOrdersForFolder(currentFolder, list);
+      await refreshMeta();
+      renderFolderGrid();
+      toast("Renumbered.");
+    });
+
+    // add photos
+    const fileInput = document.getElementById("fileInput");
+    const camInput = document.getElementById("camInput");
+    fileInput.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (files.length) await addFilesToFolder(currentFolder, files);
+    });
+    camInput.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (files.length) await addFilesToFolder(currentFolder, files);
+    });
+
+    // drop zone
+    const dz = document.getElementById("dropZone");
     ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
       e.preventDefault(); e.stopPropagation();
       dz.classList.add("drag");
@@ -1321,187 +1974,147 @@
     }));
     dz.addEventListener("drop", async (e) => {
       const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-      if (!files.length) return toast("No image files detected.");
-      await addFiles(files);
+      if (!files.length) return;
+      await addFilesToFolder(currentFolder, files);
     });
 
-    // Export / wipe
-    $("#exportCsv").addEventListener("click", exportCSV);
-    $("#wipeAll").addEventListener("click", async () => {
-      if (!confirm("Wipe all photos on THIS device/browser?")) return;
-      await wipeAll();
-      toast("Wiped.");
+    // editor
+    document.getElementById("closeBtn").addEventListener("click", async () => {
+      await flushAutosave();
+      closeEditor();
+    });
+    overlay.addEventListener("click", async (e) => {
+      if (e.target.id === "overlay"){
+        await flushAutosave();
+        closeEditor();
+      }
     });
 
-    // Snap toggle
-    $("#snapToggle").addEventListener("click", () => {
-      snapAngles = !snapAngles;
-      $("#snapToggle").textContent = `Snap: ${snapAngles ? "ON" : "OFF"}`;
-      $("#snapToggle").classList.toggle("ok", snapAngles);
+    document.getElementById("prevBtn").addEventListener("click", () => stepEditor(-1));
+    document.getElementById("nextBtn").addEventListener("click", () => stepEditor(+1));
+    document.getElementById("bigPrev").addEventListener("click", () => stepEditor(-1));
+    document.getElementById("bigNext").addEventListener("click", () => stepEditor(+1));
+
+    // keyboard
+    document.addEventListener("keydown", async (e) => {
+      if (!overlay.classList.contains("show")) return;
+      if (e.key === "Escape"){
+        await flushAutosave();
+        closeEditor();
+      }
+      if (e.key === "ArrowLeft") stepEditor(-1);
+      if (e.key === "ArrowRight") stepEditor(+1);
     });
 
-    // Viewer nav + close
-    $("#closeBtn").addEventListener("click", closeViewer);
-    $("#overlay").addEventListener("click", (e) => { if (e.target.id === "overlay") closeViewer(); });
-
-    $("#prevBtn").addEventListener("click", () => step(-1));
-    $("#nextBtn").addEventListener("click", () => step(+1));
-    $("#bigPrev").addEventListener("click", () => step(-1));
-    $("#bigNext").addEventListener("click", () => step(+1));
-
-    // Keyboard
-    document.addEventListener("keydown", (e) => {
-      if (!$("#overlay").classList.contains("show")) return;
-      if (e.key === "Escape") closeViewer();
-      if (e.key === "ArrowLeft") step(-1);
-      if (e.key === "ArrowRight") step(+1);
+    // tool icons
+    document.getElementById("toolRow").addEventListener("click", (e) => {
+      const t = e.target.closest(".toolIcon");
+      if (!t) return;
+      setTool(t.dataset.tool);
     });
 
-    // Save / delete
-    $("#saveBtn").addEventListener("click", async () => {
-      if (viewerIndex < 0) return;
-      const m = meta[viewerIndex];
-      if (!m) return;
-
-      const patch = {
-        folder: $("#vFolder").value,
-        category: $("#vCat").value,
-        notes: $("#vNotes").value || "",
-        anno: structuredClone(anno)
-      };
-      await persistMetaPatch(m.id, patch);
-      toast("Saved.");
-      renderGrid();
-      // keep viewer labels in sync
-      $("#fileName").textContent = `#${viewerIndex+1} • ${m.filename || "—"}`;
+    // notes autosave
+    document.getElementById("notesInput").addEventListener("input", () => {
+      scheduleAutosave();
     });
 
-    $("#delBtn").addEventListener("click", async () => {
-      if (viewerIndex < 0) return;
-      const m = meta[viewerIndex];
-      if (!m) return;
-      if (!confirm(`Delete photo #${viewerIndex+1}?`)) return;
-      await deletePhoto(m.id);
-      toast("Deleted.");
-    });
-
-    // Tools
-    setTool("arrow");
-    $("#toolbar").addEventListener("click", (e) => {
-      const btn = e.target.closest(".toolbtn");
-      if (!btn) return;
-      setTool(btn.dataset.tool);
-    });
-
-    // Undo/clear/reset view
-    $("#undoBtn").addEventListener("click", () => {
+    document.getElementById("undoBtn").addEventListener("click", () => {
       if (!undoStack.length) return;
       anno = undoStack.pop();
+      angleStage = 0; angleLine1 = null;
       redraw();
+      redrawAngleLabels();
+      scheduleAutosave();
     });
-    $("#clearBtn").addEventListener("click", () => {
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
       if (!anno.length) return;
       if (!confirm("Clear all markup on this photo?")) return;
       pushUndo();
       anno = [];
+      angleStage = 0; angleLine1 = null;
       redraw();
-    });
-    $("#resetViewBtn").addEventListener("click", () => {
-      resetView();
-      redraw();
+      scheduleAutosave();
     });
 
-    // Canvas interaction
-    canvas.addEventListener("pointerdown", (e) => {
-      if (!imgBitmap) return;
-      canvas.setPointerCapture(e.pointerId);
-      isDown = true;
-
-      const p = pointerPos(e);
-      const w = screenToWorld(p.x, p.y);
-      start = w;
-      curr = w;
-      temp = null;
-
-      // Shift snap on desktop
-      if (e.shiftKey) snapAngles = true;
-
-      if (tool === "pan"){
-        // just pan using delta in screen coords
-        start._sx = p.x;
-        start._sy = p.y;
-        start._tx = view.tx;
-        start._ty = view.ty;
-      }
-    });
-
-    canvas.addEventListener("pointermove", (e) => {
-      if (!isDown || !imgBitmap) return;
-      const p = pointerPos(e);
-
-      if (tool === "pan"){
-        // pan in screen space
-        const dx = p.x - (start._sx || 0);
-        const dy = p.y - (start._sy || 0);
-        view.tx = (start._tx || 0) + dx;
-        view.ty = (start._ty || 0) + dy;
-        redraw();
-        return;
-      }
-
-      const w = screenToWorld(p.x, p.y);
-      curr = w;
-
-      // line-like snapping
-      let end = w;
-      if (snapAngles || e.shiftKey){
-        end = snapPoint(w);
-      }
-
-      if (tool === "rect") temp = {type:"rect", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
-      else if (tool === "circle") temp = {type:"circle", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
-      else if (tool === "line") temp = {type:"line", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
-      else if (tool === "arrow") temp = {type:"arrow", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
-      else if (tool === "ruler") temp = {type:"ruler", x1:start.x, y1:start.y, x2:end.x, y2:end.y};
-      else if (tool === "angle"){
-        // angle uses 3 points: first click sets vertex, drag defines p1 and p2 using start as vertex
-        // Here: start is vertex; current drag defines p2; we keep p1 fixed as a short reference direction
-        const ref = { x: start.x + 120, y: start.y }; // default reference line
-        const snappedEnd = (snapAngles || e.shiftKey) ? snapPoint(w) : w;
-        temp = {type:"angle", vx:start.x, vy:start.y, x1:ref.x, y1:ref.y, x2:snappedEnd.x, y2:snappedEnd.y};
-      }
-
-      redraw();
-    });
-
-    canvas.addEventListener("pointerup", (e) => {
-      if (!isDown) return;
-      isDown = false;
-
-      if (tool === "pan"){
-        // nothing to commit
-        return;
-      }
-
-      if (temp){
-        pushUndo();
-        anno.push(temp);
-        temp = null;
-        redraw();
-      }
-    });
-
-    // Handle resize
-    window.addEventListener("resize", () => {
-      if (!$("#overlay").classList.contains("show")) return;
-      resizeCanvasToContainer();
-      redraw();
-    });
+    document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
+    document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
   }
 
-  // =======================
+  // =========================================
+  // Wipe helpers
+  // =========================================
+  async function wipeAllDevice(){
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = resolve;
+      req.onerror = resolve;
+      req.onblocked = resolve;
+    });
+    db = await openDB();
+    meta = [];
+  }
+
+  async function wipeFolder(folder){
+    // delete items in this folder
+    await refreshMeta();
+    const list = folderItems(folder);
+    if (!list.length) return;
+
+    const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
+    const sO = t.objectStore(STORE_ORIG);
+    const sE = t.objectStore(STORE_EDIT);
+    const sT = t.objectStore(STORE_THUMB);
+    const sM = t.objectStore(STORE_META);
+
+    for (const m of list){
+      await idbDel(sO, m.id).catch(()=>{});
+      await idbDel(sE, m.id).catch(()=>{});
+      await idbDel(sT, m.id).catch(()=>{});
+      await idbDel(sM, m.id).catch(()=>{});
+    }
+    await waitTxDone(t);
+
+    await refreshMeta();
+  }
+
+  // =========================================
   // Boot
-  // =======================
+  // =========================================
+  async function init(){
+    db = await openDB();
+    wireUI();
+    setupCanvasEvents();
+
+    // If no pass set, allow setting; otherwise show login
+    if (!getPass()){
+      setSubtitle("Login (Set passcode)");
+    } else {
+      setSubtitle("Login");
+    }
+    goLogin();
+  }
+
+  // Render angle labels on top of canvas after redraw
+  // (called within redraw flow)
+  function redrawAngleLabels(){
+    // after base redraw, draw angle label at screen scale
+    redrawAngleLabelsInternal();
+  }
+  function redrawAngleLabelsInternal(){
+    // We draw label using current view; we need to do it on top of existing canvas.
+    // We’ll just compute from last two angleLine shapes and draw label in world coords.
+    const angleLines = anno.filter(s => s.type === "angleLine");
+    if (angleLines.length >= 2){
+      const l2 = angleLines[angleLines.length - 1];
+      const l1 = angleLines[angleLines.length - 2];
+      if (Math.abs(l1.x1 - l2.x1) < 0.001 && Math.abs(l1.y1 - l2.y1) < 0.001){
+        drawAngleLabel(l1, l2, false);
+      }
+    }
+    // If tool angle and stage=1, ghost hint handled in redraw() already
+  }
+
   init().catch(err => {
     console.error(err);
     toast("Failed to load.");
