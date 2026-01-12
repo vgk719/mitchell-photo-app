@@ -19,11 +19,11 @@
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       
-      --primary: #3b82f6; /* Bright Blue */
+      --primary: #3b82f6;
       --primary-glow: rgba(59, 130, 246, 0.5);
-      --accent: #8b5cf6;  /* Violet */
+      --accent: #8b5cf6;
       --danger: #ef4444;
-      --success: #22c55e; /* Neon Green */
+      --success: #22c55e;
       
       --radius-sm: 12px;
       --radius-md: 18px;
@@ -110,7 +110,7 @@
       height: calc(100% - 60px);
       overflow-y: auto;
       padding: 20px;
-      padding-bottom: calc(100px + var(--safe-b)); /* Space for floating bar */
+      padding-bottom: calc(100px + var(--safe-b));
       -webkit-overflow-scrolling: touch;
     }
 
@@ -199,7 +199,7 @@
       z-index: 2; pointer-events: none;
     }
 
-    /* DRAG HANDLE - The Fix */
+    /* DRAG HANDLE */
     .drag-handle {
       position: absolute; top: 0; right: 0;
       width: 44px; height: 44px;
@@ -208,10 +208,11 @@
       color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
       font-size: 24px;
       background: radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, transparent 70%);
+      touch-action: none;
     }
     .drag-handle:active { cursor: grabbing; color: var(--primary); }
 
-    /* HIGH VIS DROP INDICATOR - The Fix */
+    /* HIGH VIS DROP INDICATOR */
     .insert-line {
       position: absolute; top: 0; bottom: 0;
       width: 6px; /* Thick */
@@ -221,7 +222,6 @@
       display: none; pointer-events: none;
     }
 
-    /* Ghost image while dragging */
     .ghost {
       position: fixed; z-index: 9999; pointer-events: none;
       opacity: 0.9; transform: scale(1.05);
@@ -241,7 +241,7 @@
       background: rgba(34, 197, 94, 0.1);
     }
 
-    /* --- Floating Bottom Bar (App-like) --- */
+    /* --- Floating Bottom Bar --- */
     .fab-bar {
       position: fixed; bottom: var(--safe-b); left: 0; right: 0;
       padding: 12px 20px;
@@ -253,12 +253,9 @@
       transform: translateY(150%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .fab-bar.show { transform: translateY(0); }
-    .fab-btn {
-      flex: 1; max-width: 200px;
-      height: 50px; font-size: 15px;
-    }
+    .fab-btn { flex: 1; max-width: 200px; height: 50px; font-size: 15px; }
 
-    /* --- Overlays (Viewer & Camera) --- */
+    /* --- Overlays --- */
     .overlay {
       position: fixed; inset: 0;
       background: #000; z-index: 100;
@@ -297,52 +294,56 @@
     .tool-icon.active { background: var(--primary); border-color: var(--primary); color: white; }
 
     /* --- Camera UI --- */
-    .cam-view { flex: 1; position: relative; background: #000; }
+    .cam-view { flex: 1; position: relative; background: #000; overflow:hidden; }
     .cam-video { width: 100%; height: 100%; object-fit: cover; }
-    
     .cam-controls {
       height: 140px; padding: 20px; padding-bottom: var(--safe-b);
       background: rgba(0,0,0,0.8);
       display: flex; align-items: center; justify-content: space-around;
+      z-index: 110;
     }
     
-    /* UPDATED: Shutter Button */
+    /* Shutter Button - Fixed for Touch/Drag */
     .shutter-btn {
       position: absolute;
-      /* Default Portrait: Bottom Center */
       left: 50%; top: 85%;
       transform: translate(-50%, -50%);
-      
       width: 80px; height: 80px;
       border-radius: 50%;
-      border: 6px solid rgba(255,255,255,0.8);
-      background: rgba(255,255,255,0.2);
+      border: 6px solid rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.25);
       backdrop-filter: blur(4px);
       box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-      z-index: 100; /* Higher Z-index to sit above everything */
+      z-index: 120;
       cursor: grab;
-      touch-action: none; /* Crucial for dragging */
+      touch-action: none; /* Critical for dragging */
+      display: flex; align-items: center; justify-content: center;
     }
-    
-    /* Landscape: Move to Right Center */
-    @media (orientation: landscape) {
-      .shutter-btn {
-        left: 90%; top: 50%;
-      }
-    }
-
+    /* Inner dot for "Photo" look */
     .shutter-btn::after {
       content: ""; display: block;
       width: 60px; height: 60px;
       background: white; border-radius: 50%;
-      position: absolute; top: 4px; left: 4px;
       pointer-events: none;
     }
     
     .shutter-btn.dragging {
       opacity: 0.8; cursor: grabbing;
       transform: translate(-50%, -50%) scale(1.1);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+      box-shadow: 0 0 0 10px rgba(255,255,255,0.1);
+    }
+
+    /* Flash Animation */
+    @keyframes flashAnim {
+      0% { background: rgba(255,255,255,0.8); }
+      100% { background: transparent; }
+    }
+    .flash-overlay {
+      position: absolute; inset:0;
+      pointer-events: none; z-index: 150;
+    }
+    .flash-overlay.active {
+      animation: flashAnim 0.3s ease-out;
     }
 
     .toast {
@@ -356,7 +357,6 @@
     }
     .toast.show { opacity: 1; }
     
-    /* Desktop/Landscape tweak */
     @media (min-width: 900px) {
       main { padding: 40px; max-width: 1200px; margin: 0 auto; }
       .viewer-layout { flex-direction: row; }
@@ -436,7 +436,7 @@
     </div>
 
     <div class="fab-bar show" id="folderFab">
-      <button class="btn primary fab-btn" id="openCamBtn">📸 Camera</button>
+      <button class="btn primary fab-btn" id="openCamBtn">📸 Take Photos</button>
       <label class="btn ok fab-btn">
         ⬆️ Upload Photos
         <input id="fileInput" type="file" accept="image/*" multiple hidden>
@@ -455,7 +455,6 @@
   <div class="viewer-layout">
     <div class="viewer-canvas-area" id="vLeft">
       <canvas id="canvas"></canvas>
-      
       <button class="btn icon" id="prevBtn" style="position:absolute; left:10px; background:rgba(0,0,0,0.5);">‹</button>
       <button class="btn icon" id="nextBtn" style="position:absolute; right:10px; background:rgba(0,0,0,0.5);">›</button>
     </div>
@@ -465,9 +464,7 @@
         <span class="muted" id="editModeStatus">VIEW MODE</span>
         <button class="btn sm" id="toggleEditBtn">Enable Edit</button>
       </div>
-
       <textarea id="notesInput" placeholder="Add damage notes..."></textarea>
-
       <div id="toolsPanel" style="display:none; flex-direction:column; gap:12px;">
         <div class="tool-scroll" id="toolRow">
           <div class="tool-icon active" data-tool="arrow">➤</div>
@@ -491,11 +488,14 @@
 
 <div class="overlay" id="camOverlay">
   <div class="cam-view" id="camView">
+    <div class="flash-overlay" id="flashOverlay"></div>
+    
     <video id="camVideo" class="cam-video" autoplay playsinline muted></video>
+    
     <div class="shutter-btn" id="camShutter"></div>
     
-    <div style="position:absolute; top:20px; left:20px; right:20px; display:flex; justify-content:space-between;">
-      <div class="pill"><span id="camCount">0</span> Captured</div>
+    <div style="position:absolute; top:20px; left:20px; right:20px; display:flex; justify-content:space-between; z-index:110;">
+      <div class="pill"><span id="camCount">0</span> Photos</div>
       <button class="btn sm" id="camFlipBtn">Flip</button>
     </div>
   </div>
@@ -515,7 +515,7 @@
 (() => {
   // --- CONFIG ---
   const FOLDERS = ["Walk Around", "UPD", "Teardown"];
-  const DB_NAME = "mitchell_app_pro_v7"; // Bumped version
+  const DB_NAME = "mitchell_app_pro_v8"; // Version bump
   const DB_VER = 1;
 
   // --- STATE ---
@@ -524,20 +524,17 @@
   let currentFolder = null;
   
   // Dragging
-  let dragItem = null; // { id, el, index }
-  let dragOverItem = null; // { index, side }
+  let dragItem = null;
+  let dragOverItem = null;
   let isDragging = false;
   
   // Editor
-  let mode = "view"; // view | edit
+  let mode = "view";
   let currentId = null;
-  let folderList = [];
-  let indexInFolder = -1;
   let baseBitmap = null;
   let view = { scale: 1, tx: 0, ty: 0 };
   let anno = [];
   let tool = "arrow";
-  let undoStack = [];
   let isDown = false;
   let startPos = {x:0, y:0};
   let tempShape = null;
@@ -553,11 +550,9 @@
     setupCanvas();
     setupCamera();
     
-    // Check localstorage for job name
     $("jobName").value = localStorage.getItem("mitchell_job") || "";
     $("jobName").addEventListener("input", e => localStorage.setItem("mitchell_job", e.target.value));
 
-    // Platform detection
     if(!isTouch) {
       $("modePill").textContent = "Desktop Mode";
       $("desktopImportBox").style.display = "block";
@@ -566,8 +561,6 @@
     }
 
     await loadFolders();
-    
-    // Restore state
     const saved = JSON.parse(sessionStorage.getItem("nav") || "null");
     if(saved && saved.folder) openFolder(saved.folder);
   }
@@ -599,7 +592,6 @@
   async function loadFolders() {
     meta = await getAllMeta();
     $("hdrCount").textContent = meta.length;
-    
     const grid = $("foldersGrid");
     grid.innerHTML = "";
     
@@ -618,7 +610,6 @@
       card.onclick = () => openFolder(f);
       grid.appendChild(card);
       
-      // Load mini thumbs
       const strip = card.querySelector(`#strip-${f}`);
       items.slice(0, 5).forEach(async m => {
         const img = document.createElement("img");
@@ -648,7 +639,7 @@
       const o = await getRec("orig", id);
       if(o) return URL.createObjectURL(o.blob);
     } catch(e){}
-    return ""; // placeholder
+    return ""; 
   }
   function getRec(s, id) {
     return new Promise(r => {
@@ -662,11 +653,9 @@
   async function openFolder(name) {
     currentFolder = name;
     sessionStorage.setItem("nav", JSON.stringify({folder: name}));
-    
     $("homeView").style.display = "none";
     $("folderView").style.display = "block";
     $("folderTitle").textContent = name;
-    
     await renderGrid();
   }
   
@@ -674,15 +663,14 @@
     $("folderView").style.display = "none";
     $("homeView").style.display = "block";
     sessionStorage.removeItem("nav");
-    loadFolders(); // refresh counts
+    loadFolders();
   };
 
   async function renderGrid() {
-    meta = await getAllMeta(); // fresh
+    meta = await getAllMeta();
     const list = meta.filter(m => m.folder === currentFolder).sort((a,b) => a.order - b.order);
     const grid = $("grid");
     grid.innerHTML = "";
-    
     $("emptyState").style.display = list.length ? "none" : "block";
 
     list.forEach((m, i) => {
@@ -690,44 +678,32 @@
       div.className = "thumb";
       div.dataset.id = m.id;
       div.dataset.index = i;
-      
       const num = currentFolder === "Teardown" ? m.order : i+1;
-      
       div.innerHTML = `
         <img src="" class="lazy-img">
         <div class="thumb-num">${num}</div>
         <div class="drag-handle">⋮⋮</div>
         <div class="insert-line"></div>
       `;
-      
-      // Load img
-      getThumbUrl(m.id).then(url => {
-        div.querySelector("img").src = url;
-      });
-
-      // Events
+      getThumbUrl(m.id).then(url => { div.querySelector("img").src = url; });
       div.onclick = (e) => {
-        if(e.target.classList.contains("drag-handle")) return; // skip if handle
+        if(e.target.classList.contains("drag-handle")) return; 
         openEditor(m.id);
       };
-
-      // DRAG LOGIC
+      
       const handle = div.querySelector(".drag-handle");
       handle.onpointerdown = (e) => startDrag(e, div, i);
-      
       grid.appendChild(div);
     });
   }
 
-  // --- DRAG & DROP IMPLEMENTATION ---
+  // --- DRAG & DROP ---
   function startDrag(e, el, index) {
     e.preventDefault();
     e.stopPropagation();
-    
     isDragging = true;
     dragItem = { el, index, id: el.dataset.id };
     
-    // Create Ghost
     const rect = el.getBoundingClientRect();
     const ghost = el.cloneNode(true);
     ghost.className = "ghost";
@@ -746,10 +722,8 @@
       ghost.style.left = (ev.clientX - offX) + "px";
       ghost.style.top = (ev.clientY - offY) + "px";
       
-      // Hit test
       const hit = document.elementFromPoint(ev.clientX, ev.clientY);
       const target = hit ? hit.closest(".thumb") : null;
-      
       document.querySelectorAll(".insert-line").forEach(l => l.style.display = "none");
       
       if(target && target !== el) {
@@ -757,9 +731,7 @@
         const mid = tRect.left + tRect.width/2;
         const side = ev.clientX < mid ? "before" : "after";
         const idx = parseInt(target.dataset.index);
-        
         dragOverItem = { index: idx, side };
-        
         const line = target.querySelector(".insert-line");
         line.style.display = "block";
         line.style.left = side === "before" ? "0" : "auto";
@@ -775,7 +747,6 @@
       ghost.remove();
       isDragging = false;
       document.querySelectorAll(".insert-line").forEach(l => l.style.display = "none");
-      
       if(dragOverItem) {
         await reorderItems(dragItem.index, dragOverItem.index, dragOverItem.side);
       }
@@ -790,27 +761,18 @@
   async function reorderItems(fromIdx, toIdx, side) {
     let list = meta.filter(m => m.folder === currentFolder).sort((a,b) => a.order - b.order);
     const moved = list.splice(fromIdx, 1)[0];
-    
-    // Adjust target index based on side
     let target = toIdx;
     if(side === "after") target++;
-    if(fromIdx < target) target--; // Account for removal
-    
+    if(fromIdx < target) target--;
     list.splice(target, 0, moved);
     
-    // Update DB
     const t = tx(["meta"], "readwrite");
     const s = t.objectStore("meta");
-    
     for(let i=0; i<list.length; i++) {
       const m = list[i];
       m.order = i + 1;
-      await new Promise(r => {
-        const req = s.put(m);
-        req.onsuccess = r;
-      });
+      await new Promise(r => { const req = s.put(m); req.onsuccess = r; });
     }
-    
     renderGrid();
     toast(`Moved to position ${target + 1}`);
   }
@@ -820,25 +782,18 @@
     const files = Array.from(e.target.files);
     e.target.value = "";
     if(!files.length) return;
-    
     const t = tx(["orig","meta"], "readwrite");
-    
-    // Get max order
     const list = meta.filter(m => m.folder === currentFolder);
     let max = list.reduce((a,b) => Math.max(a, b.order || 0), 0);
-    
     for(const f of files) {
       const id = crypto.randomUUID();
       max++;
-      
       await new Promise(r => t.objectStore("orig").put({id, blob: f}).onsuccess = r);
       await new Promise(r => t.objectStore("meta").put({
         id, folder: currentFolder, order: max,
-        created: new Date().toISOString(),
-        anno: [], notes: ""
+        created: new Date().toISOString(), anno: [], notes: ""
       }).onsuccess = r);
     }
-    
     await new Promise(r => t.oncomplete = r);
     await renderGrid();
     toast(`Uploaded ${files.length} photos`);
@@ -848,127 +803,85 @@
   async function openEditor(id) {
     currentId = id;
     $("viewerOverlay").classList.add("show");
-    
-    // Load Data
     const m = meta.find(x => x.id === id);
     anno = m.anno ? JSON.parse(JSON.stringify(m.anno)) : [];
     $("notesInput").value = m.notes || "";
-    
-    // Load Image
     const rec = await getRec("orig", id);
     if(rec) {
       baseBitmap = await createImageBitmap(rec.blob);
       resetCanvas();
       draw();
     }
-    
     setEditMode(false);
   }
-
+  
   $("closeViewerBtn").onclick = closeEditor;
-  $("saveCloseBtn").onclick = async () => {
-    await saveEditor();
-    closeEditor();
-  };
-
+  $("saveCloseBtn").onclick = async () => { await saveEditor(); closeEditor(); };
   function closeEditor() {
     $("viewerOverlay").classList.remove("show");
     baseBitmap = null;
-    renderGrid(); // Update thumbs if changed
+    renderGrid();
   }
-
   async function saveEditor() {
     if(!currentId) return;
-    
-    // Update Meta
     const t = tx(["meta", "edit", "thumb"], "readwrite");
     const m = meta.find(x => x.id === currentId);
     m.anno = anno;
     m.notes = $("notesInput").value;
     t.objectStore("meta").put(m);
-    
-    // Burn image if edited
     if(anno.length > 0) {
       const b = await burnImage();
       t.objectStore("edit").put({id: currentId, blob: b});
       t.objectStore("thumb").put({id: currentId, blob: await resizeBlob(b, 300)});
     }
-    
     await new Promise(r => t.oncomplete = r);
   }
-
   function setEditMode(edit) {
     mode = edit ? "edit" : "view";
     $("toolsPanel").style.display = edit ? "flex" : "none";
     $("editModeStatus").textContent = edit ? "EDIT MODE" : "VIEW MODE";
     $("toggleEditBtn").textContent = edit ? "Done Editing" : "Enable Edit";
-    
-    // Toggle active state for button
     if(edit) $("toggleEditBtn").style.background = "var(--primary)";
     else $("toggleEditBtn").style.background = "";
   }
-  
   $("toggleEditBtn").onclick = () => setEditMode(mode !== "edit");
 
   // Canvas Logic
   const canvas = $("canvas");
   const ctx = canvas.getContext("2d");
-
   function resetCanvas() {
     const p = canvas.parentElement;
     canvas.width = p.clientWidth;
     canvas.height = p.clientHeight;
-    
     if(baseBitmap) {
       const scale = Math.min(canvas.width / baseBitmap.width, canvas.height / baseBitmap.height);
-      view = {
-        scale: scale,
-        tx: (canvas.width - baseBitmap.width * scale) / 2,
-        ty: (canvas.height - baseBitmap.height * scale) / 2
-      };
+      view = { scale, tx: (canvas.width - baseBitmap.width * scale) / 2, ty: (canvas.height - baseBitmap.height * scale) / 2 };
     }
   }
-
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if(!baseBitmap) return;
-    
     ctx.save();
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
     ctx.drawImage(baseBitmap, 0, 0);
-    
-    // Draw Anno
     [...anno, tempShape].forEach(s => {
       if(!s) return;
-      ctx.strokeStyle = "#22c55e"; // Neon Green
+      ctx.strokeStyle = "#22c55e"; 
       ctx.lineWidth = 4 / view.scale;
       ctx.lineCap = "round";
       ctx.beginPath();
-      
       if(s.type === "arrow") {
-        ctx.moveTo(s.x1, s.y1);
-        ctx.lineTo(s.x2, s.y2);
-        // Arrowhead logic simplified
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(s.x2, s.y2, 5/view.scale, 0, Math.PI*2);
-        ctx.fillStyle = "#22c55e";
-        ctx.fill();
+        ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(s.x2, s.y2, 5/view.scale, 0, Math.PI*2); ctx.fillStyle = "#22c55e"; ctx.fill();
       } else if (s.type === "rect") {
         ctx.strokeRect(s.x1, s.y1, s.x2-s.x1, s.y2-s.y1);
       } else if (s.type === "circle") {
-         const r = Math.hypot(s.x2-s.x1, s.y2-s.y1);
-         ctx.beginPath();
-         ctx.arc(s.x1, s.y1, r, 0, Math.PI*2);
-         ctx.stroke();
+         const r = Math.hypot(s.x2-s.x1, s.y2-s.y1); ctx.beginPath(); ctx.arc(s.x1, s.y1, r, 0, Math.PI*2); ctx.stroke();
       }
     });
-    
     ctx.restore();
   }
-
-  // Canvas Interactions
   canvas.onpointerdown = e => {
     if(mode !== "edit") return;
     const r = canvas.getBoundingClientRect();
@@ -977,27 +890,18 @@
     startPos = {x, y};
     isDown = true;
   };
-  
   canvas.onpointermove = e => {
     if(!isDown) return;
     const r = canvas.getBoundingClientRect();
     const x = (e.clientX - r.left - view.tx) / view.scale;
     const y = (e.clientY - r.top - view.ty) / view.scale;
-    
     tempShape = { type: tool, x1: startPos.x, y1: startPos.y, x2: x, y2: y };
     draw();
   };
-  
   canvas.onpointerup = () => {
-    if(isDown && tempShape) {
-      anno.push(tempShape);
-      tempShape = null;
-      draw();
-    }
+    if(isDown && tempShape) { anno.push(tempShape); tempShape = null; draw(); }
     isDown = false;
   };
-
-  // Tool Select
   $("toolRow").onclick = e => {
     if(e.target.classList.contains("tool-icon")) {
       document.querySelectorAll(".tool-icon").forEach(b => b.classList.remove("active"));
@@ -1005,15 +909,8 @@
       tool = e.target.dataset.tool;
     }
   };
-  
-  $("undoBtn").onclick = () => {
-    if(anno.length) anno.pop();
-    draw();
-  };
-  $("clearAnnoBtn").onclick = () => {
-    anno = [];
-    draw();
-  };
+  $("undoBtn").onclick = () => { if(anno.length) anno.pop(); draw(); };
+  $("clearAnnoBtn").onclick = () => { anno = []; draw(); };
   $("deletePhotoBtn").onclick = async () => {
     if(confirm("Delete this photo?")) {
       const t = tx(["meta","orig","thumb","edit"], "readwrite");
@@ -1027,79 +924,87 @@
     }
   };
 
-  // --- CAMERA FIX START ---
-  let camStream;
+  // --- CAMERA LOGIC (FIXED) ---
+  let camStream = null;
   let camShots = [];
 
   function setupCamera() {
     const sh = $("camShutter");
     const view = $("camView");
     
+    // TOUCH EVENTS (Reliable on mobile)
     let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    
-    // 1. TOUCH START
-    sh.onpointerdown = (e) => {
-      e.preventDefault();
+    let startX = 0, startY = 0;
+
+    const onStart = (e) => {
+      e.preventDefault(); // Stop scroll
       isDragging = true;
-      sh.setPointerCapture(e.pointerId);
+      const t = e.touches ? e.touches[0] : e;
+      startX = t.clientX;
+      startY = t.clientY;
       sh.classList.add("dragging");
-      
-      // Record where we started so we can measure movement later
-      startX = e.clientX;
-      startY = e.clientY;
     };
-    
-    // 2. DRAGGING
-    sh.onpointermove = (e) => {
+
+    const onMove = (e) => {
       if(!isDragging) return;
       e.preventDefault();
+      const t = e.touches ? e.touches[0] : e;
       
-      // Move the button
       const r = view.getBoundingClientRect();
-      // Clamp values so it stays inside the camera view
-      let newX = e.clientX - r.left;
-      let newY = e.clientY - r.top;
+      const x = t.clientX - r.left;
+      const y = t.clientY - r.top;
       
-      // Apply position
-      sh.style.left = newX + "px";
-      sh.style.top = newY + "px";
+      sh.style.left = x + "px";
+      sh.style.top = y + "px";
     };
-    
-    // 3. TOUCH END (The Logic Fix)
-    sh.onpointerup = (e) => {
+
+    const onEnd = (e) => {
       e.preventDefault();
       isDragging = false;
       sh.classList.remove("dragging");
-      sh.releasePointerCapture(e.pointerId);
       
-      // Calculate how far we moved
-      const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+      const t = e.changedTouches ? e.changedTouches[0] : e;
+      const dist = Math.hypot(t.clientX - startX, t.clientY - startY);
       
-      // If we moved LESS than 10 pixels, treat it as a CLICK (Take Photo)
-      // If we moved MORE, it was just a drag.
-      if (dist < 10) {
-        takePhoto();
-      }
+      // Tap vs Drag threshold
+      if(dist < 10) takePhoto();
     };
+
+    // Add listeners for both touch and mouse
+    sh.addEventListener("touchstart", onStart, {passive:false});
+    sh.addEventListener("touchmove", onMove, {passive:false});
+    sh.addEventListener("touchend", onEnd);
+    
+    sh.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", (e) => { if(isDragging) onEnd(e); });
   }
 
   $("openCamBtn").onclick = async () => {
     $("camOverlay").classList.add("show");
     try {
+      // Audio FALSE forces photo mode
       camStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } 
+        video: { facingMode: "environment" },
+        audio: false 
       });
       $("camVideo").srcObject = camStream;
     } catch(e) {
-      alert("Camera access denied or unavailable.");
+      alert("Camera access failed. Check browser permissions.");
       $("camOverlay").classList.remove("show");
     }
   };
 
   function takePhoto() {
     const v = $("camVideo");
+    if(v.readyState < 2) return;
+    
+    // Flash Effect
+    const flash = $("flashOverlay");
+    flash.classList.remove("active");
+    void flash.offsetWidth; // trigger reflow
+    flash.classList.add("active");
+    
     const c = document.createElement("canvas");
     c.width = v.videoWidth; c.height = v.videoHeight;
     c.getContext("2d").drawImage(v, 0, 0);
@@ -1111,29 +1016,20 @@
       
       const thumb = document.createElement("img");
       thumb.src = url;
-      thumb.style = "height:40px; width:40px; object-fit:cover; border-radius:6px;";
+      thumb.style = "height:40px; width:40px; object-fit:cover; border-radius:6px; flex:0 0 auto;";
       $("camThumbs").appendChild(thumb);
-      
-      // Flash effect
-      v.style.opacity = 0;
-      setTimeout(() => v.style.opacity = 1, 100);
     }, "image/jpeg", 0.9);
   }
 
   $("camDoneBtn").onclick = async () => {
     if(camShots.length) {
       const t = tx(["orig","meta"], "readwrite");
-      // Logic similar to upload...
       let max = meta.filter(m => m.folder === currentFolder).length;
-      
       for(const s of camShots) {
         const id = crypto.randomUUID();
         max++;
         t.objectStore("orig").put({id, blob: s.blob});
-        t.objectStore("meta").put({
-          id, folder: currentFolder, order: max,
-          created: new Date().toISOString(), anno:[]
-        });
+        t.objectStore("meta").put({id, folder: currentFolder, order: max, created: new Date().toISOString(), anno:[]});
       }
       await new Promise(r => t.oncomplete = r);
       renderGrid();
@@ -1145,12 +1041,14 @@
 
   function closeCam() {
     $("camOverlay").classList.remove("show");
+    // DO NOT STOP STREAM if you want to avoid asking permission again constantly
+    // But to save battery, we should. 
+    // Browsers remember permission for the session usually.
     if(camStream) camStream.getTracks().forEach(t => t.stop());
     camShots = [];
     $("camThumbs").innerHTML = "";
     $("camCount").textContent = "0";
   }
-  // --- CAMERA FIX END ---
 
   // --- UTILS ---
   async function burnImage() {
@@ -1158,10 +1056,8 @@
     c.width = baseBitmap.width; c.height = baseBitmap.height;
     const x = c.getContext("2d");
     x.drawImage(baseBitmap, 0, 0);
-    // Draw anno... similar to draw() but native res
     return new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
   }
-  
   async function resizeBlob(blob, width) {
     const bmp = await createImageBitmap(blob);
     const c = document.createElement("canvas");
@@ -1170,7 +1066,6 @@
     c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
     return new Promise(r => c.toBlob(r, "image/jpeg", 0.8));
   }
-
   function setupUI() {
     $("clearJobBtn").onclick = async () => {
       if(confirm("Clear current job?")) {
@@ -1184,31 +1079,24 @@
         loadFolders();
       }
     };
-    
-    // Drop Zone
     const dz = $("dropZone");
     dz.ondragover = e => { e.preventDefault(); dz.classList.add("drag-active"); };
     dz.ondragleave = () => dz.classList.remove("drag-active");
     dz.ondrop = e => {
-      e.preventDefault();
-      dz.classList.remove("drag-active");
+      e.preventDefault(); dz.classList.remove("drag-active");
       $("fileInput").files = e.dataTransfer.files;
-      // Trigger change manually if needed or extract files
       const ev = new Event("change");
       Object.defineProperty(ev, 'target', {writable: true, value: {files: e.dataTransfer.files}});
       $("fileInput").onchange({target: {files: e.dataTransfer.files}});
     };
-
     $("exportZipBtn").onclick = async () => {
       toast("Generating ZIP...");
       const zip = new JSZip();
       const meta = await getAllMeta();
-      
       for(const m of meta) {
         let b = (await getRec("edit", m.id))?.blob || (await getRec("orig", m.id))?.blob;
         if(b) zip.folder(m.folder).file(`${m.order}.jpg`, b);
       }
-      
       const blob = await zip.generateAsync({type:"blob"});
       const name = ($("jobName").value || "photos") + ".zip";
       const a = document.createElement("a");
@@ -1217,11 +1105,8 @@
       a.click();
     };
   }
-
   function toast(msg) {
-    const t = $("toast");
-    t.textContent = msg;
-    t.classList.add("show");
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), 2000);
   }
 
