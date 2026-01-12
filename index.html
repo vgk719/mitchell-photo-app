@@ -174,7 +174,8 @@
     /* --- Photo Grid & Dragging --- */
     .photo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      /* UPDATED: Increased min-width from 100px to 140px for larger thumbnails */
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 12px;
       margin-top: 16px;
     }
@@ -222,9 +223,12 @@
       display: none; pointer-events: none;
     }
 
+    /* UPDATED: Ghost Image Sizing */
     .ghost {
       position: fixed; z-index: 9999; pointer-events: none;
-      opacity: 0.9; transform: scale(1.05);
+      opacity: 0.85; 
+      /* Scale DOWN slightly so it's not "way too big" */
+      transform: scale(0.9);
       box-shadow: 0 20px 50px rgba(0,0,0,0.6);
       border-radius: var(--radius-sm); border: 2px solid var(--primary);
     }
@@ -272,7 +276,12 @@
       flex: 1; position: relative; background: #000;
       touch-action: none; display: flex; align-items: center; justify-content: center;
     }
-    canvas { max-width: 100%; max-height: 100%; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+    /* UPDATED: Ensure touch works on canvas */
+    canvas { 
+      max-width: 100%; max-height: 100%; 
+      box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+      touch-action: none; 
+    }
     
     .viewer-tools {
       height: auto; min-height: 60px;
@@ -449,7 +458,7 @@
   <header style="background:black; border:none; padding:10px;">
     <button class="btn icon" id="closeViewerBtn">✕</button>
     <div class="pill" id="posPill">0 / 0</div>
-    <button class="btn primary sm" id="saveCloseBtn">Done</button>
+    <button class="btn primary sm" id="saveCloseBtn">Save & Close</button>
   </header>
   
   <div class="viewer-layout">
@@ -515,7 +524,7 @@
 (() => {
   // --- CONFIG ---
   const FOLDERS = ["Walk Around", "UPD", "Teardown"];
-  const DB_NAME = "mitchell_app_pro_v8"; // Version bump
+  const DB_NAME = "mitchell_app_pro_v9"; // Version bump
   const DB_VER = 1;
 
   // --- STATE ---
@@ -817,11 +826,26 @@
   
   $("closeViewerBtn").onclick = closeEditor;
   $("saveCloseBtn").onclick = async () => { await saveEditor(); closeEditor(); };
+  
   function closeEditor() {
     $("viewerOverlay").classList.remove("show");
     baseBitmap = null;
     renderGrid();
   }
+
+  // UPDATED: AUTO-SAVE Logic
+  // Saves just the annotation data (lightweight) instantly
+  async function saveAnnotationsOnly() {
+    if(!currentId) return;
+    const t = tx(["meta"], "readwrite");
+    const m = meta.find(x => x.id === currentId);
+    if(m) {
+      m.anno = anno;
+      t.objectStore("meta").put(m);
+    }
+  }
+
+  // Heavy save (burns image)
   async function saveEditor() {
     if(!currentId) return;
     const t = tx(["meta", "edit", "thumb"], "readwrite");
@@ -836,6 +860,7 @@
     }
     await new Promise(r => t.oncomplete = r);
   }
+
   function setEditMode(edit) {
     mode = edit ? "edit" : "view";
     $("toolsPanel").style.display = edit ? "flex" : "none";
@@ -882,6 +907,7 @@
     });
     ctx.restore();
   }
+  
   canvas.onpointerdown = e => {
     if(mode !== "edit") return;
     const r = canvas.getBoundingClientRect();
@@ -890,6 +916,7 @@
     startPos = {x, y};
     isDown = true;
   };
+  
   canvas.onpointermove = e => {
     if(!isDown) return;
     const r = canvas.getBoundingClientRect();
@@ -898,19 +925,32 @@
     tempShape = { type: tool, x1: startPos.x, y1: startPos.y, x2: x, y2: y };
     draw();
   };
+  
   canvas.onpointerup = () => {
-    if(isDown && tempShape) { anno.push(tempShape); tempShape = null; draw(); }
+    if(isDown && tempShape) { 
+      anno.push(tempShape); 
+      tempShape = null; 
+      draw(); 
+      // TRIGGER AUTO-SAVE
+      saveAnnotationsOnly();
+    }
     isDown = false;
   };
+
+  // UPDATED: Tool selection click logic fix
   $("toolRow").onclick = e => {
-    if(e.target.classList.contains("tool-icon")) {
+    // Use .closest to ensure we capture the click even if user hits the icon text/svg
+    const btn = e.target.closest(".tool-icon");
+    if(btn) {
       document.querySelectorAll(".tool-icon").forEach(b => b.classList.remove("active"));
-      e.target.classList.add("active");
-      tool = e.target.dataset.tool;
+      btn.classList.add("active");
+      tool = btn.dataset.tool;
     }
   };
-  $("undoBtn").onclick = () => { if(anno.length) anno.pop(); draw(); };
-  $("clearAnnoBtn").onclick = () => { anno = []; draw(); };
+  
+  $("undoBtn").onclick = () => { if(anno.length) { anno.pop(); draw(); saveAnnotationsOnly(); } };
+  $("clearAnnoBtn").onclick = () => { anno = []; draw(); saveAnnotationsOnly(); };
+  
   $("deletePhotoBtn").onclick = async () => {
     if(confirm("Delete this photo?")) {
       const t = tx(["meta","orig","thumb","edit"], "readwrite");
