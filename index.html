@@ -231,8 +231,8 @@
     .insertLine{
       position:absolute; top:0; bottom:0;
       width:0;
-      border-left: 5px solid rgba(59,130,246,.95);
-      filter: drop-shadow(0 0 12px rgba(59,130,246,.45));
+      border-left: 3px solid rgba(59,130,246,.95);
+      filter: drop-shadow(0 0 10px rgba(59,130,246,.35));
       pointer-events:none;
       display:none;
       z-index: 2;
@@ -453,6 +453,48 @@
       .camStrip{ min-width:0; }
     }
 
+    /* Landscape shutter */
+    .camShutter {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      width: 86px;
+      height: 86px;
+      border-radius: 999px;
+      border: 6px solid rgba(255,255,255,.85);
+      background: rgba(255,255,255,.12);
+      box-shadow: 0 18px 50px rgba(0,0,0,.55);
+      display: none;
+      cursor: pointer;
+      user-select: none;
+      z-index: 5;
+    }
+    .camShutter::after{
+      content:"";
+      display:block;
+      width: 62px;
+      height: 62px;
+      margin: 6px auto 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+    }
+    .camShutter:active{
+      transform: translateX(-50%) scale(0.97);
+      filter: brightness(1.05);
+    }
+
+    .camOverlay.landscape .camBody{
+      flex-direction: column;
+      padding: 8px;
+    }
+    .camOverlay.landscape .camStrip{
+      display:none;
+    }
+    .camOverlay.landscape .camShutter{
+      display:block;
+    }
+
     .bigPhoneBtn{
       width:100%;
       padding: 14px 14px;
@@ -522,7 +564,7 @@
       </div>
 
       <div style="font-weight:1000; font-size:16px;">Folders</div>
-      <div class="muted">Tap a folder. Drag to reorder. (Desktop: click=view, double click=edit.)</div>
+      <div class="muted">Tap a folder. Drag to reorder. Tap a photo to open the editor.</div>
       <div class="folders" id="folders"></div>
 
       <div class="hr"></div>
@@ -541,7 +583,7 @@
       <div class="row" style="justify-content:space-between;">
         <div>
           <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
-          <div class="muted" id="folderSub">Drag to reorder. Desktop: click=view, double click=edit.</div>
+          <div class="muted" id="folderSub">Drag to reorder. Tap a photo to edit.</div>
         </div>
         <div class="row">
           <button class="btn" id="backHomeBtn">← Folders</button>
@@ -550,9 +592,8 @@
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <!-- ✅ MULTI-ADD on mobile + desktop -->
         <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
-          ⬆️ Upload Photos
+          📷 Add Photos
           <input id="fileInput" type="file" accept="image/*" multiple hidden>
         </label>
 
@@ -562,7 +603,7 @@
 
       <div class="drop" id="dropZone" style="margin-top:10px;">
         <b>Drop photos into “<span id="dropFolderName"></span>”</b>
-        <div class="muted">Reorder by dragging. (Dragging will NOT open view/edit.)</div>
+        <div class="muted">Reorder by dragging. (Dragging will NOT open the editor.)</div>
       </div>
 
       <div class="insertBadge" id="insertBadge">
@@ -601,8 +642,8 @@
     <div class="vRight">
       <div class="row" style="justify-content:space-between; align-items:center;">
         <div>
-          <div style="font-weight:1000; margin-bottom:2px;" id="modeTitle">VIEW</div>
-          <div class="muted" id="modeSub">Viewing</div>
+          <div style="font-weight:1000; margin-bottom:2px;" id="modeTitle">EDIT</div>
+          <div class="muted" id="modeSub">Autosave ON</div>
         </div>
         <button class="btn primary sm" id="forceEditBtn" style="display:none;">Enable Edit</button>
       </div>
@@ -614,7 +655,7 @@
 
       <div class="hr"></div>
 
-      <div style="font-weight:1000;">Tools (EDIT mode only)</div>
+      <div style="font-weight:1000;">Tools</div>
       <div class="toolRow" id="toolRow">
         <div class="toolIcon active" data-tool="arrow" title="Arrow">➤</div>
         <div class="toolIcon" data-tool="circle" title="Circle">◯</div>
@@ -622,7 +663,7 @@
         <div class="toolIcon" data-tool="line" title="Straight Line">／</div>
         <div class="toolIcon" data-tool="angle" title="Angle (2 lines)">∠</div>
         <div class="toolIcon" data-tool="ruler" title="Measure">📏</div>
-        <div class="toolIcon" data-tool="text" title="Add Text">T</div>
+        <div class="toolIcon" data-tool="text" title="Add/Edit Text">T</div>
         <div class="toolIcon" data-tool="pan" title="Pan">✋</div>
       </div>
 
@@ -640,9 +681,9 @@
         Angle tool: draw <b>Line 1</b> (start→end), then draw <b>Line 2</b> (start→end). Angle shows between them.
       </div>
       <div class="hint" id="textHint" style="display:none;">
-        Text tool: tap to place. Drag to move. Double click a text box to edit content.
+        Text tool: tap to add. Tap an existing green box to edit. Drag any green box to move it.
       </div>
-      <div class="hint" id="editHint">You are in <b>VIEW</b>.</div>
+      <div class="hint" id="editHint">Editing is always ON (autosave).</div>
     </div>
   </div>
 </div>
@@ -662,6 +703,7 @@
     <div class="camBody">
       <div class="camLive">
         <video id="camVideo" playsinline autoplay muted></video>
+        <div class="camShutter" id="camShutter" title="Snap"></div>
       </div>
 
       <div class="camStrip">
@@ -671,10 +713,6 @@
         </div>
         <div class="hr"></div>
         <div class="camThumbs" id="camThumbs"></div>
-
-        <div class="muted" style="margin-top:10px;">
-          ✅ Snap now SAVES immediately into the folder (no losing photos).
-        </div>
       </div>
     </div>
   </div>
@@ -720,9 +758,9 @@
   let indexInFolder = -1;
   let currentId = null;
 
-  // mode: 'view' or 'edit'
-  let mode = "view";
-  let phoneEditsUnlocked = false;
+  // mode: ALWAYS EDIT
+  let mode = "edit";
+  let phoneEditsUnlocked = true;
 
   // base original + view transform
   let baseBitmap = null;
@@ -990,9 +1028,7 @@
     document.getElementById("dropFolderName").textContent = folder;
 
     const folderSub = document.getElementById("folderSub");
-    folderSub.textContent = isPhoneMode
-      ? "Drag to reorder. (Phone: capture here, edit later on computer.)"
-      : "Drag to reorder. Desktop: click=view, double click=edit.";
+    folderSub.textContent = "Drag to reorder. Tap a photo to edit.";
 
     await refreshMeta();
     setHdrCount();
@@ -1037,26 +1073,11 @@
       insertLine.className = "insertLine";
       div.appendChild(insertLine);
 
-      // Desktop: click=view, dblclick=edit
-      if (isDesktopMode){
-        let clickTimer = null;
-        div.addEventListener("click", () => {
-          if (Date.now() < suppressClickUntil) return;
-          clearTimeout(clickTimer);
-          clickTimer = setTimeout(() => openViewer(currentFolder, idx, "view"), 200);
-        });
-        div.addEventListener("dblclick", () => {
-          if (Date.now() < suppressClickUntil) return;
-          clearTimeout(clickTimer);
-          openViewer(currentFolder, idx, "edit");
-        });
-      } else {
-        // Phone: tap=view only (capture-first)
-        div.addEventListener("click", () => {
-          if (Date.now() < suppressClickUntil) return;
-          openViewer(currentFolder, idx, "view");
-        });
-      }
+      // ALWAYS: single click opens editor
+      div.addEventListener("click", () => {
+        if (Date.now() < suppressClickUntil) return;
+        openViewer(currentFolder, idx);
+      });
 
       // Drag threshold
       div.addEventListener("pointerdown", (e) => {
@@ -1296,24 +1317,24 @@
   // ---------- Viewer / Editor ----------
   function setMode(next){
     mode = next;
-    document.getElementById("modeTitle").textContent = (mode === "edit") ? "EDIT" : "VIEW";
-    document.getElementById("modeSub").textContent = (mode === "edit") ? "Autosave ON" : "Viewing";
-    document.getElementById("editHint").textContent = isPhoneMode
-      ? "Phone capture mode: editing is hidden. Use “Enable Edit” if needed."
-      : "Desktop: Double click to enter EDIT.";
 
-    const toolsEnabled = (mode === "edit");
+    // UI says edit always
+    document.getElementById("modeTitle").textContent = "EDIT";
+    document.getElementById("modeSub").textContent = "Autosave ON";
+    document.getElementById("editHint").textContent = "Editing is always ON (autosave).";
+
+    // Tools always enabled/visible
     document.querySelectorAll(".toolIcon").forEach(el => {
-      el.style.opacity = toolsEnabled ? "1" : "0.55";
-      el.style.pointerEvents = toolsEnabled ? "auto" : "none";
+      el.style.opacity = "1";
+      el.style.pointerEvents = "auto";
     });
-    document.getElementById("undoBtn").disabled = !toolsEnabled;
-    document.getElementById("clearBtn").disabled = !toolsEnabled;
-    document.getElementById("revertBtn").disabled = !toolsEnabled;
-    document.getElementById("toolRow").style.display = toolsEnabled ? "" : "none";
+    document.getElementById("undoBtn").disabled = false;
+    document.getElementById("clearBtn").disabled = false;
+    document.getElementById("revertBtn").disabled = false;
+    document.getElementById("toolRow").style.display = "";
   }
 
-  async function openViewer(folder, idx, openAs){
+  async function openViewer(folder, idx){
     await refreshMeta();
     currentFolder = folder;
     folderList = folderItems(folder);
@@ -1321,7 +1342,10 @@
     currentId = folderList[indexInFolder]?.id || null;
     if (!currentId) return;
 
-    phoneEditsUnlocked = false;
+    // ALWAYS EDIT ON
+    mode = "edit";
+    phoneEditsUnlocked = true;
+    document.getElementById("forceEditBtn").style.display = "none";
 
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden","false");
@@ -1339,14 +1363,7 @@
     resetView();
     redraw();
 
-    if (isPhoneMode){
-      setMode("view");
-      document.getElementById("forceEditBtn").style.display = "";
-    } else {
-      setMode(openAs === "edit" ? "edit" : "view");
-      document.getElementById("forceEditBtn").style.display = "none";
-    }
-
+    setMode("edit");
     setArrows();
     setAngleHint();
     setTextHint();
@@ -1366,7 +1383,7 @@
     tempShape = null;
     clearTimeout(saveTimer);
     saveTimer = null;
-    phoneEditsUnlocked = false;
+    phoneEditsUnlocked = true;
   }
 
   function setArrows(){
@@ -1382,7 +1399,7 @@
     const next = indexInFolder + dir;
     if (next < 0 || next >= folderList.length) return;
     await flushAutosave();
-    await openViewer(currentFolder, next, mode);
+    await openViewer(currentFolder, next);
   }
 
   async function loadOriginalBitmap(id){
@@ -1431,7 +1448,6 @@
   }
 
   function scheduleAutosave(){
-    if (mode !== "edit") return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => autosave().catch(console.error), AUTOSAVE_MS);
   }
@@ -1459,13 +1475,10 @@
   }
 
   async function autosave(){
-    if (!currentId || mode !== "edit") return;
+    if (!currentId) return;
     const notes = document.getElementById("notesInput").value || "";
     await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
     await renderAndStoreEdited(currentId);
-    // refresh thumbnails on UI
-    renderFolderGrid();
-    renderFolders();
   }
 
   function pushUndo(){
@@ -1521,28 +1534,27 @@
     ctx.closePath();
   }
 
-  // ✅ BIGGER default text box
   function drawTextBox(s, dashed){
     ctx.save();
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
 
-    const padding = 14;
-    const fontSize = 34;
+    const padding = 10;
+    const fontSize = 22;
     ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
     const lines = (s.text || "").split("\n");
-    const lineH = fontSize * 1.15;
+    const lineH = fontSize * 1.2;
     let maxW = 0;
     for (const line of lines) maxW = Math.max(maxW, ctx.measureText(line).width);
-    const w = Math.max(120, maxW + padding*2);
-    const h = Math.max(64, lines.length * lineH + padding*2);
+    const w = Math.max(40, maxW + padding*2);
+    const h = Math.max(28, lines.length * lineH + padding*2);
     s.w = w; s.h = h;
 
     ctx.setLineDash(dashed ? [10,8] : []);
     ctx.fillStyle = "rgba(0,255,0,0.95)";
     ctx.strokeStyle = "rgba(0,0,0,0.9)";
-    ctx.lineWidth = 4;
-    roundRect(ctx, s.x, s.y, w, h, 12);
+    ctx.lineWidth = 3;
+    roundRect(ctx, s.x, s.y, w, h, 10);
     ctx.fill();
     ctx.stroke();
     ctx.setLineDash([]);
@@ -1664,13 +1676,13 @@
     ctx.save();
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
-    ctx.font = `${18 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    ctx.font = `${16 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
     ctx.fillStyle = GREEN;
     ctx.strokeStyle = "rgba(0,0,0,0.65)";
-    ctx.lineWidth = 6 / view.scale;
+    ctx.lineWidth = 5 / view.scale;
     const txt = `${deg.toFixed(1)}°`;
-    const x = l2.x1 + 12;
-    const y = l2.y1 - 12;
+    const x = l2.x1 + 10;
+    const y = l2.y1 - 10;
     ctx.strokeText(txt, x, y);
     ctx.fillText(txt, x, y);
     ctx.restore();
@@ -1700,21 +1712,21 @@
     };
 
     const drawText = (s) => {
-      const padding = 14;
-      const fontSize = 34;
+      const padding = 10;
+      const fontSize = 22;
       octx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
       const lines = (s.text || "").split("\n");
-      const lineH = fontSize * 1.15;
+      const lineH = fontSize * 1.2;
       let maxW = 0;
       for (const line of lines) maxW = Math.max(maxW, octx.measureText(line).width);
-      const ww = Math.max(120, maxW + padding*2);
-      const hh = Math.max(64, lines.length * lineH + padding*2);
+      const ww = Math.max(40, maxW + padding*2);
+      const hh = Math.max(28, lines.length * lineH + padding*2);
       s.w = ww; s.h = hh;
 
       octx.fillStyle = "rgba(0,255,0,0.95)";
       octx.strokeStyle = "rgba(0,0,0,0.9)";
-      octx.lineWidth = 4;
-      roundRect2(octx, s.x, s.y, ww, hh, 12);
+      octx.lineWidth = 3;
+      roundRect2(octx, s.x, s.y, ww, hh, 10);
       octx.fill();
       octx.stroke();
 
@@ -1746,7 +1758,7 @@
 
     const drawLabel = (txt, x, y, color) => {
       octx.save();
-      octx.font = `20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      octx.font = `18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
       octx.fillStyle = color;
       octx.strokeStyle = "rgba(0,0,0,0.65)";
       octx.lineWidth = 6;
@@ -1795,7 +1807,7 @@
         drawLine(s, color, ww);
         const dx=s.x2-s.x1, dy=s.y2-s.y1;
         const ang=Math.atan2(dy,dx);
-        const head=32;
+        const head=28;
         const a1=ang-Math.PI/8, a2=ang+Math.PI/8;
         octx.save();
         octx.strokeStyle = color;
@@ -1870,14 +1882,6 @@
   let movingText = null;
 
   function setupCanvas(){
-    canvas.addEventListener("dblclick", () => {
-      if (isPhoneMode && !phoneEditsUnlocked) return;
-      if (mode === "view"){
-        setMode("edit");
-        toast("EDIT mode");
-      }
-    });
-
     canvas.addEventListener("pointerdown", (e) => {
       if (!baseBitmap) return;
       canvas.setPointerCapture(e.pointerId);
@@ -1885,10 +1889,6 @@
       isDown = true;
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
-
-      if (isPhoneMode && !phoneEditsUnlocked){
-        tool = "pan";
-      }
 
       if (mode === "edit"){
         const hitText = topmostTextAt(w);
@@ -1913,7 +1913,7 @@
       if (!isDown || !baseBitmap) return;
       const p = pointerPos(e);
 
-      if (movingText && mode === "edit"){
+      if (movingText){
         const w = screenToWorld(p.x, p.y);
         const s = anno[movingText.index];
         if (s && s.type === "text"){
@@ -1933,8 +1933,6 @@
         redraw();
         return;
       }
-
-      if (mode !== "edit") return;
 
       const w = screenToWorld(p.x, p.y);
 
@@ -1958,13 +1956,21 @@
       }
 
       if (tool === "pan"){ tempShape = null; return; }
-      if (mode !== "edit"){ tempShape = null; return; }
 
+      // TEXT TOOL: tap to add OR tap existing to edit (no double-click)
       if (tool === "text"){
         const p = pointerPos(e);
         const w = screenToWorld(p.x, p.y);
-        const existing = topmostTextAt(w);
-        if (!existing){
+        const hit = topmostTextAt(w);
+        if (hit){
+          const next = prompt("Edit text:", hit.shape.text || "");
+          if (next != null){
+            pushUndo();
+            hit.shape.text = next.trim();
+            redraw();
+            scheduleAutosave();
+          }
+        } else {
           const content = prompt("Text:", "ADD NOTE");
           if (content && content.trim()){
             pushUndo();
@@ -2009,30 +2015,11 @@
         return;
       }
     });
-
-    canvas.addEventListener("dblclick", (e) => {
-      if (mode !== "edit") return;
-      if (isPhoneMode && !phoneEditsUnlocked) return;
-
-      const p = pointerPos(e);
-      const w = screenToWorld(p.x, p.y);
-      const hit = topmostTextAt(w);
-      if (hit){
-        const next = prompt("Edit text:", hit.shape.text || "");
-        if (next != null){
-          pushUndo();
-          hit.shape.text = next.trim();
-          redraw();
-          scheduleAutosave();
-        }
-      }
-    });
   }
 
   // ---------- Revert/Delete ----------
   async function revertToOriginal(){
     if (!currentId) return;
-    if (mode !== "edit") return;
     if (!confirm("Revert this photo back to ORIGINAL (remove all edits/markup)?")) return;
 
     anno = [];
@@ -2086,7 +2073,7 @@
     closeViewer();
     await openFolder(folder);
     toast("Deleted.");
-    openViewer(folder, nextIndex, mode);
+    openViewer(folder, nextIndex);
   }
 
   // ---------- Export / Import ----------
@@ -2286,7 +2273,7 @@
     setHdrCount();
   }
 
-  // ---------- Camera Mode (multi-shot) ----------
+  // ---------- Camera Mode ----------
   const camOverlay = document.getElementById("camOverlay");
   const camVideo = document.getElementById("camVideo");
   const camThumbs = document.getElementById("camThumbs");
@@ -2296,27 +2283,10 @@
   let camFacing = "environment";
   let camShots = []; // {blob, url}
 
-  async function waitForVideoReady(video, timeoutMs = 2500){
-    if (video.videoWidth && video.videoHeight) return true;
-
-    await new Promise((resolve) => {
-      let done = false;
-      const finish = () => { if (!done){ done = true; cleanup(); resolve(); } };
-
-      const cleanup = () => {
-        video.removeEventListener("loadedmetadata", finish);
-        video.removeEventListener("loadeddata", finish);
-        video.removeEventListener("canplay", finish);
-      };
-
-      video.addEventListener("loadedmetadata", finish, { once:true });
-      video.addEventListener("loadeddata", finish, { once:true });
-      video.addEventListener("canplay", finish, { once:true });
-
-      setTimeout(() => finish(), timeoutMs);
-    });
-
-    return !!(video.videoWidth && video.videoHeight);
+  function updateCamLayout(){
+    if (!camOverlay.classList.contains("show")) return;
+    const landscape = window.matchMedia("(orientation: landscape)").matches || (window.innerWidth > window.innerHeight);
+    camOverlay.classList.toggle("landscape", landscape);
   }
 
   async function camStart(){
@@ -2325,11 +2295,14 @@
     camOverlay.classList.add("show");
     camOverlay.setAttribute("aria-hidden","false");
 
-    // Prime audio (helps iPhones)
     try{ playSnapSound(); }catch{}
 
+    updateCamLayout();
+    window.addEventListener("resize", updateCamLayout, {passive:true});
+    window.addEventListener("orientationchange", updateCamLayout, {passive:true});
+
     if (!navigator.mediaDevices?.getUserMedia){
-      alert("Camera Mode not supported on this browser. Use Upload Photos instead.");
+      alert("Camera Mode not supported on this browser. Use Add Photos instead.");
       camStop();
       return;
     }
@@ -2349,6 +2322,7 @@
       });
       camVideo.srcObject = camStream;
       await camVideo.play().catch(()=>{});
+      updateCamLayout();
     }catch(err){
       console.error(err);
       alert("Camera permission blocked. Allow camera access in your browser settings, then try again.");
@@ -2358,7 +2332,11 @@
 
   function camStop(){
     camOverlay.classList.remove("show");
+    camOverlay.classList.remove("landscape");
     camOverlay.setAttribute("aria-hidden","true");
+
+    window.removeEventListener("resize", updateCamLayout);
+    window.removeEventListener("orientationchange", updateCamLayout);
 
     if (camStream){
       camStream.getTracks().forEach(t => t.stop());
@@ -2377,50 +2355,35 @@
     }
   }
 
-  // ✅ UPDATED: Snap SAVES immediately into the folder (no losing photos)
   async function camSnap(){
-    if (!currentFolder){
-      toast("Open a folder first.");
-      return;
-    }
-
-    const ready = await waitForVideoReady(camVideo, 2500);
-    if (!ready){
-      toast("Camera not ready yet. Try again.");
-      return;
-    }
-
+    if (!camVideo.videoWidth) return;
     const c = document.createElement("canvas");
     c.width = camVideo.videoWidth;
     c.height = camVideo.videoHeight;
     const cctx = c.getContext("2d");
     cctx.drawImage(camVideo, 0, 0, c.width, c.height);
-
     const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
-    if (!blob){
-      toast("Snap failed. Try again.");
-      return;
-    }
+    if (!blob) return;
 
     playSnapSound();
 
     const url = URL.createObjectURL(blob);
     camShots.push({blob, url});
     renderCamThumbs();
-
-    // ✅ Save immediately so it appears in the folder and exports
-    const file = new File([blob], `camera_${Date.now()}.jpg`, { type:"image/jpeg" });
-    await addFilesToFolder(currentFolder, [file]);
-
-    toast("Saved to folder");
+    toast(`Captured ${camShots.length}`);
   }
 
-  // ✅ Done just closes (snaps already saved)
   async function camDone(){
+    if (!camShots.length){
+      camStop();
+      return;
+    }
+    const files = camShots.map((s, i) => new File([s.blob], `camera_${Date.now()}_${i+1}.jpg`, {type:"image/jpeg"}));
     camShots.forEach(s => URL.revokeObjectURL(s.url));
     camShots = [];
     renderCamThumbs();
     camStop();
+    await addFilesToFolder(currentFolder, files);
   }
 
   function camCancel(){
@@ -2493,7 +2456,7 @@
       await renderFolders();
     });
 
-    // Upload Photos (multi)
+    // Add Photos
     const fileInput = document.getElementById("fileInput");
     fileInput.addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
@@ -2531,25 +2494,16 @@
       if (e.key === "ArrowRight") step(+1);
     });
 
-    // Force edit button (phone)
-    document.getElementById("forceEditBtn").addEventListener("click", () => {
-      phoneEditsUnlocked = true;
-      setMode("edit");
-      toast("Editing enabled");
-    });
-
     // Tools
     document.getElementById("toolRow").addEventListener("click", (e) => {
       const t = e.target.closest(".toolIcon");
       if (!t) return;
-      if (mode !== "edit") return;
       setTool(t.dataset.tool);
     });
 
     document.getElementById("notesInput").addEventListener("input", () => scheduleAutosave());
 
     document.getElementById("undoBtn").addEventListener("click", () => {
-      if (mode !== "edit") return;
       if (!undoStack.length) return;
       anno = undoStack.pop();
       angleStage = 0; angleLine1 = null;
@@ -2557,7 +2511,6 @@
       scheduleAutosave();
     });
     document.getElementById("clearBtn").addEventListener("click", () => {
-      if (mode !== "edit") return;
       if (!anno.length) return;
       if (!confirm("Clear all markup on this photo?")) return;
       pushUndo();
@@ -2572,6 +2525,7 @@
     // Camera Mode
     document.getElementById("openCamBtn").addEventListener("click", camStart);
     document.getElementById("camSnapBtn").addEventListener("click", camSnap);
+    document.getElementById("camShutter").addEventListener("click", camSnap);
     document.getElementById("camDoneBtn").addEventListener("click", camDone);
     document.getElementById("camCancelBtn").addEventListener("click", camCancel);
     document.getElementById("camClearBtn").addEventListener("click", camClear);
