@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <title>Mitchell Photo App</title>
 
   <meta name="theme-color" content="#070b16">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mitchell Photos">
 
   <style>
     :root{
@@ -24,9 +25,7 @@
       --shadow: 0 18px 44px rgba(0,0,0,.45);
       --safe-b: env(safe-area-inset-bottom, 0px);
       --safe-t: env(safe-area-inset-top, 0px);
-
-      --dropBg: rgba(59,130,246,.35);
-      --dropEdge: rgba(59,130,246,.95);
+      --green: rgba(0,255,0,.95);
     }
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html,body{ height:100%; }
@@ -78,7 +77,7 @@
     }
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
-    input, textarea, button, select{ font:inherit; }
+    input, textarea, button{ font:inherit; }
     textarea{
       width:100%;
       padding: 12px 12px;
@@ -87,19 +86,9 @@
       background: rgba(10,16,34,.55);
       color: var(--text);
       outline:none;
-      min-height: 80px;
+      min-height: 70px;
       resize: vertical;
     }
-    .field{
-      width:100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(10,16,34,.55);
-      color: var(--text);
-      outline:none;
-    }
-    .label{ font-size:12px; color:var(--muted); font-weight:900; margin-top:10px; }
 
     .btn{
       border: 1px solid rgba(255,255,255,.14);
@@ -124,18 +113,6 @@
     }
     .btn.sm{ padding: 8px 10px; border-radius: 10px; font-size: 12px; }
 
-    .drop{
-      border:2px dashed rgba(255,255,255,.16);
-      border-radius: var(--radius);
-      padding: 12px;
-      text-align:center;
-      background: rgba(0,0,0,.10);
-    }
-    .drop.drag{
-      border-color: rgba(59,130,246,.85);
-      background: rgba(59,130,246,.10);
-    }
-
     .folders{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
@@ -143,7 +120,6 @@
       margin-top: 12px;
     }
     @media (max-width: 900px){ .folders{ grid-template-columns: 1fr; } }
-
     .folderCard{
       padding: 16px;
       border-radius: var(--radius);
@@ -198,7 +174,6 @@
       cursor:pointer;
       user-select:none;
       box-shadow: 0 10px 20px rgba(0,0,0,.25);
-      touch-action:none;
     }
     .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
     .num{
@@ -211,190 +186,71 @@
       border:1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
-      z-index: 4;
-    }
-    .thumbBar{
-      position:absolute;
-      left:8px; right:8px; bottom:8px;
-      display:flex; justify-content:space-between; gap:8px;
-      pointer-events:none;
-      z-index: 4;
-    }
-    .chip{
-      font-size:11px;
-      padding: 5px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(12,18,38,.65);
-      backdrop-filter: blur(10px);
-      max-width:100%;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
+      z-index: 3;
     }
 
-    .moveBtn{
+    /* MOVE HANDLE (only this starts drag) */
+    .moveHandle{
       position:absolute;
-      top:8px; right:8px;
-      height:44px;
-      padding: 0 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.45);
-      color: var(--text);
-      font-weight: 1200;
-      letter-spacing:.4px;
+      right:8px; top:8px;
+      z-index: 4;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.40);
+      font-weight:1000;
+      font-size: 12px;
       cursor: grab;
       user-select:none;
-      z-index: 7;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      touch-action:none;
     }
-    .moveBtn:active{ cursor: grabbing; filter: brightness(1.1); }
-    .moveDot{
-      width:10px; height:10px;
-      border-radius:999px;
-      background: rgba(59,130,246,.9);
-      box-shadow: 0 0 18px rgba(59,130,246,.5);
-    }
+    .moveHandle:active{ cursor: grabbing; }
 
-    .dropOverlay{
-      position:absolute; inset:0;
-      display:none; pointer-events:none; z-index: 6;
-    }
-    .thumb.drop-target .dropOverlay{ display:block; }
-
-    .dropHalf{ position:absolute; top:0; bottom:0; width:50%; background: transparent; }
-    .dropHalf.left{ left:0; }
-    .dropHalf.right{ right:0; }
-    .thumb.drop-before .dropHalf.left{ background: var(--dropBg); }
-    .thumb.drop-after  .dropHalf.right{ background: var(--dropBg); }
-
-    .dropLabel{
-      position:absolute; left:50%; top:50%;
-      transform: translate(-50%,-50%);
-      padding: 14px 16px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.22);
-      background: rgba(0,0,0,.70);
-      font-weight: 1300;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      display:flex; align-items:center; gap:12px;
-      box-shadow: 0 18px 40px rgba(0,0,0,.45);
-      white-space:nowrap;
-      font-size: 14px;
-    }
-    .dropLabel b{ color: #d7e8ff; font-size: 18px; text-shadow: 0 0 22px rgba(59,130,246,.35); }
-    .dropEdge{
-      position:absolute; top:10px; bottom:10px;
-      width:0; display:none;
-      border-left: 8px solid var(--dropEdge);
-      filter: drop-shadow(0 0 18px rgba(59,130,246,.60));
-    }
-    .thumb.drop-before .dropEdge{ left:10px; display:block; }
-    .thumb.drop-after  .dropEdge{ right:10px; display:block; }
-
-    .ghost{
-      position:fixed; z-index: 9999;
-      pointer-events:none; opacity:.92;
-      transform: scale(1.02);
-      box-shadow: 0 18px 40px rgba(0,0,0,.55);
-      border-radius: 14px; overflow:hidden;
-    }
-
-    .insertBadge{
-      position: sticky; top: 6px;
-      z-index: 10; margin-top: 8px;
-      display:none;
-    }
-    .insertBadgeInner{
-      display:inline-flex; gap:10px; align-items:center;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.65);
-      font-weight: 1100;
-      font-size: 12px;
-      max-width: 100%;
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-    }
-
-    .overlay{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.72);
-      backdrop-filter: blur(10px);
-      z-index: 50;
-      display:none;
-    }
-    .overlay.show{ display:block; }
-    .viewer{
-      position:absolute; inset: 10px;
-      border-radius: 18px;
-      border:1px solid rgba(255,255,255,.14);
-      background: var(--panel2);
-      box-shadow: var(--shadow);
-      display:flex;
-      overflow:hidden;
-    }
-    .vLeft{
-      flex: 1.55;
-      position:relative;
-      background: rgba(0,0,0,.18);
-      min-width:0;
-      touch-action:none;
-    }
-    canvas{ width:100%; height:100%; display:block; touch-action:none; }
-    .vRight{
-      flex: 0.75;
-      border-left:1px solid rgba(255,255,255,.10);
-      padding:12px;
-      overflow:auto;
-      min-width: 300px;
-    }
-    @media (max-width: 950px){
-      .viewer{ flex-direction:column; }
-      .vRight{ border-left:none; border-top:1px solid rgba(255,255,255,.10); min-width:0; }
-    }
-    .topbar{
+    /* Big obvious BEFORE/AFTER indicator on hover target */
+    .dropMark{
       position:absolute;
-      top:10px; left:10px; right:10px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
+      inset:0;
+      z-index: 5;
+      display:none;
       pointer-events:none;
-      z-index: 10;
     }
-    .topbar .group{ display:flex; gap:10px; pointer-events:auto; align-items:center; }
-
-    .arrowBtn{
+    .dropMark.show{ display:block; }
+    .dropMark .bar{
       position:absolute;
-      top:50%;
-      transform: translateY(-50%);
-      width:54px; height:54px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.35);
-      display:flex; align-items:center; justify-content:center;
-      font-size: 24px;
-      font-weight: 1000;
-      cursor:pointer;
-      user-select:none;
-      pointer-events:auto;
-      z-index: 10;
+      left:0; right:0;
+      height:8px;
+      background: rgba(59,130,246,.95);
+      filter: drop-shadow(0 0 12px rgba(59,130,246,.45));
     }
-    .arrowBtn.left{ left:10px; }
-    .arrowBtn.right{ right:10px; }
-    .arrowBtn[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
+    .dropMark .label{
+      position:absolute;
+      left:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.65);
+      font-weight:1000;
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .dropMark.before .bar{ top:0; }
+    .dropMark.after  .bar{ bottom:0; }
+    .dropMark.before .label{ top:10px; }
+    .dropMark.after  .label{ bottom:10px; }
+
+    .empty{
+      color: var(--muted);
+      text-align:center;
+      padding: 18px 0;
+      display:none;
+    }
 
     .toolRow{
-      display:flex; gap:8px; flex-wrap:wrap;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
       margin-top: 10px;
     }
     .toolIcon{
@@ -436,36 +292,103 @@
     }
     .toast.show{ display:block; }
 
-    .modeBadge{
-      display:inline-flex;
-      gap:8px;
+    /* Viewer */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(10px);
+      z-index: 50;
+      display:none;
+    }
+    .overlay.show{ display:block; }
+    .viewer{
+      position:absolute;
+      inset: 10px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.14);
+      background: var(--panel2);
+      box-shadow: var(--shadow);
+      display:flex;
+      overflow:hidden;
+    }
+    .vLeft{
+      flex: 1.55;
+      position:relative;
+      background: rgba(0,0,0,.18);
+      min-width:0;
+      touch-action:none;
+    }
+    canvas{ width:100%; height:100%; display:block; }
+    .vRight{
+      flex: 0.75;
+      border-left:1px solid rgba(255,255,255,.10);
+      padding:12px;
+      overflow:auto;
+      min-width: 320px;
+    }
+    @media (max-width: 950px){
+      .viewer{ flex-direction:column; }
+      .vRight{ border-left:none; border-top:1px solid rgba(255,255,255,.10); min-width:0; }
+    }
+    .topbar{
+      position:absolute;
+      top:10px; left:10px; right:10px;
+      display:flex;
       align-items:center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.45);
-      font-weight:1100;
-      font-size:12px;
-      color: var(--text);
+      justify-content:space-between;
+      gap:10px;
+      pointer-events:none;
+      z-index: 10;
     }
-    .modeDot{
-      width:10px; height:10px; border-radius:999px;
-      background: rgba(59,130,246,.9);
-      box-shadow: 0 0 18px rgba(59,130,246,.5);
-    }
-    .modeDot.edit{
-      background: rgba(34,197,94,.95);
-      box-shadow: 0 0 18px rgba(34,197,94,.5);
-    }
+    .topbar .group{ display:flex; gap:10px; pointer-events:auto; }
 
-    /* Selected text highlight (on canvas) uses dashed box. */
-    .kbd{
-      padding:2px 8px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      font-weight:1000;
-      font-size:12px;
-      color: var(--muted);
+    .arrowBtn{
+      position:absolute;
+      top:50%;
+      transform: translateY(-50%);
+      width:54px; height:54px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.35);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 24px;
+      font-weight: 1000;
+      cursor:pointer;
+      user-select:none;
+      pointer-events:auto;
+      z-index: 10;
+    }
+    .arrowBtn.left{ left:10px; }
+    .arrowBtn.right{ right:10px; }
+    .arrowBtn[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
+
+    .errorBar{
+      position:fixed;
+      left:12px; right:12px;
+      bottom: calc(12px + var(--safe-b));
+      background: rgba(239,68,68,.18);
+      border:1px solid rgba(239,68,68,.35);
+      color: #ffd0d0;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-weight: 900;
+      font-size: 12px;
+      z-index: 999;
+      display:none;
+      white-space: pre-wrap;
+      max-height: 36vh;
+      overflow:auto;
+    }
+    .errorBar.show{ display:block; }
+    .errorBar .x{
+      float:right;
+      cursor:pointer;
+      padding: 0 6px;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.25);
+      margin-left: 10px;
     }
   </style>
 </head>
@@ -480,60 +403,53 @@
 </header>
 
 <main>
+  <!-- HOME -->
   <section id="homeView">
     <div class="card">
       <div class="row" style="justify-content:space-between;">
         <div style="font-weight:1000; font-size:16px;">Folders</div>
-        <div class="pill">Reorder with <b style="color:#d7e8ff;">MOVE</b></div>
+        <div class="row">
+          <button class="btn ok" id="exportZipBtn">Export ZIP</button>
+          <button class="btn danger" id="wipeBtn">Wipe This Device</button>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:6px;">
+        Teardown keeps strict Mitchell order. Drag using the <b>MOVE</b> button; drop <b>BEFORE/AFTER</b> is highlighted.
       </div>
 
       <div class="folders" id="folders"></div>
-
-      <div class="hr"></div>
-      <div class="row">
-        <button class="btn ok" id="exportZipBtn">Export ZIP</button>
-        <button class="btn danger" id="wipeBtn">Wipe This Device</button>
-      </div>
-      <div class="hint">Teardown keeps strict Mitchell order. Drag using the MOVE button; drop BEFORE/AFTER is highlighted.</div>
     </div>
   </section>
 
+  <!-- FOLDER -->
   <section id="folderView" style="display:none;">
     <div class="card" style="margin-bottom:12px;">
       <div class="row" style="justify-content:space-between;">
         <div>
           <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
-          <div class="muted" id="folderSub">Tap photo to view. Use MOVE to reorder.</div>
+          <div class="muted">Click a photo to view/edit. Drag with MOVE.</div>
         </div>
         <div class="row">
           <button class="btn" id="backHomeBtn">← Folders</button>
           <button class="btn ok" id="folderExportZipBtn">Export ZIP</button>
+          <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
         </div>
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <input id="fileInput" type="file" accept="image/*" multiple hidden>
-        <button class="btn primary" id="uploadBtn">⬆️ Upload Photos</button>
-        <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
-      </div>
-
-      <div class="drop" id="dropZone" style="margin-top:10px;">
-        <b>Drop photos into “<span id="dropFolderName"></span>”</b>
-        <div class="muted">To reorder: drag using MOVE → drop BEFORE/AFTER (big highlight).</div>
-      </div>
-
-      <div class="insertBadge" id="insertBadge">
-        <div class="insertBadgeInner" id="insertBadgeInner">Dragging…</div>
+        <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+          ⬆️ Upload Photos
+          <input id="fileInput" type="file" accept="image/*" multiple hidden>
+        </label>
       </div>
     </div>
 
     <div id="grid" class="grid"></div>
-    <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
-      No photos yet. Upload some above.
-    </div>
+    <div id="empty" class="empty">No photos yet. Upload some above.</div>
   </section>
 </main>
 
+<!-- VIEW/EDIT OVERLAY -->
 <div class="overlay" id="overlay" aria-hidden="true">
   <div class="viewer">
     <div class="vLeft" id="vLeft">
@@ -541,10 +457,8 @@
         <div class="group">
           <button class="btn icon" id="closeBtn" title="Close">✕</button>
           <div class="pill" id="posPill">0 / 0</div>
-          <div class="modeBadge" id="modeBadge"><span class="modeDot" id="modeDot"></span><span id="modeLabel">VIEW</span></div>
         </div>
         <div class="group">
-          <button class="btn primary sm" id="toggleEditBtn">Enable Edit</button>
           <button class="btn icon" id="prevBtn" title="Prev">←</button>
           <button class="btn icon" id="nextBtn" title="Next">→</button>
         </div>
@@ -557,7 +471,16 @@
     </div>
 
     <div class="vRight">
-      <div style="font-weight:1000; margin-bottom:6px;">Notes</div>
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:1000; margin-bottom:2px;">EDIT</div>
+          <div class="muted">Autosave ON • Thumbnail updates immediately</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="muted" style="margin-bottom:6px;">Notes (optional)</div>
       <textarea id="notesInput" placeholder="Damage notes…"></textarea>
 
       <div class="hr"></div>
@@ -567,76 +490,79 @@
         <div class="toolIcon active" data-tool="arrow" title="Arrow">➤</div>
         <div class="toolIcon" data-tool="circle" title="Circle">◯</div>
         <div class="toolIcon" data-tool="rect" title="Square">▢</div>
-        <div class="toolIcon" data-tool="line" title="Line">／</div>
-        <div class="toolIcon" data-tool="angle" title="Angle">∠</div>
+        <div class="toolIcon" data-tool="line" title="Straight Line">／</div>
+        <div class="toolIcon" data-tool="angle" title="Angle (2 lines)">∠</div>
         <div class="toolIcon" data-tool="ruler" title="Measure">📏</div>
         <div class="toolIcon" data-tool="text" title="Text">T</div>
         <div class="toolIcon" data-tool="pan" title="Pan">✋</div>
       </div>
 
-      <!-- TEXT PANEL (always visible in photo view; enabled in EDIT) -->
+      <div class="hint" id="toolHint" style="margin-top:8px;">
+        Tip: Use PAN (✋) to move image if needed.
+      </div>
+
       <div class="hr"></div>
-      <div style="font-weight:1000;">Text</div>
-      <div class="hint">In EDIT: choose Text tool → press <span class="kbd">Place Text</span> → click where to drop it. Tap a text label to select and edit here.</div>
 
-      <div class="label">Text content</div>
-      <textarea id="textBox" placeholder="Type label here…" style="min-height:64px;"></textarea>
-
-      <div class="row" style="margin-top:10px; align-items:flex-end;">
-        <div style="flex:1; min-width:140px;">
-          <div class="label">Size</div>
-          <select id="textSize" class="field">
-            <option value="28">28</option>
-            <option value="34" selected>34 (default)</option>
-            <option value="42">42</option>
-            <option value="54">54</option>
-            <option value="70">70</option>
-          </select>
+      <div id="textPanel" style="display:none;">
+        <div class="muted" style="margin-bottom:6px;">Text (green box)</div>
+        <textarea id="textValue" placeholder="Type text…"></textarea>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn ok sm" id="applyTextBtn">Apply to Selected</button>
+          <button class="btn sm" id="newTextBtn">New Text Box</button>
         </div>
-        <div style="flex:1; min-width:140px;">
-          <div class="label">Style</div>
-          <select id="textStyle" class="field">
-            <option value="pill" selected>Pill (green)</option>
-            <option value="outline">Outline only</option>
-          </select>
-        </div>
+        <div class="hint">Click a text box to select it, then edit here. Drag text boxes to move.</div>
+        <div class="hr"></div>
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <button class="btn ok" id="placeTextBtn">Place Text</button>
-        <button class="btn primary" id="updateTextBtn">Update Selected</button>
-        <button class="btn danger" id="deleteTextBtn">Delete Selected</button>
-      </div>
-      <div class="hint" id="textSelHint">No text selected.</div>
-
-      <div class="hr"></div>
-
-      <div class="row">
         <button class="btn sm" id="undoBtn">Undo</button>
-        <button class="btn sm" id="clearBtn">Clear</button>
+        <button class="btn sm" id="clearBtn">Clear Markup</button>
         <button class="btn sm" id="revertBtn">Revert Original</button>
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <button class="btn danger" id="deleteBtn">Delete</button>
+        <button class="btn danger" id="deleteBtn">Delete Photo</button>
       </div>
 
       <div class="hint" id="angleHint" style="display:none;">
-        Angle tool: draw line 1, then draw line 2.
+        Angle tool: click 4 points: Line1 start/end, then Line2 start/end.
       </div>
-      <div class="hint" id="editHint">Viewer is in VIEW mode. Turn on Edit to draw.</div>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="errorBar" id="errorBar"><span class="x" id="errClose">x</span><span id="errText"></span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script>
 (() => {
   const FOLDERS = ["Walk Around","UPD","Teardown"];
-  const DB_NAME = "mitchell_app_pro_v9_text_panel_big";
+
+  // ----- Error banner -----
+  const errorBar = document.getElementById("errorBar");
+  const errText = document.getElementById("errText");
+  document.getElementById("errClose").onclick = () => errorBar.classList.remove("show");
+  function showError(msg){
+    errText.textContent = msg;
+    errorBar.classList.add("show");
+  }
+  window.addEventListener("error", (e) => showError("JS Error: " + (e.message || e.error || "Unknown")));
+  window.addEventListener("unhandledrejection", (e) => showError("Promise Error: " + (e.reason?.message || String(e.reason || "Unknown"))));
+
+  // ----- Toast -----
+  const toastEl = document.getElementById("toast");
+  let toastTimer = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1400);
+  }
+
+  // ----- IndexedDB -----
+  const DB_NAME = "mitchell_photo_app_stable_v1";
   const DB_VER = 1;
   const STORE_ORIG  = "originals";
   const STORE_EDIT  = "edits";
@@ -647,71 +573,43 @@
   let meta = [];
   let currentFolder = null;
 
-  // Drag reorder (ONLY from MOVE button)
-  let dragging = null; // {id, fromIndex, ghost, offsetX, offsetY}
-  let insertTarget = null; // {index, side}
-  let suppressClickUntil = 0;
-  let dragRAF = 0;
-  let lastDragEvent = null;
-
-  // viewer/editor
+  // viewer state
   const overlay = document.getElementById("overlay");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
-
   let folderList = [];
   let indexInFolder = -1;
   let currentId = null;
 
-  // mode
-  let mode = "view"; // 'view' | 'edit'
-
-  // base + view transform
   let baseBitmap = null;
   let view = { scale: 1, tx: 0, ty: 0 };
-
-  // tools + shapes
   let tool = "arrow";
   let isDown = false;
   let startW = {x:0,y:0};
   let tempShape = null;
   let anno = [];
   let undoStack = [];
-  let movingText = null;
-
-  // selection + place mode for text
-  let selectedTextIndex = -1;
-  let placingText = false;
-
-  // angle
-  let angleStage = 0;
-
-  // autosave
   let saveTimer = null;
   const AUTOSAVE_MS = 250;
 
-  // colors
+  // text selection
+  let selectedTextIndex = -1;
+
+  // angle tool: 4 clicks
+  let angleClicks = []; // points [{x,y}...]
+
+  // colors/stroke
   const GREEN = "rgba(0,255,0,0.95)";
   const DARK  = "rgba(0,0,0,0.55)";
   const WIDTH = 4;
 
-  // toast
-  const toastEl = document.getElementById("toast");
-  let toastTimer = null;
-  function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1600);
-  }
-
   function uuid(){
-    return crypto.randomUUID ? crypto.randomUUID() : ("id_" + Math.random().toString(16).slice(2) + Date.now());
+    try { return crypto.randomUUID(); }
+    catch { return "id_" + Math.random().toString(16).slice(2) + Date.now(); }
   }
   function nowISO(){ return new Date().toISOString(); }
   function pad3(n){ return String(n).padStart(3,"0"); }
 
-  // ---------- IndexedDB ----------
   function openDB(){
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VER);
@@ -776,12 +674,9 @@
     }));
     await ensureFolderOrder("Teardown");
   }
-
   function folderItems(folder){
-    return meta.filter(m => m.folder === folder)
-               .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+    return meta.filter(m => m.folder === folder).sort((a,b)=> (a.order||0)-(b.order||0));
   }
-
   async function ensureFolderOrder(folder){
     const list = folderItems(folder);
     let needs = false;
@@ -797,61 +692,65 @@
       await idbPut(s, {...cur, order: item.order});
     }
     await waitTxDone(t);
+
     for (const item of list){
       const idx = meta.findIndex(m => m.id === item.id);
       if (idx >= 0) meta[idx].order = item.order;
     }
   }
 
-  function setHdrCount(){ document.getElementById("hdrCount").textContent = String(meta.length); }
+  function setHdrCount(){
+    document.getElementById("hdrCount").textContent = String(meta.length);
+  }
 
-  // ---------- Thumbs ----------
+  // ----- Thumbs (with simple cache to avoid glitchy reload spam) -----
+  const urlCache = new Map(); // id -> objectURL
+  function setImgFromBlob(imgEl, id, blob){
+    if (!blob) return;
+    const old = urlCache.get(id);
+    if (old) URL.revokeObjectURL(old);
+    const url = URL.createObjectURL(blob);
+    urlCache.set(id, url);
+    imgEl.src = url;
+  }
+
+  async function getBlob(storeName, id){
+    const t = tx([storeName], "readonly");
+    const rec = await idbGet(t.objectStore(storeName), id);
+    return rec?.blob || null;
+  }
+
   async function getThumbBlob(id){
-    try{
-      const t = tx([STORE_THUMB], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_THUMB), id);
-      if (rec?.blob) return rec.blob;
-    }catch{}
-    try{
-      const t = tx([STORE_EDIT], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_EDIT), id);
-      if (rec?.blob) return rec.blob;
-    }catch{}
-    try{
-      const t = tx([STORE_ORIG], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_ORIG), id);
-      return rec?.blob || null;
-    }catch{}
-    return null;
+    return (await getBlob(STORE_THUMB, id))
+      || (await getBlob(STORE_EDIT, id))
+      || (await getBlob(STORE_ORIG, id));
   }
 
   async function ensureThumb(id){
-    try{
-      const t = tx([STORE_THUMB],"readonly");
-      const rec = await idbGet(t.objectStore(STORE_THUMB), id);
-      if (rec?.blob) return;
-    }catch{}
+    // already have thumb?
+    const existing = await getBlob(STORE_THUMB, id).catch(()=>null);
+    if (existing) return;
 
-    let blob = await getThumbBlob(id);
+    const blob = await getBlob(STORE_EDIT, id).catch(()=>null) || await getBlob(STORE_ORIG, id).catch(()=>null);
     if (!blob) return;
 
     const bmp = await createImageBitmap(blob);
     const max = 360;
-    const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
-    const w = Math.max(1, Math.round(bmp.width * scale));
-    const h = Math.max(1, Math.round(bmp.height * scale));
+    const s = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * s));
+    const h = Math.max(1, Math.round(bmp.height * s));
     const c = document.createElement("canvas");
     c.width = w; c.height = h;
     c.getContext("2d").drawImage(bmp, 0, 0, w, h);
     const thumbBlob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.85));
     if (!thumbBlob) return;
 
-    const t4 = tx([STORE_THUMB], "readwrite");
-    await idbPut(t4.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
-    await waitTxDone(t4);
+    const t2 = tx([STORE_THUMB], "readwrite");
+    await idbPut(t2.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
+    await waitTxDone(t2);
   }
 
-  // ---------- Home UI ----------
+  // ----- Home render (ALWAYS show folders even if DB empty) -----
   async function renderFolders(){
     await refreshMeta();
     setHdrCount();
@@ -879,16 +778,13 @@
       const strip = document.createElement("div");
       strip.className = "miniStrip";
       const preview = list.slice(0, 10);
+
       for (const m of preview){
         const img = document.createElement("img");
         img.className = "miniThumb";
+        img.alt = "";
         strip.appendChild(img);
-        getThumbBlob(m.id).then(blob => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          img.src = url;
-          img.onload = () => URL.revokeObjectURL(url);
-        }).catch(()=>{});
+        getThumbBlob(m.id).then(blob => { if (blob) setImgFromBlob(img, m.id + "_mini", blob); }).catch(()=>{});
       }
       if (count > preview.length){
         const more = document.createElement("div");
@@ -916,231 +812,13 @@
     document.getElementById("homeView").style.display = "none";
     document.getElementById("folderView").style.display = "";
     document.getElementById("folderTitle").textContent = folder;
-    document.getElementById("dropFolderName").textContent = folder;
+
     await refreshMeta();
     setHdrCount();
     renderFolderGrid();
   }
 
-  // ---------- Folder grid + reorder ----------
-  function clearDropTargets(grid){
-    grid.querySelectorAll(".thumb.drop-target, .thumb.drop-before, .thumb.drop-after").forEach(el=>{
-      el.classList.remove("drop-target","drop-before","drop-after");
-      const label = el.querySelector(".dropLabel b");
-      if (label) label.textContent = "BEFORE";
-    });
-  }
-
-  async function renderFolderGrid(){
-    const grid = document.getElementById("grid");
-    const empty = document.getElementById("empty");
-    const badgeWrap = document.getElementById("insertBadge");
-    const badgeInner = document.getElementById("insertBadgeInner");
-
-    grid.innerHTML = "";
-    badgeWrap.style.display = "none";
-
-    const list = folderItems(currentFolder);
-    empty.style.display = list.length ? "none" : "";
-
-    list.forEach((m, idx) => {
-      const div = document.createElement("div");
-      div.className = "thumb";
-      div.dataset.id = m.id;
-      div.dataset.index = String(idx);
-
-      const img = document.createElement("img");
-      div.appendChild(img);
-
-      const shownNum = (currentFolder === "Teardown") ? (m.order || (idx+1)) : (idx+1);
-
-      const num = document.createElement("div");
-      num.className = "num";
-      num.textContent = String(shownNum);
-      div.appendChild(num);
-
-      const moveBtn = document.createElement("button");
-      moveBtn.type = "button";
-      moveBtn.className = "moveBtn";
-      moveBtn.innerHTML = `<span class="moveDot"></span> MOVE`;
-      div.appendChild(moveBtn);
-
-      const dropOverlay = document.createElement("div");
-      dropOverlay.className = "dropOverlay";
-      dropOverlay.innerHTML = `
-        <div class="dropHalf left"></div>
-        <div class="dropHalf right"></div>
-        <div class="dropEdge"></div>
-        <div class="dropLabel"><span>DROP</span> <b>BEFORE</b></div>
-      `;
-      div.appendChild(dropOverlay);
-
-      const bar = document.createElement("div");
-      bar.className = "thumbBar";
-      bar.innerHTML = `<span class="chip">${currentFolder}</span><span class="chip">${pad3(shownNum)}</span>`;
-      div.appendChild(bar);
-
-      div.addEventListener("click", () => {
-        if (Date.now() < suppressClickUntil) return;
-        if (dragging) return;
-        openViewer(currentFolder, idx);
-      });
-
-      moveBtn.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (overlay.classList.contains("show")) return;
-        if (e.button !== undefined && e.button !== 0) return;
-
-        beginDragFromHandle(e, div, idx, badgeWrap, badgeInner, grid);
-
-        const move = (ev) => onDragMove(ev, grid, badgeInner);
-        const up = (ev) => endDrag(ev, grid, badgeWrap, move, up);
-        window.addEventListener("pointermove", move, {passive:false});
-        window.addEventListener("pointerup", up, {passive:false});
-      });
-
-      grid.appendChild(div);
-
-      getThumbBlob(m.id).then(blob => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        img.src = url;
-        img.onload = () => URL.revokeObjectURL(url);
-      });
-    });
-  }
-
-  function beginDragFromHandle(e, thumbEl, fromIndex, badgeWrap, badgeInner, grid){
-    const rect = thumbEl.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-
-    const ghost = thumbEl.cloneNode(true);
-    ghost.classList.add("ghost");
-    ghost.style.left = (e.clientX - offsetX) + "px";
-    ghost.style.top  = (e.clientY - offsetY) + "px";
-    ghost.style.width = rect.width + "px";
-    ghost.style.height = rect.height + "px";
-    document.body.appendChild(ghost);
-
-    dragging = { id: thumbEl.dataset.id, fromIndex, ghost, offsetX, offsetY };
-    insertTarget = null;
-
-    badgeWrap.style.display = "";
-    badgeInner.textContent = "Drag over a photo → drop BEFORE or AFTER";
-    clearDropTargets(grid);
-
-    suppressClickUntil = Date.now() + 450;
-  }
-
-  function onDragMove(e, grid, badgeInner){
-    if (!dragging) return;
-    e.preventDefault();
-
-    lastDragEvent = e;
-    if (dragRAF) return;
-
-    dragRAF = requestAnimationFrame(() => {
-      dragRAF = 0;
-      const ev = lastDragEvent;
-      if (!dragging || !ev) return;
-
-      dragging.ghost.style.left = (ev.clientX - dragging.offsetX) + "px";
-      dragging.ghost.style.top  = (ev.clientY - dragging.offsetY) + "px";
-
-      clearDropTargets(grid);
-      insertTarget = null;
-
-      const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      const thumb = el ? el.closest(".thumb") : null;
-
-      if (!thumb || !grid.contains(thumb)){
-        badgeInner.textContent = "Release to cancel…";
-        return;
-      }
-
-      const r = thumb.getBoundingClientRect();
-      const idx = Number(thumb.dataset.index);
-
-      const midX = (r.left + r.right) / 2;
-      const side = (ev.clientX < midX) ? "before" : "after";
-
-      thumb.classList.add("drop-target");
-      thumb.classList.add(side === "before" ? "drop-before" : "drop-after");
-
-      const labelB = thumb.querySelector(".dropLabel b");
-      if (labelB) labelB.textContent = (side === "before") ? "BEFORE" : "AFTER";
-
-      insertTarget = { index: idx, side };
-
-      const placeNum = idx + 1;
-      badgeInner.textContent = side === "before"
-        ? `Release to place BEFORE #${placeNum}`
-        : `Release to place AFTER #${placeNum}`;
-    });
-  }
-
-  async function endDrag(e, grid, badgeWrap, moveHandler, upHandler){
-    window.removeEventListener("pointermove", moveHandler);
-    window.removeEventListener("pointerup", upHandler);
-
-    if (!dragging) return;
-    e.preventDefault();
-
-    if (dragRAF){
-      cancelAnimationFrame(dragRAF);
-      dragRAF = 0;
-      lastDragEvent = null;
-    }
-
-    clearDropTargets(grid);
-    badgeWrap.style.display = "none";
-    dragging.ghost.remove();
-
-    const from = dragging.fromIndex;
-    let to = from;
-
-    if (insertTarget){
-      to = insertTarget.index + (insertTarget.side === "after" ? 1 : 0);
-      if (to > from) to -= 1;
-    } else {
-      dragging = null;
-      insertTarget = null;
-      toast("Move cancelled");
-      return;
-    }
-
-    dragging = null;
-    insertTarget = null;
-
-    await refreshMeta();
-    let listNow = folderItems(currentFolder);
-    if (!listNow.length) return;
-
-    to = Math.max(0, Math.min(to, listNow.length - 1));
-    if (to === from) { toast("No change"); return; }
-
-    const item = listNow.splice(from, 1)[0];
-    listNow.splice(to, 0, item);
-    listNow.forEach((x,i)=> x.order = i+1);
-
-    const t = tx([STORE_META], "readwrite");
-    const s = t.objectStore(STORE_META);
-    for (const m of listNow){
-      const cur = await idbGet(s, m.id);
-      if (!cur) continue;
-      await idbPut(s, {...cur, order: m.order});
-    }
-    await waitTxDone(t);
-
-    toast(`Moved to #${to+1}`);
-    await refreshMeta();
-    renderFolderGrid();
-    renderFolders();
-  }
-
-  // ---------- Add photos ----------
+  // ----- Add photos -----
   async function addFilesToFolder(folder, files){
     await refreshMeta();
     const list = folderItems(folder);
@@ -1156,7 +834,8 @@
       const id = uuid();
       await idbPut(sO, {id, blob: f, type: f.type || "image/jpeg"});
       const m = {
-        id, folder,
+        id,
+        folder,
         order: maxOrder + added + 1,
         filename: f.name || `photo_${added+1}.jpg`,
         created: nowISO(),
@@ -1172,124 +851,150 @@
     const newOnes = folderItems(folder).slice(-added);
     for (const m of newOnes) await ensureThumb(m.id);
 
-    toast(`Added ${added} photo(s).`);
+    toast(`Uploaded ${added} photo(s).`);
     await refreshMeta();
     setHdrCount();
     renderFolderGrid();
     renderFolders();
   }
 
-  // ---------- Viewer / Editor ----------
-  function setMode(next){
-    mode = next;
-    const modeDot = document.getElementById("modeDot");
-    const modeLabel = document.getElementById("modeLabel");
-    const toggleBtn = document.getElementById("toggleEditBtn");
+  // ----- Reorder with MOVE handle (HTML5 drag) -----
+  let dragId = null;
+  let dragOverId = null;
+  let dragOverSide = null; // "before"|"after"
 
-    if (mode === "edit"){
-      modeDot.classList.add("edit");
-      modeLabel.textContent = "EDIT";
-      toggleBtn.textContent = "Disable Edit";
-      document.getElementById("editHint").textContent = "EDIT mode: draw on the photo. Pan tool moves the image. Tap text to select + edit on the right.";
-    } else {
-      modeDot.classList.remove("edit");
-      modeLabel.textContent = "VIEW";
-      toggleBtn.textContent = "Enable Edit";
-      document.getElementById("editHint").textContent = "VIEW mode: enable Edit to use tools. You can still read notes + navigate photos.";
-      placingText = false;
-    }
+  function clearMarks(){
+    document.querySelectorAll(".dropMark").forEach(m => m.classList.remove("show","before","after"));
+  }
 
-    const toolsEnabled = (mode === "edit");
-    document.querySelectorAll(".toolIcon").forEach(el => {
-      el.style.opacity = toolsEnabled ? "1" : "0.55";
-      el.style.pointerEvents = toolsEnabled ? "auto" : "none";
+  function renderFolderGrid(){
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    grid.innerHTML = "";
+    clearMarks();
+
+    const list = folderItems(currentFolder);
+    empty.style.display = list.length ? "none" : "";
+
+    list.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "thumb";
+      div.dataset.id = m.id;
+      div.dataset.index = String(idx);
+
+      const img = document.createElement("img");
+      img.alt = m.filename || "photo";
+      div.appendChild(img);
+
+      const shownNum = (currentFolder === "Teardown") ? (m.order || (idx+1)) : (idx+1);
+      const num = document.createElement("div");
+      num.className = "num";
+      num.textContent = String(shownNum);
+      div.appendChild(num);
+
+      // drop mark overlay
+      const mark = document.createElement("div");
+      mark.className = "dropMark";
+      mark.innerHTML = `<div class="bar"></div><div class="label"></div>`;
+      div.appendChild(mark);
+
+      // MOVE handle
+      const handle = document.createElement("div");
+      handle.className = "moveHandle";
+      handle.innerHTML = `↕ MOVE`;
+      handle.setAttribute("draggable","true");
+      div.appendChild(handle);
+
+      // click to open viewer
+      div.addEventListener("click", (e) => {
+        // if clicking handle, ignore (drag)
+        if (e.target.closest(".moveHandle")) return;
+        openViewer(currentFolder, idx);
+      });
+
+      // DRAG events (only from handle)
+      handle.addEventListener("dragstart", (e) => {
+        dragId = m.id;
+        e.dataTransfer.effectAllowed = "move";
+        try { e.dataTransfer.setData("text/plain", m.id); } catch {}
+        toast("Dragging…");
+      });
+
+      div.addEventListener("dragover", (e) => {
+        if (!dragId) return;
+        e.preventDefault();
+        const r = div.getBoundingClientRect();
+        const midY = r.top + r.height/2;
+        const side = (e.clientY < midY) ? "before" : "after";
+        dragOverId = m.id;
+        dragOverSide = side;
+
+        clearMarks();
+        mark.classList.add("show", side);
+        mark.querySelector(".label").textContent = side === "before" ? "DROP BEFORE" : "DROP AFTER";
+      });
+
+      div.addEventListener("dragleave", () => {
+        mark.classList.remove("show","before","after");
+      });
+
+      div.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        if (!dragId) return;
+        mark.classList.remove("show","before","after");
+        await doReorder(dragId, dragOverId, dragOverSide);
+        dragId = null; dragOverId = null; dragOverSide = null;
+      });
+
+      div.addEventListener("dragend", () => {
+        dragId = null; dragOverId = null; dragOverSide = null;
+        clearMarks();
+      });
+
+      grid.appendChild(div);
+
+      // thumb load
+      getThumbBlob(m.id).then(blob => {
+        if (blob) setImgFromBlob(img, m.id + "_grid", blob);
+      }).catch(()=>{});
     });
-    document.getElementById("undoBtn").disabled = !toolsEnabled;
-    document.getElementById("clearBtn").disabled = !toolsEnabled;
-    document.getElementById("revertBtn").disabled = !toolsEnabled;
-
-    // text panel buttons
-    document.getElementById("placeTextBtn").disabled = !toolsEnabled;
-    document.getElementById("updateTextBtn").disabled = !toolsEnabled;
-    document.getElementById("deleteTextBtn").disabled = !toolsEnabled;
   }
 
-  async function openViewer(folder, idx){
+  async function doReorder(moveId, targetId, side){
     await refreshMeta();
-    currentFolder = folder;
-    folderList = folderItems(folder);
-    indexInFolder = Math.max(0, Math.min(idx, folderList.length - 1));
-    currentId = folderList[indexInFolder]?.id || null;
-    if (!currentId) return;
+    const list = folderItems(currentFolder);
+    const from = list.findIndex(x => x.id === moveId);
+    const hit  = list.findIndex(x => x.id === targetId);
+    if (from < 0 || hit < 0) return;
 
-    overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden","false");
+    let to = hit + (side === "after" ? 1 : 0);
+    if (to > from) to -= 1;
+    to = Math.max(0, Math.min(to, list.length - 1));
+    if (to === from) return;
 
-    document.getElementById("posPill").textContent = `${indexInFolder+1} / ${folderList.length}`;
+    const item = list.splice(from, 1)[0];
+    list.splice(to, 0, item);
 
-    const m = folderList[indexInFolder];
-    anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
-    undoStack = [];
-    angleStage = 0;
-    selectedTextIndex = -1;
-    placingText = false;
+    // keep strict order field (especially teardown)
+    list.forEach((x,i)=> x.order = i+1);
 
-    document.getElementById("notesInput").value = m.notes || "";
-    document.getElementById("textSelHint").textContent = "No text selected.";
-    document.getElementById("textBox").value = "";
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    for (const m of list){
+      const cur = await idbGet(s, m.id);
+      if (!cur) continue;
+      await idbPut(s, {...cur, order: m.order});
+    }
+    await waitTxDone(t);
 
-    await loadOriginalBitmap(currentId);
-    resetView();
-    redraw();
-
-    setMode("view");
-    setArrows();
-    saveNotesSoon();
+    toast(`Moved to #${to+1}`);
+    await refreshMeta();
+    renderFolderGrid();
+    renderFolders();
   }
 
-  function closeViewer(){
-    overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden","true");
-    baseBitmap = null;
-    folderList = [];
-    indexInFolder = -1;
-    currentId = null;
-    anno = [];
-    undoStack = [];
-    angleStage = 0;
-    tempShape = null;
-    movingText = null;
-    selectedTextIndex = -1;
-    placingText = false;
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-
-  function setArrows(){
-    const canPrev = indexInFolder > 0;
-    const canNext = indexInFolder < folderList.length - 1;
-    document.getElementById("prevBtn").disabled = !canPrev;
-    document.getElementById("nextBtn").disabled = !canNext;
-    document.getElementById("bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
-    document.getElementById("bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
-  }
-
-  async function step(dir){
-    const next = indexInFolder + dir;
-    if (next < 0 || next >= folderList.length) return;
-    await flushAutosave();
-    await openViewer(currentFolder, next);
-    setMode(mode);
-  }
-
-  async function loadOriginalBitmap(id){
-    const t = tx([STORE_ORIG], "readonly");
-    const rec = await idbGet(t.objectStore(STORE_ORIG), id);
-    baseBitmap = rec?.blob ? await createImageBitmap(rec.blob) : null;
-    resizeCanvasToContainer();
-  }
-
-  function resizeCanvasToContainer(){
+  // ----- Viewer / Editor -----
+  function resizeCanvas(){
     const host = document.getElementById("vLeft").getBoundingClientRect();
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     canvas.width = Math.floor(host.width * dpr);
@@ -1323,10 +1028,74 @@
     return { x: (x - view.tx) / view.scale, y: (y - view.ty) / view.scale };
   }
 
+  async function loadOriginalBitmap(id){
+    const blob = await getBlob(STORE_ORIG, id);
+    if (!blob){ baseBitmap = null; return; }
+    baseBitmap = await createImageBitmap(blob);
+  }
+
+  function setArrows(){
+    const canPrev = indexInFolder > 0;
+    const canNext = indexInFolder < folderList.length - 1;
+    document.getElementById("prevBtn").disabled = !canPrev;
+    document.getElementById("nextBtn").disabled = !canNext;
+    document.getElementById("bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
+    document.getElementById("bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
+  }
+
+  async function openViewer(folder, idx){
+    await refreshMeta();
+    currentFolder = folder;
+    folderList = folderItems(folder);
+    indexInFolder = Math.max(0, Math.min(idx, folderList.length - 1));
+    currentId = folderList[indexInFolder]?.id || null;
+    if (!currentId) return;
+
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden","false");
+    document.getElementById("posPill").textContent = `${indexInFolder+1} / ${folderList.length}`;
+
+    const m = folderList[indexInFolder];
+    anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
+    undoStack = [];
+    angleClicks = [];
+    selectedTextIndex = -1;
+
+    document.getElementById("notesInput").value = m.notes || "";
+
+    await loadOriginalBitmap(currentId);
+    resizeCanvas();
+    resetView();
+    redraw();
+
+    setArrows();
+    syncTextPanel();
+  }
+
+  async function closeViewer(){
+    await flushAutosave();
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden","true");
+    baseBitmap = null;
+    folderList = [];
+    indexInFolder = -1;
+    currentId = null;
+    anno = [];
+    undoStack = [];
+    angleClicks = [];
+    selectedTextIndex = -1;
+  }
+
+  async function step(dir){
+    const next = indexInFolder + dir;
+    if (next < 0 || next >= folderList.length) return;
+    await flushAutosave();
+    await openViewer(currentFolder, next);
+  }
+
   function scheduleAutosave(){
-    if (mode !== "edit") return;
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => autosave().catch(console.error), AUTOSAVE_MS);
+    saveTimer = setTimeout(() => autosave().catch(err => showError(err.message || String(err))), AUTOSAVE_MS);
   }
   async function flushAutosave(){
     if (saveTimer){
@@ -1334,256 +1103,6 @@
       saveTimer = null;
       await autosave();
     }
-  }
-
-  function pushUndo(){
-    undoStack.push(structuredClone(anno));
-    if (undoStack.length > 60) undoStack.shift();
-  }
-
-  function setTool(next){
-    tool = next;
-    document.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
-    angleStage = 0;
-    document.getElementById("angleHint").style.display = (tool === "angle") ? "" : "none";
-    placingText = false;
-  }
-
-  function redraw(){
-    resizeCanvasToContainer();
-    const cw = canvas.clientWidth;
-    const ch = canvas.clientHeight;
-    ctx.clearRect(0,0,cw,ch);
-
-    if (baseBitmap){
-      ctx.save();
-      ctx.translate(view.tx, view.ty);
-      ctx.scale(view.scale, view.scale);
-      ctx.drawImage(baseBitmap, 0, 0);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = "rgba(255,255,255,0.08)";
-      ctx.fillRect(0,0,cw,ch);
-    }
-
-    drawShapes(anno, false);
-
-    // Selected text highlight (dashed)
-    if (selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text"){
-      drawTextSelection(anno[selectedTextIndex]);
-    }
-
-    if (tempShape) drawShapes([tempShape], true);
-    drawAngleLabelIfPresent();
-  }
-
-  function roundRect(ctx, x, y, w, h, r){
-    const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y, x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x, y+h, rr);
-    ctx.arcTo(x, y+h, x, y, rr);
-    ctx.arcTo(x, y, x+w, y, rr);
-    ctx.closePath();
-  }
-
-  function measureTextBox(s){
-    const padding = Math.max(10, Math.round((s.size || 34) * 0.35));
-    const fontSize = s.size || 34;
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
-
-    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-    const lines = (s.text || "").split("\n");
-    const lineH = fontSize * 1.22;
-    let maxW = 0;
-    for (const line of lines) maxW = Math.max(maxW, ctx.measureText(line).width);
-    const w = Math.max(60, maxW + padding*2);
-    const h = Math.max(fontSize + padding*1.6, lines.length * lineH + padding*2);
-
-    ctx.restore();
-    s.w = w; s.h = h; s._pad = padding; s._lineH = lineH;
-  }
-
-  function drawTextBox(s, dashed){
-    measureTextBox(s);
-
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
-
-    const padding = s._pad || 12;
-    const fontSize = s.size || 34;
-    const w = s.w || 120;
-    const h = s.h || 60;
-
-    const pill = (s.style || "pill") === "pill";
-
-    ctx.setLineDash(dashed ? [10,8] : []);
-
-    if (pill){
-      ctx.fillStyle = GREEN;
-      ctx.strokeStyle = "rgba(0,0,0,0.90)";
-      ctx.lineWidth = 3;
-      roundRect(ctx, s.x, s.y, w, h, 14);
-      ctx.fill();
-      ctx.stroke();
-    } else {
-      ctx.strokeStyle = GREEN;
-      ctx.lineWidth = 6;
-      roundRect(ctx, s.x, s.y, w, h, 14);
-      ctx.stroke();
-    }
-
-    ctx.setLineDash([]);
-
-    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-    ctx.fillStyle = pill ? "rgba(0,0,0,1)" : "rgba(255,255,255,0.98)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    const lines = (s.text || "").split("\n");
-    const lineH = s._lineH || (fontSize*1.2);
-    const cx = s.x + w/2;
-    const cy = s.y + h/2;
-    const totalH = lines.length * lineH;
-    let y = cy - totalH/2 + lineH/2;
-    for (const line of lines){
-      ctx.fillText(line, cx, y);
-      y += lineH;
-    }
-
-    ctx.restore();
-  }
-
-  function drawTextSelection(s){
-    measureTextBox(s);
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
-    ctx.setLineDash([10 / view.scale, 8 / view.scale]);
-    ctx.strokeStyle = "rgba(59,130,246,0.95)";
-    ctx.lineWidth = 6 / view.scale;
-    roundRect(ctx, s.x - 6, s.y - 6, (s.w||0) + 12, (s.h||0) + 12, 16);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawShapeStroke(s, color, width, dashed){
-    if (s.type === "text"){
-      drawTextBox(s, dashed);
-      return;
-    }
-
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width / view.scale;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.setLineDash(dashed ? [8 / view.scale, 6 / view.scale] : []);
-
-    const label = (txt, x, y) => {
-      ctx.save();
-      ctx.setLineDash([]);
-      ctx.font = `${14 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-      ctx.fillStyle = color;
-      ctx.strokeStyle = "rgba(0,0,0,0.65)";
-      ctx.lineWidth = 4 / view.scale;
-      ctx.strokeText(txt, x, y);
-      ctx.fillText(txt, x, y);
-      ctx.restore();
-    };
-
-    if (["line","ruler","angleLine"].includes(s.type)){
-      ctx.beginPath();
-      ctx.moveTo(s.x1, s.y1);
-      ctx.lineTo(s.x2, s.y2);
-      ctx.stroke();
-      if (s.type === "ruler"){
-        const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
-        label(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 8, (s.y1+s.y2)/2 - 8);
-      }
-    } else if (s.type === "rect"){
-      const x = Math.min(s.x1, s.x2);
-      const y = Math.min(s.y1, s.y2);
-      const w = Math.abs(s.x2 - s.x1);
-      const h = Math.abs(s.y2 - s.y1);
-      ctx.strokeRect(x,y,w,h);
-    } else if (s.type === "circle"){
-      const cx = (s.x1 + s.x2) / 2;
-      const cy = (s.y1 + s.y2) / 2;
-      const rx = Math.abs(s.x2 - s.x1) / 2;
-      const ry = Math.abs(s.y2 - s.y1) / 2;
-      ctx.beginPath();
-      if (ctx.ellipse) ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-      else {
-        ctx.save();
-        ctx.translate(cx,cy);
-        ctx.scale(rx || 1, ry || 1);
-        ctx.arc(0,0,1,0,Math.PI*2);
-        ctx.restore();
-      }
-      ctx.stroke();
-    } else if (s.type === "arrow"){
-      ctx.beginPath();
-      ctx.moveTo(s.x1, s.y1);
-      ctx.lineTo(s.x2, s.y2);
-      ctx.stroke();
-      const dx = s.x2 - s.x1;
-      const dy = s.x2 - s.x1 ? (s.y2 - s.y1) : (s.y2 - s.y1);
-      const ang = Math.atan2(dy, dx);
-      const headLen = 18 / view.scale;
-      const a1 = ang - Math.PI / 8;
-      const a2 = ang + Math.PI / 8;
-      ctx.beginPath();
-      ctx.moveTo(s.x2, s.y2);
-      ctx.lineTo(s.x2 - Math.cos(a1)*headLen, s.y2 - Math.sin(a1)*headLen);
-      ctx.moveTo(s.x2, s.y2);
-      ctx.lineTo(s.x2 - Math.cos(a2)*headLen, s.y2 - Math.sin(a2)*headLen);
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  function drawShapes(list, dashed){
-    for (const s of list){
-      drawShapeStroke(s, DARK, WIDTH+2, dashed);
-      drawShapeStroke(s, GREEN, WIDTH, dashed);
-    }
-  }
-
-  function drawAngleLabelIfPresent(){
-    const lines = anno.filter(s => s.type === "angleLine");
-    if (lines.length < 2) return;
-    const l2 = lines[lines.length - 1];
-    const l1 = lines[lines.length - 2];
-    const a = {x: l1.x2 - l1.x1, y: l1.y2 - l1.y1};
-    const b = {x: l2.x2 - l2.x1, y: l2.y2 - l2.y1};
-    const dot = a.x*b.x + a.y*b.y;
-    const la = Math.hypot(a.x,a.y);
-    const lb = Math.hypot(b.x,b.y);
-    if (!la || !lb) return;
-    const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
-
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
-    ctx.font = `${16 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-    ctx.fillStyle = GREEN;
-    ctx.strokeStyle = "rgba(0,0,0,0.65)";
-    ctx.lineWidth = 5 / view.scale;
-    const txt = `${deg.toFixed(1)}°`;
-    const x = l2.x1 + 10;
-    const y = l2.y1 - 10;
-    ctx.strokeText(txt, x, y);
-    ctx.fillText(txt, x, y);
-    ctx.restore();
   }
 
   async function persistMetaPatch(id, patch){
@@ -1601,128 +1120,386 @@
     }
   }
 
-  async function autosave(){
-    if (!currentId || mode !== "edit") return;
-    const notes = document.getElementById("notesInput").value || "";
-    await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
+  function pushUndo(){
+    undoStack.push(structuredClone(anno));
+    if (undoStack.length > 60) undoStack.shift();
   }
 
-  function saveNotesSoon(){
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      if (!currentId) return;
-      const notes = document.getElementById("notesInput").value || "";
-      persistMetaPatch(currentId, { notes }).catch(()=>{});
-    }, 250);
+  // ----- Drawing -----
+  function roundRect(ctx, x, y, w, h, r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+  }
+
+  function drawTextBoxOn(ctx2, s){
+    const padding = 14;
+    const fontSize = 34; // BIGGER text
+    ctx2.font = `${fontSize}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial`;
+    const lines = (s.text || "").split("\n");
+    const lineH = fontSize * 1.15;
+    let maxW = 0;
+    for (const line of lines) maxW = Math.max(maxW, ctx2.measureText(line).width);
+    const w = Math.max(90, maxW + padding*2);
+    const h = Math.max(54, lines.length * lineH + padding*2);
+    s.w = w; s.h = h;
+
+    ctx2.fillStyle = "rgba(0,255,0,0.95)";
+    ctx2.strokeStyle = "rgba(0,0,0,0.9)";
+    ctx2.lineWidth = 4;
+
+    roundRect(ctx2, s.x, s.y, w, h, 12);
+    ctx2.fill();
+    ctx2.stroke();
+
+    ctx2.fillStyle = "rgba(0,0,0,1)";
+    ctx2.textAlign = "center";
+    ctx2.textBaseline = "middle";
+    const cx = s.x + w/2;
+    const cy = s.y + h/2;
+    const totalH = lines.length * lineH;
+    let y = cy - totalH/2 + lineH/2;
+    for (const line of lines){
+      ctx2.fillText(line, cx, y);
+      y += lineH;
+    }
+
+    // selection outline
+    if (s._selected){
+      ctx2.strokeStyle = "rgba(59,130,246,0.95)";
+      ctx2.lineWidth = 4;
+      ctx2.setLineDash([10,7]);
+      roundRect(ctx2, s.x-6, s.y-6, w+12, h+12, 14);
+      ctx2.stroke();
+      ctx2.setLineDash([]);
+    }
+  }
+
+  function drawShapes(ctx2, list){
+    const drawStroke = (s, color, width) => {
+      ctx2.save();
+      ctx2.strokeStyle = color;
+      ctx2.lineWidth = width;
+      ctx2.lineCap = "round";
+      ctx2.lineJoin = "round";
+
+      if (s.type === "text"){
+        drawTextBoxOn(ctx2, s);
+        ctx2.restore();
+        return;
+      }
+
+      if (["line","ruler","angleLine"].includes(s.type)){
+        ctx2.beginPath();
+        ctx2.moveTo(s.x1, s.y1);
+        ctx2.lineTo(s.x2, s.y2);
+        ctx2.stroke();
+        if (s.type === "ruler"){
+          const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+          ctx2.font = `22px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial`;
+          ctx2.fillStyle = color;
+          ctx2.strokeStyle = "rgba(0,0,0,0.65)";
+          ctx2.lineWidth = 7;
+          const txt = `${len.toFixed(0)} px`;
+          const x = (s.x1+s.x2)/2 + 12;
+          const y = (s.y1+s.y2)/2 - 12;
+          ctx2.strokeText(txt, x, y);
+          ctx2.fillText(txt, x, y);
+        }
+        ctx2.restore();
+        return;
+      }
+
+      if (s.type === "rect"){
+        const x = Math.min(s.x1, s.x2);
+        const y = Math.min(s.y1, s.y2);
+        const w = Math.abs(s.x2 - s.x1);
+        const h = Math.abs(s.y2 - s.y1);
+        ctx2.strokeRect(x,y,w,h);
+        ctx2.restore();
+        return;
+      }
+
+      if (s.type === "circle"){
+        const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2;
+        const rx=Math.abs(s.x2-s.x1)/2, ry=Math.abs(s.y2-s.y1)/2;
+        ctx2.beginPath();
+        if (ctx2.ellipse) ctx2.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+        else {
+          ctx2.save(); ctx2.translate(cx,cy); ctx2.scale(rx||1,ry||1);
+          ctx2.arc(0,0,1,0,Math.PI*2); ctx2.restore();
+        }
+        ctx2.stroke();
+        ctx2.restore();
+        return;
+      }
+
+      if (s.type === "arrow"){
+        ctx2.beginPath();
+        ctx2.moveTo(s.x1, s.y1);
+        ctx2.lineTo(s.x2, s.y2);
+        ctx2.stroke();
+        const dx=s.x2-s.x1, dy=s.y2-s.y1;
+        const ang=Math.atan2(dy,dx);
+        const head=28;
+        const a1=ang-Math.PI/8, a2=ang+Math.PI/8;
+        ctx2.beginPath();
+        ctx2.moveTo(s.x2,s.y2);
+        ctx2.lineTo(s.x2-Math.cos(a1)*head, s.y2-Math.sin(a1)*head);
+        ctx2.moveTo(s.x2,s.y2);
+        ctx2.lineTo(s.x2-Math.cos(a2)*head, s.y2-Math.sin(a2)*head);
+        ctx2.stroke();
+        ctx2.restore();
+        return;
+      }
+
+      ctx2.restore();
+    };
+
+    for (const s of list){
+      // selection flag is handled inside text draw
+      drawStroke(s, DARK, WIDTH+2);
+      drawStroke(s, GREEN, WIDTH);
+    }
+  }
+
+  function drawAngleLabel(ctx2){
+    const lines = anno.filter(s => s.type === "angleLine");
+    if (lines.length < 2) return;
+    const l2 = lines[lines.length-1];
+    const l1 = lines[lines.length-2];
+    const a = {x: l1.x2 - l1.x1, y: l1.y2 - l1.y1};
+    const b = {x: l2.x2 - l2.x1, y: l2.y2 - l2.y1};
+    const dot = a.x*b.x + a.y*b.y;
+    const la = Math.hypot(a.x,a.y);
+    const lb = Math.hypot(b.x,b.y);
+    if (!la || !lb) return;
+    const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
+
+    ctx2.save();
+    ctx2.font = `26px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial`;
+    ctx2.fillStyle = GREEN;
+    ctx2.strokeStyle = "rgba(0,0,0,0.65)";
+    ctx2.lineWidth = 9;
+    const txt = `${deg.toFixed(1)}°`;
+    const x = l2.x1 + 18;
+    const y = l2.y1 - 18;
+    ctx2.strokeText(txt, x, y);
+    ctx2.fillText(txt, x, y);
+    ctx2.restore();
+  }
+
+  function redraw(){
+    resizeCanvas();
+    const cw = canvas.clientWidth;
+    const ch = canvas.clientHeight;
+    ctx.clearRect(0,0,cw,ch);
+
+    if (baseBitmap){
+      ctx.save();
+      ctx.translate(view.tx, view.ty);
+      ctx.scale(view.scale, view.scale);
+      ctx.drawImage(baseBitmap, 0, 0);
+      // draw shapes in world coords
+      drawShapes(ctx, anno.map((s, i) => {
+        if (s.type === "text") return {...s, _selected: (i === selectedTextIndex)};
+        return s;
+      }));
+      drawAngleLabel(ctx);
+      ctx.restore();
+    }
+  }
+
+  // ----- Render edited image -> store -> thumb -> update UI immediately -----
+  async function renderAndStoreEdited(id){
+    if (!baseBitmap) return;
+
+    const w = baseBitmap.width;
+    const h = baseBitmap.height;
+
+    const off = document.createElement("canvas");
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext("2d");
+    octx.drawImage(baseBitmap, 0, 0);
+
+    // draw shapes directly in image coords
+    drawShapes(octx, anno.map((s,i)=> (s.type==="text" ? {...s,_selected:false} : s)));
+    drawAngleLabel(octx);
+
+    const editedBlob = await new Promise(res => off.toBlob(res, "image/jpeg", 0.92));
+    if (!editedBlob) return;
+
+    const t = tx([STORE_EDIT], "readwrite");
+    await idbPut(t.objectStore(STORE_EDIT), {id, blob: editedBlob, type:"image/jpeg"});
+    await waitTxDone(t);
+
+    // thumb
+    const max = 360;
+    const scale = Math.min(1, max / Math.max(w, h));
+    const tw = Math.max(1, Math.round(w * scale));
+    const th = Math.max(1, Math.round(h * scale));
+    const tc = document.createElement("canvas");
+    tc.width = tw; tc.height = th;
+    tc.getContext("2d").drawImage(off, 0, 0, tw, th);
+
+    const thumbBlob = await new Promise(res => tc.toBlob(res, "image/jpeg", 0.85));
+    if (thumbBlob){
+      const t2 = tx([STORE_THUMB], "readwrite");
+      await idbPut(t2.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
+      await waitTxDone(t2);
+    }
+
+    // update current folder grid thumbnails immediately
+    const imgEl = document.querySelector(`.thumb[data-id="${id}"] img`);
+    if (imgEl && thumbBlob){
+      setImgFromBlob(imgEl, id + "_grid", thumbBlob);
+    }
+  }
+
+  async function autosave(){
+    if (!currentId) return;
+    const notes = document.getElementById("notesInput").value || "";
+    await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
+    await renderAndStoreEdited(currentId);
+    // refresh folder mini thumbs in background (fast)
+    renderFolders().catch(()=>{});
+  }
+
+  // ----- Tools / Text panel -----
+  function setTool(next){
+    tool = next;
+    document.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
+    const textPanel = document.getElementById("textPanel");
+    const angleHint = document.getElementById("angleHint");
+    textPanel.style.display = (tool === "text") ? "" : "none";
+    angleHint.style.display = (tool === "angle") ? "" : "none";
+
+    const hint = document.getElementById("toolHint");
+    if (tool === "text") hint.textContent = "Text: click to place or select; drag to move.";
+    else if (tool === "angle") hint.textContent = "Angle: click 4 points (line1 start/end, line2 start/end).";
+    else if (tool === "pan") hint.textContent = "Pan: drag to move the image around.";
+    else hint.textContent = "Draw on the photo. Undo works.";
+  }
+
+  function syncTextPanel(){
+    const panel = document.getElementById("textPanel");
+    if (tool !== "text") return;
+    panel.style.display = "";
+    const tv = document.getElementById("textValue");
+    if (selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text"){
+      tv.value = anno[selectedTextIndex].text || "";
+    } else {
+      tv.value = "";
+    }
   }
 
   function pointInText(s, p){
     if (s.type !== "text") return false;
-    measureTextBox(s);
     const w = s.w || 0, h = s.h || 0;
     return p.x >= s.x && p.x <= s.x + w && p.y >= s.y && p.y <= s.y + h;
   }
+
   function topmostTextAt(p){
     for (let i = anno.length - 1; i >= 0; i--){
       const s = anno[i];
-      if (s.type === "text" && pointInText(s, p)) return {shape:s, index:i};
+      if (s.type === "text" && pointInText(s, p)) return i;
     }
-    return null;
+    return -1;
   }
 
-  function updateTextSelectionUI(){
-    const hint = document.getElementById("textSelHint");
-    const updateBtn = document.getElementById("updateTextBtn");
-    const delBtn = document.getElementById("deleteTextBtn");
-
-    if (selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text"){
-      const s = anno[selectedTextIndex];
-      hint.textContent = "Selected text: edit fields above, then click “Update Selected”.";
-      updateBtn.disabled = (mode !== "edit");
-      delBtn.disabled = (mode !== "edit");
-      document.getElementById("textBox").value = s.text || "";
-      document.getElementById("textSize").value = String(s.size || 34);
-      document.getElementById("textStyle").value = String(s.style || "pill");
-    } else {
-      hint.textContent = placingText ? "Click on the photo where you want the new text." : "No text selected.";
-      updateBtn.disabled = true;
-      delBtn.disabled = true;
-    }
-  }
+  let movingText = null;
 
   function setupCanvas(){
+    // keep canvas size updated
+    window.addEventListener("resize", () => { if (overlay.classList.contains("show")) redraw(); }, {passive:true});
+
     canvas.addEventListener("pointerdown", (e) => {
-      if (!baseBitmap) return;
+      if (!baseBitmap || !currentId) return;
       canvas.setPointerCapture(e.pointerId);
+      isDown = true;
 
       const p = pointerPos(e);
+      // world coords
       const w = screenToWorld(p.x, p.y);
 
-      // VIEW: pan only
-      const activeTool = (mode === "edit") ? tool : "pan";
-
-      isDown = true;
-      startW = w;
-      tempShape = null;
-
-      // If we are placing a new text label:
-      if (mode === "edit" && placingText){
-        isDown = false;
-        placingText = false;
-
-        const text = (document.getElementById("textBox").value || "").trim();
-        if (!text){
-          toast("Type text first.");
-          updateTextSelectionUI();
-          return;
-        }
-
-        const size = Number(document.getElementById("textSize").value || 34);
-        const style = String(document.getElementById("textStyle").value || "pill");
-
-        pushUndo();
-        const s = {type:"text", x:w.x, y:w.y, text, size, style, w:0, h:0};
-        anno.push(s);
-        selectedTextIndex = anno.length - 1;
-        redraw();
-        scheduleAutosave();
-        toast("Text added.");
-        updateTextSelectionUI();
+      // PAN
+      if (tool === "pan"){
+        startW._sx = p.x; startW._sy = p.y;
+        startW._tx = view.tx; startW._ty = view.ty;
         return;
       }
 
-      // Select text by single tap/click (NO double click)
-      if (mode === "edit"){
-        const hitText = topmostTextAt(w);
-        if (hitText){
-          selectedTextIndex = hitText.index;
-          updateTextSelectionUI();
+      // select/move text
+      if (tool === "text"){
+        const hitIndex = topmostTextAt(w);
+        if (hitIndex >= 0){
+          selectedTextIndex = hitIndex;
+          syncTextPanel();
+          // start move
+          const s = anno[hitIndex];
+          movingText = { index: hitIndex, dx: w.x - s.x, dy: w.y - s.y };
           redraw();
-
-          // allow drag-move selected text if user keeps dragging
-          movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
           return;
         } else {
-          selectedTextIndex = -1;
-          movingText = null;
-          updateTextSelectionUI();
+          // create new text box at click
+          pushUndo();
+          const newShape = {type:"text", x:w.x, y:w.y, text:"ADD NOTE", w:0, h:0};
+          anno.push(newShape);
+          selectedTextIndex = anno.length - 1;
+          document.getElementById("textValue").value = newShape.text;
           redraw();
+          scheduleAutosave();
+          // start move immediately
+          movingText = { index: selectedTextIndex, dx: 10, dy: 10 };
+          return;
         }
       }
 
-      if (activeTool === "pan"){
-        startW._sx = p.x; startW._sy = p.y;
-        startW._tx = view.tx; startW._ty = view.ty;
+      // Angle = 4 clicks (no drag)
+      if (tool === "angle"){
+        angleClicks.push({x:w.x, y:w.y});
+        if (angleClicks.length === 2){
+          pushUndo();
+          anno.push({type:"angleLine", x1: angleClicks[0].x, y1: angleClicks[0].y, x2: angleClicks[1].x, y2: angleClicks[1].y});
+          scheduleAutosave();
+        }
+        if (angleClicks.length === 4){
+          pushUndo();
+          anno.push({type:"angleLine", x1: angleClicks[2].x, y1: angleClicks[2].y, x2: angleClicks[3].x, y2: angleClicks[3].y});
+          angleClicks = [];
+          scheduleAutosave();
+        }
+        redraw();
+        return;
       }
+
+      // other tools use drag preview
+      startW = w;
+      tempShape = null;
     });
 
     canvas.addEventListener("pointermove", (e) => {
       if (!isDown || !baseBitmap) return;
-
       const p = pointerPos(e);
 
-      // Drag-move selected text
-      if (movingText && mode === "edit"){
+      // PAN
+      if (tool === "pan"){
+        const dx = p.x - (startW._sx || 0);
+        const dy = p.y - (startW._sy || 0);
+        view.tx = (startW._tx || 0) + dx;
+        view.ty = (startW._ty || 0) + dy;
+        redraw();
+        return;
+      }
+
+      // move text
+      if (movingText){
         const w = screenToWorld(p.x, p.y);
         const s = anno[movingText.index];
         if (s && s.type === "text"){
@@ -1734,31 +1511,26 @@
         return;
       }
 
-      const activeTool = (mode === "edit") ? tool : "pan";
-
-      if (activeTool === "pan"){
-        const dx = p.x - (startW._sx || 0);
-        const dy = p.y - (startW._sy || 0);
-        view.tx = (startW._tx || 0) + dx;
-        view.ty = (startW._ty || 0) + dy;
-        redraw();
-        return;
-      }
-
-      if (mode !== "edit") return;
-
+      // draw preview
       const w = screenToWorld(p.x, p.y);
-      if (activeTool === "rect") tempShape = {type:"rect", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (activeTool === "circle") tempShape = {type:"circle", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (activeTool === "line") tempShape = {type:"line", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (activeTool === "arrow") tempShape = {type:"arrow", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (activeTool === "ruler") tempShape = {type:"ruler", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (activeTool === "angle") tempShape = {type:"angleLine", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      if (tool === "rect") tempShape = {type:"rect", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "circle") tempShape = {type:"circle", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "line") tempShape = {type:"line", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "arrow") tempShape = {type:"arrow", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+      else if (tool === "ruler") tempShape = {type:"ruler", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
 
       redraw();
+      // draw temp on top (screen space inside world transform)
+      if (tempShape){
+        ctx.save();
+        ctx.translate(view.tx, view.ty);
+        ctx.scale(view.scale, view.scale);
+        drawShapes(ctx, [tempShape]);
+        ctx.restore();
+      }
     });
 
-    canvas.addEventListener("pointerup", async () => {
+    canvas.addEventListener("pointerup", () => {
       if (!isDown) return;
       isDown = false;
 
@@ -1767,64 +1539,38 @@
         return;
       }
 
-      const activeTool = (mode === "edit") ? tool : "pan";
-      if (activeTool === "pan"){ tempShape = null; return; }
-      if (mode !== "edit") { tempShape = null; return; }
+      if (tool === "pan") return;
+      if (tool === "text") return;
+      if (tool === "angle") return;
 
       if (!tempShape) return;
-
-      if (activeTool !== "angle"){
-        pushUndo();
-        anno.push(tempShape);
-        tempShape = null;
-        redraw();
-        scheduleAutosave();
-        return;
-      }
-
-      // Angle tool: store 2 angleLine shapes
-      if (angleStage === 0){
-        pushUndo();
-        anno.push(structuredClone(tempShape));
-        angleStage = 1;
-      } else {
-        pushUndo();
-        anno.push(structuredClone(tempShape));
-        angleStage = 0;
-      }
+      pushUndo();
+      anno.push(tempShape);
       tempShape = null;
       redraw();
       scheduleAutosave();
     });
-
-    window.addEventListener("resize", () => {
-      if (!overlay.classList.contains("show")) return;
-      resizeCanvasToContainer();
-      redraw();
-    }, {passive:true});
   }
 
-  // ---------- Revert / Delete ----------
+  // ----- Buttons: undo/clear/revert/delete -----
   async function revertToOriginal(){
     if (!currentId) return;
-    if (!confirm("Revert this photo back to ORIGINAL (remove all markup)?")) return;
+    if (!confirm("Revert this photo back to ORIGINAL (remove all edits/markup)?")) return;
 
     anno = [];
     undoStack = [];
-    angleStage = 0;
+    angleClicks = [];
     selectedTextIndex = -1;
-    placingText = false;
 
     const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
     await idbDel(t.objectStore(STORE_EDIT), currentId).catch(()=>{});
     await idbDel(t.objectStore(STORE_THUMB), currentId).catch(()=>{});
     await waitTxDone(t);
 
-    await persistMetaPatch(currentId, { anno: [] });
+    await persistMetaPatch(currentId, { anno: [], notes: document.getElementById("notesInput").value || "" });
     await ensureThumb(currentId);
 
     redraw();
-    updateTextSelectionUI();
     toast("Reverted.");
     renderFolderGrid();
     renderFolders();
@@ -1832,7 +1578,7 @@
 
   async function deleteCurrent(){
     if (!currentId) return;
-    if (!confirm(`Delete this photo?`)) return;
+    if (!confirm("Delete this photo?")) return;
 
     const id = currentId;
     const folder = currentFolder;
@@ -1852,20 +1598,19 @@
 
     const list = folderItems(folder);
     if (!list.length){
-      closeViewer();
+      await closeViewer();
       await openFolder(folder);
       toast("Deleted.");
       return;
     }
-
     const nextIndex = Math.min(indexInFolder, list.length - 1);
-    closeViewer();
+    await closeViewer();
     await openFolder(folder);
     toast("Deleted.");
     openViewer(folder, nextIndex);
   }
 
-  // ---------- Export / Wipe ----------
+  // ----- Export ZIP -----
   function downloadBlob(filename, blob){
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1877,25 +1622,12 @@
     URL.revokeObjectURL(url);
   }
 
-  async function getEditedBlob(id){
-    try{
-      const t = tx([STORE_EDIT], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_EDIT), id);
-      if (rec?.blob) return rec.blob;
-    }catch{}
-    return null;
-  }
-  async function getOriginalBlob(id){
-    const t2 = tx([STORE_ORIG], "readonly");
-    const rec2 = await idbGet(t2.objectStore(STORE_ORIG), id);
-    return rec2?.blob || null;
-  }
-
   async function exportZipAll(){
     if (!window.JSZip){
-      alert("JSZip failed to load (offline?). Connect once and try again.");
+      alert("JSZip failed to load. Refresh once (internet required).");
       return;
     }
+
     await refreshMeta();
     await ensureFolderOrder("Teardown");
     await refreshMeta();
@@ -1904,20 +1636,26 @@
     for (const folder of FOLDERS){
       const list = folderItems(folder);
       const zf = zip.folder(folder);
+
       for (let i=0; i<list.length; i++){
         const m = list[i];
-        let blob = await getEditedBlob(m.id);
-        if (!blob) blob = await getOriginalBlob(m.id);
+        const edited = await getBlob(STORE_EDIT, m.id).catch(()=>null);
+        const orig = await getBlob(STORE_ORIG, m.id).catch(()=>null);
+        const blob = edited || orig;
         if (!blob) continue;
         zf.file(`${pad3(i+1)}.jpg`, blob);
       }
     }
+
+    const date = new Date().toISOString().slice(0,10);
+    const fileName = `Mitchell_${date}.zip`;
     toast("Building ZIP…");
     const out = await zip.generateAsync({type:"blob"});
-    downloadBlob(`Mitchell_Export_${new Date().toISOString().slice(0,10)}.zip`, out);
+    downloadBlob(fileName, out);
     toast("ZIP downloaded.");
   }
 
+  // ----- Wipe device / folder -----
   async function wipeFolder(folder){
     await refreshMeta();
     const list = folderItems(folder);
@@ -1949,12 +1687,13 @@
     db = await openDB();
     meta = [];
     setHdrCount();
+    toast("Wiped.");
   }
 
-  // ---------- UI wiring ----------
+  // ----- Wire UI -----
   function wireUI(){
-    document.getElementById("backHomeBtn").addEventListener("click", () => {
-      closeViewer();
+    document.getElementById("backHomeBtn").addEventListener("click", async () => {
+      await closeViewer();
       showHome();
       renderFolders();
     });
@@ -1962,7 +1701,6 @@
     document.getElementById("wipeBtn").addEventListener("click", async () => {
       if (!confirm("Wipe EVERYTHING on this device?")) return;
       await wipeAllDevice();
-      toast("Wiped.");
       showHome();
       renderFolders();
     });
@@ -1978,31 +1716,16 @@
       await renderFolders();
     });
 
+    // Upload photos
     const fileInput = document.getElementById("fileInput");
-    document.getElementById("uploadBtn").addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
       e.target.value = "";
       if (files.length) await addFilesToFolder(currentFolder, files);
     });
 
-    const dz = document.getElementById("dropZone");
-    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.add("drag");
-    }));
-    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.remove("drag");
-    }));
-    dz.addEventListener("drop", async (e) => {
-      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-      if (!files.length) return;
-      await addFilesToFolder(currentFolder, files);
-    });
-
-    // Overlay nav + close
-    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
+    // Overlay controls
+    document.getElementById("closeBtn").addEventListener("click", closeViewer);
     document.getElementById("prevBtn").addEventListener("click", () => step(-1));
     document.getElementById("nextBtn").addEventListener("click", () => step(+1));
     document.getElementById("bigPrev").addEventListener("click", () => step(-1));
@@ -2010,121 +1733,81 @@
 
     document.addEventListener("keydown", async (e) => {
       if (!overlay.classList.contains("show")) return;
-      if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
+      if (e.key === "Escape") closeViewer();
       if (e.key === "ArrowLeft") step(-1);
       if (e.key === "ArrowRight") step(+1);
     });
 
-    document.getElementById("toggleEditBtn").addEventListener("click", async () => {
-      if (mode === "view"){
-        setMode("edit");
-        toast("EDIT enabled");
-      } else {
-        await flushAutosave();
-        setMode("view");
-        toast("EDIT disabled");
-      }
-      updateTextSelectionUI();
-      redraw();
-    });
-
+    // Tool row
     document.getElementById("toolRow").addEventListener("click", (e) => {
       const t = e.target.closest(".toolIcon");
       if (!t) return;
-      if (mode !== "edit") { toast("Enable Edit first"); return; }
       setTool(t.dataset.tool);
+      syncTextPanel();
     });
 
-    document.getElementById("notesInput").addEventListener("input", () => {
-      if (mode === "edit") scheduleAutosave();
-      else saveNotesSoon();
-    });
+    document.getElementById("notesInput").addEventListener("input", () => scheduleAutosave());
 
     document.getElementById("undoBtn").addEventListener("click", () => {
-      if (mode !== "edit") return toast("Enable Edit first");
       if (!undoStack.length) return;
       anno = undoStack.pop();
-      angleStage = 0;
+      angleClicks = [];
       selectedTextIndex = -1;
-      placingText = false;
-      updateTextSelectionUI();
       redraw();
       scheduleAutosave();
+      syncTextPanel();
     });
 
     document.getElementById("clearBtn").addEventListener("click", () => {
-      if (mode !== "edit") return toast("Enable Edit first");
       if (!anno.length) return;
       if (!confirm("Clear all markup on this photo?")) return;
       pushUndo();
       anno = [];
-      angleStage = 0;
+      angleClicks = [];
       selectedTextIndex = -1;
-      placingText = false;
-      updateTextSelectionUI();
       redraw();
       scheduleAutosave();
+      syncTextPanel();
     });
 
     document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
     document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
 
-    // TEXT PANEL BUTTONS
-    document.getElementById("placeTextBtn").addEventListener("click", () => {
-      if (mode !== "edit") return toast("Enable Edit first");
+    // Text panel buttons
+    document.getElementById("applyTextBtn").addEventListener("click", () => {
+      if (selectedTextIndex < 0) { toast("Select a text box first"); return; }
+      const s = anno[selectedTextIndex];
+      if (!s || s.type !== "text") return;
+      pushUndo();
+      s.text = (document.getElementById("textValue").value || "").trim();
+      redraw();
+      scheduleAutosave();
+    });
+
+    document.getElementById("newTextBtn").addEventListener("click", () => {
       setTool("text");
-      placingText = true;
       selectedTextIndex = -1;
-      updateTextSelectionUI();
-      toast("Click on the photo to place text.");
-      redraw();
-    });
-
-    document.getElementById("updateTextBtn").addEventListener("click", () => {
-      if (mode !== "edit") return toast("Enable Edit first");
-      if (!(selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text")) return;
-
-      const text = (document.getElementById("textBox").value || "").trim();
-      const size = Number(document.getElementById("textSize").value || 34);
-      const style = String(document.getElementById("textStyle").value || "pill");
-
-      pushUndo();
-      anno[selectedTextIndex].text = text || anno[selectedTextIndex].text || "TEXT";
-      anno[selectedTextIndex].size = size;
-      anno[selectedTextIndex].style = style;
-
-      placingText = false;
-      redraw();
-      scheduleAutosave();
-      toast("Text updated.");
-      updateTextSelectionUI();
-    });
-
-    document.getElementById("deleteTextBtn").addEventListener("click", () => {
-      if (mode !== "edit") return toast("Enable Edit first");
-      if (!(selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text")) return;
-
-      pushUndo();
-      anno.splice(selectedTextIndex, 1);
-      selectedTextIndex = -1;
-      placingText = false;
-      redraw();
-      scheduleAutosave();
-      toast("Text deleted.");
-      updateTextSelectionUI();
+      document.getElementById("textValue").value = "ADD NOTE";
+      toast("Click photo to place text");
+      syncTextPanel();
     });
   }
 
-  // ---------- Boot ----------
+  // ----- Boot -----
   async function init(){
     db = await openDB();
     wireUI();
     setupCanvas();
-    await renderFolders();
     showHome();
+
+    // IMPORTANT: always render folders (even if DB is empty)
+    await renderFolders();
   }
 
-  init().catch(err => { console.error(err); toast("Failed to load."); });
+  init().catch(err => {
+    console.error(err);
+    showError("Failed to load app:\n" + (err?.message || String(err)));
+  });
 })();
 </script>
 </body>
