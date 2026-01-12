@@ -189,7 +189,6 @@
       white-space:nowrap;
     }
 
-    /* MOVE button on every photo */
     .moveBtn{
       position:absolute;
       right:8px;
@@ -208,7 +207,6 @@
     }
     .moveBtn:active{ cursor: grabbing; }
 
-    /* Drag/drop look like your screenshot */
     .thumb.dragTarget{
       outline: 3px solid rgba(34,197,94,.85);
       outline-offset: -3px;
@@ -438,7 +436,6 @@
       .camStrip{ min-width:0; }
     }
 
-    /* Big shutter (movable) */
     .camShutter {
       position: absolute;
       left: var(--shutter-x, 50%);
@@ -492,7 +489,6 @@
       outline-offset: 3px;
     }
 
-    /* Inline text controls (no double click / no prompt) */
     .inlineBox{
       border:1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.06);
@@ -620,10 +616,9 @@
 
       <div class="hr"></div>
 
-      <!-- ✅ Text is always available here (no prompt / no double click) -->
       <div class="inlineBox">
         <div class="smallLabel">Text Tool Panel</div>
-        <textarea id="textBox" placeholder="Type text here… (tap a green text box on the image to edit it)" style="min-height:64px;"></textarea>
+        <textarea id="textBox" placeholder="Type text here… (tap a green text box on the image to select it)" style="min-height:64px;"></textarea>
         <div class="seg" style="margin-top:8px;">
           <button class="btn sm ok" id="addTextBtn">Add New Text</button>
           <button class="btn sm" id="applyTextBtn">Apply to Selected</button>
@@ -631,7 +626,7 @@
           <div class="pill" id="textSelPill">Selected: none</div>
         </div>
         <div class="hint" style="margin-top:8px;">
-          Tip: Select the <b>T</b> tool, then tap a green text box to select it. Drag a green text box to move it.
+          Tip: New text drops centered. Drag the green box to move it anywhere.
         </div>
       </div>
 
@@ -684,8 +679,12 @@
 
 <script>
 (() => {
-  // Single Mitchell upload stream
-  const PREFIX = "TEARDOWN"; // exported filenames: TEARDOWN_001.JPG ...
+  const PREFIX = "TEARDOWN";
+
+  // ✅ Text default settings (bigger + centered drop)
+  const TEXT_DEFAULT_FONT = 54;      // much larger default text
+  const TEXT_MIN_FONT = 28;
+  const TEXT_MAX_FONT = 120;
 
   const DB_NAME = "mitchell_easy_pie_v1";
   const DB_VER = 1;
@@ -699,12 +698,10 @@
   let db;
   let meta = [];
 
-  // reorder state
-  let dragging = null; // { id, fromIndex, ghost, offsetX, offsetY }
-  let insertTarget = null; // { index, side }
+  let dragging = null;
+  let insertTarget = null;
   let suppressClickUntil = 0;
 
-  // viewer/editor
   const overlay = document.getElementById("overlay");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
@@ -716,7 +713,6 @@
   let baseBitmap = null;
   let view = { scale: 1, tx: 0, ty: 0 };
 
-  // tools & annotations
   let tool = "arrow";
   let isDown = false;
   let startW = {x:0,y:0};
@@ -724,23 +720,19 @@
   let anno = [];
   let undoStack = [];
 
-  // angle tool state
   let angleStage = 0;
   let angleLine1 = null;
 
-  // text selection (no prompts)
+  // ✅ selected text index
   let selectedTextIndex = -1;
 
-  // autosave
   let saveTimer = null;
   const AUTOSAVE_MS = 250;
 
-  // colors
   const GREEN = "rgba(0,255,0,0.95)";
   const DARK  = "rgba(0,0,0,0.55)";
   const WIDTH = 4;
 
-  // toast
   const toastEl = document.getElementById("toast");
   let toastTimer = null;
   function toast(msg){
@@ -750,7 +742,6 @@
     toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1500);
   }
 
-  // Job name
   const jobNameEl = document.getElementById("jobName");
   const LS_JOB = "mitchell_job_name_easy";
   jobNameEl.value = localStorage.getItem(LS_JOB) || "";
@@ -1046,7 +1037,6 @@
     const label = hit.el.querySelector(".dropLabel");
     const n = hit.index + 1;
     if (label){
-      // exactly like screenshot feel
       label.textContent = (side === "before") ? `DROP BEFORE #${n}` : `DROP AFTER #${n}`;
     }
   }
@@ -1186,7 +1176,6 @@
 
     const zip = new JSZip();
 
-    // ✅ root files: TEARDOWN_001.JPG etc (Mitchell order)
     for (let i=0; i<list.length; i++){
       const m = list[i];
       let blob = await getEditedBlob(m.id);
@@ -1208,10 +1197,9 @@
     toast("ZIP downloaded.");
   }
 
-  // ---------- Import ZIP (tries to keep numeric order if present) ----------
+  // ---------- Import ZIP ----------
   function parseLeadingNumber(filename){
     const base = (filename.split("/").pop() || filename).toUpperCase();
-    // matches TEARDOWN_001.JPG, 001.JPG, etc
     const m = base.match(/(\d{1,4})/);
     return m ? parseInt(m[1],10) : null;
   }
@@ -1249,7 +1237,7 @@
     toast("Import complete.");
   }
 
-  // ---------- Clear job / clear device ----------
+  // ---------- Clear ----------
   async function clearJob(){
     await refreshMeta();
     const list = items();
@@ -1319,7 +1307,7 @@
     tempShape = null;
 
     selectedTextIndex = -1;
-    syncTextPanel();
+    syncTextPanel(true);
 
     document.getElementById("notesInput").value = m.notes || "";
 
@@ -1350,7 +1338,7 @@
     angleLine1 = null;
     tempShape = null;
     selectedTextIndex = -1;
-    syncTextPanel();
+    syncTextPanel(true);
     clearTimeout(saveTimer);
     saveTimer = null;
   }
@@ -1436,7 +1424,6 @@
     const notes = document.getElementById("notesInput").value || "";
     await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
     await renderAndStoreEdited(currentId);
-    // refresh thumbs grid in background-feel (cheap)
     ensureThumb(currentId).catch(()=>{});
   }
 
@@ -1489,31 +1476,38 @@
     ctx.closePath();
   }
 
+  // ✅ Big text box: bigger font, bigger padding, auto width/height
   function drawTextBox(s, dashed, selected){
     ctx.save();
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
 
-    const padding = 10;
-    const fontSize = 22;
-    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    const fontSize = Math.max(TEXT_MIN_FONT, Math.min(TEXT_MAX_FONT, s.font || TEXT_DEFAULT_FONT));
+    const padding = Math.round(fontSize * 0.55);
+    ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+
     const lines = (s.text || "").split("\n");
-    const lineH = fontSize * 1.2;
+    const lineH = fontSize * 1.15;
+
     let maxW = 0;
     for (const line of lines) maxW = Math.max(maxW, ctx.measureText(line).width);
-    const w = Math.max(40, maxW + padding*2);
-    const h = Math.max(28, lines.length * lineH + padding*2);
+
+    const w = Math.max(fontSize * 1.6, maxW + padding*2);
+    const h = Math.max(fontSize * 1.2, lines.length * lineH + padding*2);
+
     s.w = w; s.h = h;
 
     ctx.setLineDash(dashed ? [10,8] : []);
     ctx.fillStyle = GREEN;
     ctx.strokeStyle = selected ? "rgba(59,130,246,0.95)" : "rgba(0,0,0,0.9)";
-    ctx.lineWidth = selected ? 5 : 3;
-    roundRect(ctx, s.x, s.y, w, h, 10);
+    ctx.lineWidth = selected ? 6 : 4;
+
+    roundRect(ctx, s.x, s.y, w, h, Math.max(12, Math.round(fontSize * 0.30)));
     ctx.fill();
     ctx.stroke();
     ctx.setLineDash([]);
 
+    // black text
     ctx.fillStyle = "rgba(0,0,0,1)";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1525,6 +1519,7 @@
       ctx.fillText(line, cx, y);
       y += lineH;
     }
+
     ctx.restore();
   }
 
@@ -1645,6 +1640,7 @@
     ctx.restore();
   }
 
+  // ✅ render edited image uses same BIG text rules
   async function renderAndStoreEdited(id){
     if (!baseBitmap) return;
 
@@ -1667,22 +1663,26 @@
       c.closePath();
     };
 
-    const drawText = (s, selected) => {
-      const padding = 10;
-      const fontSize = 22;
-      octx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    const drawText = (s) => {
+      const fontSize = Math.max(TEXT_MIN_FONT, Math.min(TEXT_MAX_FONT, s.font || TEXT_DEFAULT_FONT));
+      const padding = Math.round(fontSize * 0.55);
+      octx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+
       const lines = (s.text || "").split("\n");
-      const lineH = fontSize * 1.2;
+      const lineH = fontSize * 1.15;
+
       let maxW = 0;
       for (const line of lines) maxW = Math.max(maxW, octx.measureText(line).width);
-      const ww = Math.max(40, maxW + padding*2);
-      const hh = Math.max(28, lines.length * lineH + padding*2);
+
+      const ww = Math.max(fontSize * 1.6, maxW + padding*2);
+      const hh = Math.max(fontSize * 1.2, lines.length * lineH + padding*2);
+
       s.w = ww; s.h = hh;
 
       octx.fillStyle = GREEN;
       octx.strokeStyle = "rgba(0,0,0,0.9)";
-      octx.lineWidth = 3;
-      roundRect2(octx, s.x, s.y, ww, hh, 10);
+      octx.lineWidth = 4;
+      roundRect2(octx, s.x, s.y, ww, hh, Math.max(12, Math.round(fontSize * 0.30)));
       octx.fill();
       octx.stroke();
 
@@ -1692,10 +1692,10 @@
       const cx = s.x + ww/2;
       const cy = s.y + hh/2;
       const totalH = lines.length * lineH;
-      let y = cy - totalH/2 + lineH/2;
+      let yy = cy - totalH/2 + lineH/2;
       for (const line of lines){
-        octx.fillText(line, cx, y);
-        y += lineH;
+        octx.fillText(line, cx, yy);
+        yy += lineH;
       }
     };
 
@@ -1805,7 +1805,6 @@
     await idbPut(t.objectStore(STORE_EDIT), {id, blob: editedBlob, type:"image/jpeg"});
     await waitTxDone(t);
 
-    // thumb from edited
     const max = 360;
     const scale = Math.min(1, max / Math.max(w, h));
     const tw = Math.max(1, Math.round(w * scale));
@@ -1822,14 +1821,14 @@
     }
   }
 
-  // ---- Text selection + panel sync (no prompts) ----
+  // ---- Text selection + panel sync ----
   const textBoxEl = document.getElementById("textBox");
   const textSelPill = document.getElementById("textSelPill");
 
-  function syncTextPanel(){
+  function syncTextPanel(force=false){
     if (selectedTextIndex < 0 || !anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text"){
       textSelPill.textContent = "Selected: none";
-      // do not wipe user's typed content unless it's empty
+      if (force) textBoxEl.value = "";
       return;
     }
     const s = anno[selectedTextIndex];
@@ -1852,20 +1851,53 @@
 
   let movingText = null;
 
+  // ✅ centered drop helper
+  function dropCenteredText(text){
+    if (!baseBitmap) return;
+    const txt = (text || "").trim();
+    if (!txt) { toast("Type text first."); return; }
+
+    // estimate size so we can center it properly
+    const font = TEXT_DEFAULT_FONT;
+    const pad = Math.round(font * 0.55);
+    const lines = txt.split("\n");
+    const lineH = font * 1.15;
+
+    // crude width estimate (good enough; drawTextBox will refine)
+    // use a hidden measurement on main canvas in world space:
+    const measure = document.createElement("canvas").getContext("2d");
+    measure.font = `900 ${font}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    let maxW = 0;
+    for (const line of lines) maxW = Math.max(maxW, measure.measureText(line).width);
+    const ww = Math.max(font * 1.6, maxW + pad*2);
+    const hh = Math.max(font * 1.2, lines.length * lineH + pad*2);
+
+    const x = (baseBitmap.width  - ww) / 2;
+    const y = (baseBitmap.height - hh) / 2;
+
+    pushUndo();
+    anno.push({ type:"text", x, y, text: txt, font: TEXT_DEFAULT_FONT, w: ww, h: hh });
+    selectedTextIndex = anno.length - 1;
+    syncTextPanel(false);
+    redraw();
+    scheduleAutosave();
+    toast("Text added (center). Drag it to move.");
+  }
+
   function setupCanvas(){
     canvas.addEventListener("pointerdown", (e) => {
       if (!baseBitmap) return;
-      canvas.setPointerCapture(e.pointerId); // keep smooth drag
+      canvas.setPointerCapture(e.pointerId);
 
       isDown = true;
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
 
-      // selecting / moving a text box
+      // ✅ Select/move text always (no needing the T tool)
       const hitIdx = topmostTextAt(w);
       if (hitIdx >= 0){
         selectedTextIndex = hitIdx;
-        syncTextPanel();
+        syncTextPanel(false);
         redraw();
 
         const s = anno[hitIdx];
@@ -1874,9 +1906,8 @@
         return;
       }
 
-      // if clicked elsewhere, clear text selection
       selectedTextIndex = -1;
-      syncTextPanel();
+      syncTextPanel(false);
       redraw();
 
       startW = w;
@@ -1946,7 +1977,6 @@
         return;
       }
 
-      // angle tool: two lines
       if (angleStage === 0){
         angleLine1 = structuredClone(tempShape);
         pushUndo();
@@ -1977,7 +2007,7 @@
     angleStage = 0;
     angleLine1 = null;
     selectedTextIndex = -1;
-    syncTextPanel();
+    syncTextPanel(true);
 
     const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
     await idbDel(t.objectStore(STORE_EDIT), currentId).catch(()=>{});
@@ -2227,7 +2257,6 @@
 
   // ---------- UI wiring ----------
   function wireUI(){
-    // upload photos
     const fileInput = document.getElementById("fileInput");
     fileInput.addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
@@ -2235,7 +2264,6 @@
       if (files.length) await addFiles(files);
     });
 
-    // drop zone
     const dz = document.getElementById("dropZone");
     ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -2251,23 +2279,19 @@
       await addFiles(files);
     });
 
-    // export
     document.getElementById("exportZipBtn").addEventListener("click", exportZip);
 
-    // clear job
     document.getElementById("clearJobBtn").addEventListener("click", async () => {
       if (!confirm("Clear this job (remove all photos on this device)?")) return;
       await clearJob();
       toast("Job cleared.");
     });
 
-    // clear device
     document.getElementById("wipeBtn").addEventListener("click", async () => {
       if (!confirm("CLEAR ALL on this device? (Removes everything stored in this browser)")) return;
       await clearAllDevice();
     });
 
-    // import zip
     const zipInput = document.getElementById("zipInput");
     zipInput.addEventListener("change", async (e) => {
       const file = (e.target.files || [])[0];
@@ -2277,7 +2301,6 @@
       await renderGrid();
     });
 
-    // overlay
     document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
     document.getElementById("prevBtn").addEventListener("click", () => step(-1));
     document.getElementById("nextBtn").addEventListener("click", () => step(+1));
@@ -2291,7 +2314,6 @@
       if (e.key === "ArrowRight") step(+1);
     });
 
-    // tools
     document.getElementById("toolRow").addEventListener("click", (e) => {
       const t = e.target.closest(".toolIcon");
       if (!t) return;
@@ -2305,7 +2327,7 @@
       anno = undoStack.pop();
       angleStage = 0; angleLine1 = null;
       selectedTextIndex = -1;
-      syncTextPanel();
+      syncTextPanel(true);
       redraw();
       scheduleAutosave();
     });
@@ -2317,7 +2339,7 @@
       anno = [];
       angleStage = 0; angleLine1 = null;
       selectedTextIndex = -1;
-      syncTextPanel();
+      syncTextPanel(true);
       redraw();
       scheduleAutosave();
     });
@@ -2325,40 +2347,34 @@
     document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
     document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
 
-    // text panel
+    // ✅ Add text: CENTER + BIG by default
     document.getElementById("addTextBtn").addEventListener("click", () => {
-      const txt = (textBoxEl.value || "").trim();
-      if (!txt) { toast("Type text first."); return; }
-      if (!baseBitmap) return;
-
-      // Add near top-left of image (visible)
-      pushUndo();
-      anno.push({type:"text", x: 40, y: 40, text: txt, w: 0, h: 0});
-      selectedTextIndex = anno.length - 1;
-      syncTextPanel();
-      redraw();
-      scheduleAutosave();
-      toast("Text added.");
+      dropCenteredText(textBoxEl.value || "");
     });
 
+    // Apply changes to selected text box
     document.getElementById("applyTextBtn").addEventListener("click", () => {
-      const txt = (textBoxEl.value || "").trim();
-      if (selectedTextIndex < 0) { toast("Select a text box first."); return; }
-      if (!anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text") { toast("Select a text box first."); return; }
+      if (selectedTextIndex < 0 || !anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text"){
+        toast("Tap a green text box to select it.");
+        return;
+      }
       pushUndo();
-      anno[selectedTextIndex].text = txt;
+      anno[selectedTextIndex].text = (textBoxEl.value || "").trim();
+      if (!anno[selectedTextIndex].font) anno[selectedTextIndex].font = TEXT_DEFAULT_FONT;
       redraw();
       scheduleAutosave();
       toast("Text updated.");
     });
 
     document.getElementById("deleteTextBtn").addEventListener("click", () => {
-      if (selectedTextIndex < 0) { toast("Select a text box first."); return; }
-      if (!anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text") { toast("Select a text box first."); return; }
+      if (selectedTextIndex < 0 || !anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text"){
+        toast("Tap a green text box to select it.");
+        return;
+      }
       pushUndo();
       anno.splice(selectedTextIndex, 1);
       selectedTextIndex = -1;
-      syncTextPanel();
+      syncTextPanel(true);
       redraw();
       scheduleAutosave();
       toast("Text deleted.");
@@ -2380,7 +2396,6 @@
     document.getElementById("camMoveShutterBtn").addEventListener("click", toggleMoveShutter);
     document.getElementById("camResetShutterBtn").addEventListener("click", () => { resetShutterPos(); toast("Shutter reset."); });
 
-    // drag shutter when move-mode
     camShutter.addEventListener("pointerdown", (e) => {
       if (!shutterMoveMode) return;
       e.preventDefault();
