@@ -453,12 +453,14 @@
       .camStrip{ min-width:0; }
     }
 
-    /* Landscape shutter */
+    /* Shutter + Move Shutter mode */
+    .camLive{ touch-action: none; }
     .camShutter {
       position: absolute;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
+      left: var(--shutter-x, 50%);
+      top: var(--shutter-y, auto);
+      bottom: var(--shutter-b, 18px);
+      transform: translate(-50%, 0);
       width: 86px;
       height: 86px;
       border-radius: 999px;
@@ -480,8 +482,10 @@
       background: rgba(255,255,255,.92);
     }
     .camShutter:active{
-      transform: translateX(-50%) scale(0.97);
       filter: brightness(1.05);
+    }
+    .camOverlay.landscape .camShutter{
+      display:block;
     }
 
     .camOverlay.landscape .camBody{
@@ -491,8 +495,28 @@
     .camOverlay.landscape .camStrip{
       display:none;
     }
-    .camOverlay.landscape .camShutter{
-      display:block;
+
+    .shutterMoveHint{
+      position:absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.55);
+      font-weight: 1000;
+      font-size: 12px;
+      color: var(--text);
+      display:none;
+      z-index: 6;
+    }
+    .camLive.moveMode .shutterMoveHint{ display:block; }
+    .camLive.moveMode .camShutter{
+      box-shadow: 0 18px 55px rgba(59,130,246,.35);
+      border-color: rgba(255,255,255,.95);
+      outline: 3px solid rgba(59,130,246,.55);
+      outline-offset: 3px;
     }
 
     .bigPhoneBtn{
@@ -694,6 +718,10 @@
     <div class="camTop">
       <div class="pill"><span id="camCount">0</span> captured</div>
       <div class="row">
+        <!-- ✅ Move Shutter button restored -->
+        <button class="btn primary" id="camMoveShutterBtn">Move Shutter</button>
+        <button class="btn" id="camResetShutterBtn" title="Reset shutter position">Reset</button>
+
         <button class="btn" id="camFlipBtn">Flip</button>
         <button class="btn danger" id="camCancelBtn">Cancel</button>
         <button class="btn ok" id="camDoneBtn">Done</button>
@@ -701,9 +729,13 @@
     </div>
 
     <div class="camBody">
-      <div class="camLive">
+      <div class="camLive" id="camLive">
         <video id="camVideo" playsinline autoplay muted></video>
+
         <div class="camShutter" id="camShutter" title="Snap"></div>
+        <div class="shutterMoveHint" id="shutterMoveHint">
+          Move Shutter ON: drag the big shutter button to where you want it. Tap “Move Shutter” again to lock.
+        </div>
       </div>
 
       <div class="camStrip">
@@ -760,7 +792,6 @@
 
   // mode: ALWAYS EDIT
   let mode = "edit";
-  let phoneEditsUnlocked = true;
 
   // base original + view transform
   let baseBitmap = null;
@@ -1027,8 +1058,7 @@
     document.getElementById("folderTitle").textContent = folder;
     document.getElementById("dropFolderName").textContent = folder;
 
-    const folderSub = document.getElementById("folderSub");
-    folderSub.textContent = "Drag to reorder. Tap a photo to edit.";
+    document.getElementById("folderSub").textContent = "Drag to reorder. Tap a photo to edit.";
 
     await refreshMeta();
     setHdrCount();
@@ -1073,13 +1103,11 @@
       insertLine.className = "insertLine";
       div.appendChild(insertLine);
 
-      // ALWAYS: single click opens editor
       div.addEventListener("click", () => {
         if (Date.now() < suppressClickUntil) return;
         openViewer(currentFolder, idx);
       });
 
-      // Drag threshold
       div.addEventListener("pointerdown", (e) => {
         if (overlay.classList.contains("show")) return;
         if (e.button !== undefined && e.button !== 0) return;
@@ -1196,6 +1224,7 @@
     insertTarget = { index: hit.index, side };
 
     const placeNum = hit.index + 1;
+    // ✅ keeps your "in front / behind" wording
     badgeInner.textContent = side === "before"
       ? `Place BEFORE #${placeNum} (in front)`
       : `Place AFTER #${placeNum} (behind)`;
@@ -1315,37 +1344,20 @@
   }
 
   // ---------- Viewer / Editor ----------
-  function setMode(next){
-    mode = next;
-
-    // UI says edit always
+  function setMode(){
     document.getElementById("modeTitle").textContent = "EDIT";
     document.getElementById("modeSub").textContent = "Autosave ON";
     document.getElementById("editHint").textContent = "Editing is always ON (autosave).";
-
-    // Tools always enabled/visible
-    document.querySelectorAll(".toolIcon").forEach(el => {
-      el.style.opacity = "1";
-      el.style.pointerEvents = "auto";
-    });
-    document.getElementById("undoBtn").disabled = false;
-    document.getElementById("clearBtn").disabled = false;
-    document.getElementById("revertBtn").disabled = false;
-    document.getElementById("toolRow").style.display = "";
   }
 
   async function openViewer(folder, idx){
     await refreshMeta();
     currentFolder = folder;
     folderList = folderItems(folder);
-    indexInFolder = Math.max(0, Math.min(idx, folderList.length - 1));
+    idx = Math.max(0, Math.min(idx, folderList.length - 1));
+    indexInFolder = idx;
     currentId = folderList[indexInFolder]?.id || null;
     if (!currentId) return;
-
-    // ALWAYS EDIT ON
-    mode = "edit";
-    phoneEditsUnlocked = true;
-    document.getElementById("forceEditBtn").style.display = "none";
 
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden","false");
@@ -1363,7 +1375,7 @@
     resetView();
     redraw();
 
-    setMode("edit");
+    setMode();
     setArrows();
     setAngleHint();
     setTextHint();
@@ -1383,7 +1395,6 @@
     tempShape = null;
     clearTimeout(saveTimer);
     saveTimer = null;
-    phoneEditsUnlocked = true;
   }
 
   function setArrows(){
@@ -1890,14 +1901,12 @@
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
 
-      if (mode === "edit"){
-        const hitText = topmostTextAt(w);
-        if (hitText){
-          movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
-          tempShape = null;
-          redraw();
-          return;
-        }
+      const hitText = topmostTextAt(w);
+      if (hitText){
+        movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
+        tempShape = null;
+        redraw();
+        return;
       }
 
       startW = w;
@@ -1957,7 +1966,6 @@
 
       if (tool === "pan"){ tempShape = null; return; }
 
-      // TEXT TOOL: tap to add OR tap existing to edit (no double-click)
       if (tool === "text"){
         const p = pointerPos(e);
         const w = screenToWorld(p.x, p.y);
@@ -2278,10 +2286,43 @@
   const camVideo = document.getElementById("camVideo");
   const camThumbs = document.getElementById("camThumbs");
   const camCount = document.getElementById("camCount");
+  const camLive = document.getElementById("camLive");
+  const shutterMoveHint = document.getElementById("shutterMoveHint");
 
   let camStream = null;
   let camFacing = "environment";
   let camShots = []; // {blob, url}
+
+  // ✅ Shutter move state + persistence
+  const LS_SHUTTER = "mitchell_shutter_pos_v1";
+  let shutterMoveMode = false;
+  let shutterDrag = null; // {dx, dy}
+  function loadShutterPos(){
+    try{
+      const raw = localStorage.getItem(LS_SHUTTER);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || typeof obj.x !== "number" || typeof obj.y !== "number") return null;
+      return obj;
+    }catch{ return null; }
+  }
+  function saveShutterPos(x, y){
+    localStorage.setItem(LS_SHUTTER, JSON.stringify({x, y}));
+  }
+  function applyShutterPos(x, y){
+    // x,y are percent within camLive box
+    camLive.style.setProperty("--shutter-x", x + "%");
+    // Use TOP positioning so it works regardless of aspect.
+    camLive.style.setProperty("--shutter-y", y + "%");
+    camLive.style.setProperty("--shutter-b", "auto");
+  }
+  function resetShutterPos(){
+    // default centered bottom-ish
+    camLive.style.removeProperty("--shutter-x");
+    camLive.style.removeProperty("--shutter-y");
+    camLive.style.removeProperty("--shutter-b");
+    localStorage.removeItem(LS_SHUTTER);
+  }
 
   function updateCamLayout(){
     if (!camOverlay.classList.contains("show")) return;
@@ -2295,7 +2336,9 @@
     camOverlay.classList.add("show");
     camOverlay.setAttribute("aria-hidden","false");
 
-    try{ playSnapSound(); }catch{}
+    // restore shutter pos
+    const pos = loadShutterPos();
+    if (pos) applyShutterPos(pos.x, pos.y);
 
     updateCamLayout();
     window.addEventListener("resize", updateCamLayout, {passive:true});
@@ -2334,6 +2377,9 @@
     camOverlay.classList.remove("show");
     camOverlay.classList.remove("landscape");
     camOverlay.setAttribute("aria-hidden","true");
+
+    shutterMoveMode = false;
+    camLive.classList.remove("moveMode");
 
     window.removeEventListener("resize", updateCamLayout);
     window.removeEventListener("orientationchange", updateCamLayout);
@@ -2402,6 +2448,25 @@
   async function camFlip(){
     camFacing = (camFacing === "environment") ? "user" : "environment";
     await camOpenStream();
+  }
+
+  // ✅ Move shutter toggle + drag logic
+  function toggleMoveShutter(){
+    shutterMoveMode = !shutterMoveMode;
+    camLive.classList.toggle("moveMode", shutterMoveMode);
+    document.getElementById("camMoveShutterBtn").textContent = shutterMoveMode ? "Lock Shutter" : "Move Shutter";
+    if (shutterMoveMode) toast("Drag the shutter to place it.");
+    else toast("Shutter locked.");
+  }
+
+  function percentFromPoint(clientX, clientY){
+    const r = camLive.getBoundingClientRect();
+    const x = ((clientX - r.left) / r.width) * 100;
+    const y = ((clientY - r.top) / r.height) * 100;
+    return {
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y))
+    };
   }
 
   // ---------- UI Wiring ----------
@@ -2525,11 +2590,62 @@
     // Camera Mode
     document.getElementById("openCamBtn").addEventListener("click", camStart);
     document.getElementById("camSnapBtn").addEventListener("click", camSnap);
-    document.getElementById("camShutter").addEventListener("click", camSnap);
+
+    // In landscape, big shutter is visible. If move-mode is ON, clicking it should NOT snap.
+    const camShutter = document.getElementById("camShutter");
+    camShutter.addEventListener("click", (e) => {
+      if (shutterMoveMode) return;
+      camSnap();
+    });
+
     document.getElementById("camDoneBtn").addEventListener("click", camDone);
     document.getElementById("camCancelBtn").addEventListener("click", camCancel);
     document.getElementById("camClearBtn").addEventListener("click", camClear);
     document.getElementById("camFlipBtn").addEventListener("click", camFlip);
+
+    // ✅ Move shutter controls
+    document.getElementById("camMoveShutterBtn").addEventListener("click", toggleMoveShutter);
+    document.getElementById("camResetShutterBtn").addEventListener("click", () => {
+      resetShutterPos();
+      toast("Shutter reset.");
+    });
+
+    // Drag shutter when move-mode
+    camShutter.addEventListener("pointerdown", (e) => {
+      if (!shutterMoveMode) return;
+      e.preventDefault();
+      camShutter.setPointerCapture(e.pointerId);
+
+      shutterDrag = { active: true };
+      const p = percentFromPoint(e.clientX, e.clientY);
+      applyShutterPos(p.x, p.y);
+      saveShutterPos(p.x, p.y);
+    }, {passive:false});
+
+    camShutter.addEventListener("pointermove", (e) => {
+      if (!shutterMoveMode || !shutterDrag?.active) return;
+      e.preventDefault();
+      const p = percentFromPoint(e.clientX, e.clientY);
+      applyShutterPos(p.x, p.y);
+      saveShutterPos(p.x, p.y);
+    }, {passive:false});
+
+    camShutter.addEventListener("pointerup", (e) => {
+      if (!shutterMoveMode) return;
+      shutterDrag = null;
+    });
+
+    // Optional: in move-mode, tapping anywhere on live area also places shutter there
+    camLive.addEventListener("pointerdown", (e) => {
+      if (!shutterMoveMode) return;
+      // don't double-handle if they grabbed the shutter itself
+      if (e.target && e.target.id === "camShutter") return;
+      e.preventDefault();
+      const p = percentFromPoint(e.clientX, e.clientY);
+      applyShutterPos(p.x, p.y);
+      saveShutterPos(p.x, p.y);
+      toast("Placed.");
+    }, {passive:false});
   }
 
   // ---------- Boot ----------
