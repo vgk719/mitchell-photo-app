@@ -1,35 +1,1190 @@
-/* FIND the existing .insertLine and REPLACE it with this: */
-    .insertLine{
-      position:absolute; top:0; bottom:0;
-      width: 6px;  /* Thicker line */
-      background: #22c55e; /* Bright Neon Green */
-      box-shadow: 0 0 15px rgba(34, 197, 94, 0.8); /* Glow effect */
-      pointer-events:none;
-      display:none;
-      z-index: 20;
-      border-radius: 4px;
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Mitchell Photo App</title>
+
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mitchell Photos">
+
+  <style>
+    :root{
+      /* Modern Color Palette */
+      --bg: #0f172a;
+      --surface-glass: rgba(30, 41, 59, 0.70);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      --primary: #3b82f6; /* Bright Blue */
+      --primary-glow: rgba(59, 130, 246, 0.5);
+      --accent: #8b5cf6;  /* Violet */
+      --danger: #ef4444;
+      --success: #22c55e; /* Neon Green */
+      
+      --radius-sm: 12px;
+      --radius-md: 18px;
+      --radius-lg: 24px;
+      
+      --safe-t: env(safe-area-inset-top, 20px);
+      --safe-b: env(safe-area-inset-bottom, 20px);
+      
+      --shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
     }
 
-    /* ADD this new style for your drag button */
-    .dragHandle {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 36px;
-      height: 36px;
-      background: rgba(0,0,0,0.65);
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 15;
-      cursor: grab;
-      font-size: 20px;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    html, body { height: 100%; }
+    
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      color: var(--text-main);
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      background-attachment: fixed;
+      overflow: hidden;
+      padding-top: var(--safe-t);
+    }
+
+    /* --- Typography & Elements --- */
+    h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-muted); }
+    .muted { color: var(--text-muted); font-size: 13px; line-height: 1.4; }
+    
+    .pill {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--surface-border);
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    button, input, textarea { font: inherit; outline: none; }
+
+    /* --- Buttons --- */
+    .btn {
+      background: var(--surface-glass);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      backdrop-filter: blur(10px);
+    }
+    .btn:active { transform: scale(0.96); }
+    
+    .btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border: none;
+      box-shadow: 0 4px 15px var(--primary-glow);
       color: white;
+    }
+    .btn.danger { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+    .btn.ok { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #86efac; }
+    .btn.icon { width: 44px; height: 44px; padding: 0; font-size: 20px; border-radius: 50%; }
+    .btn.sm { padding: 8px 12px; font-size: 12px; border-radius: var(--radius-sm); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+
+    .full-width { width: 100%; justify-content: center; }
+
+    /* --- Layout --- */
+    header {
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      position: relative; z-index: 10;
+    }
+
+    main {
+      height: calc(100% - 60px);
+      overflow-y: auto;
+      padding: 20px;
+      padding-bottom: calc(100px + var(--safe-b)); /* Space for floating bar */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .card {
+      background: var(--surface-glass);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .hr { height: 1px; background: var(--surface-border); margin: 16px 0; width: 100%; }
+
+    /* --- Inputs --- */
+    input[type="text"], textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--surface-border);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      color: white;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: var(--primary); }
+    textarea { min-height: 80px; resize: vertical; }
+
+    /* --- Folders Grid --- */
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .folder-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .folder-card:active { background: rgba(255,255,255,0.07); }
+    .folder-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .folder-title { font-size: 17px; font-weight: 700; color: white; }
+    
+    .mini-strip { display: flex; gap: 4px; margin-top: 12px; height: 40px; }
+    .mini-thumb {
+      width: 40px; height: 40px; border-radius: 8px; object-fit: cover;
+      background: rgba(0,0,0,0.5); border: 1px solid var(--surface-border);
+    }
+    .mini-more {
+      width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+    }
+
+    /* --- Photo Grid & Dragging --- */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .thumb {
+      aspect-ratio: 1;
+      position: relative;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      user-select: none;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    
+    /* Number Badge */
+    .thumb-num {
+      position: absolute; top: 6px; left: 6px;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      color: white; font-size: 11px; font-weight: 800;
+      padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.2);
+      z-index: 2; pointer-events: none;
+    }
+
+    /* DRAG HANDLE - The Fix */
+    .drag-handle {
+      position: absolute; top: 0; right: 0;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10; cursor: grab;
+      color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      font-size: 24px;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, transparent 70%);
+    }
+    .drag-handle:active { cursor: grabbing; color: var(--primary); }
+
+    /* HIGH VIS DROP INDICATOR - The Fix */
+    .insert-line {
+      position: absolute; top: 0; bottom: 0;
+      width: 6px; /* Thick */
+      background: var(--success); /* Neon Green */
+      box-shadow: 0 0 15px var(--success); /* Glow */
+      z-index: 20; border-radius: 4px;
+      display: none; pointer-events: none;
+    }
+
+    /* Ghost image while dragging */
+    .ghost {
+      position: fixed; z-index: 9999; pointer-events: none;
+      opacity: 0.9; transform: scale(1.05);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      border-radius: var(--radius-sm); border: 2px solid var(--primary);
+    }
+    
+    .drop-zone {
+      border: 2px dashed rgba(255,255,255,0.15);
+      border-radius: var(--radius-md);
+      padding: 24px; text-align: center;
+      background: rgba(0,0,0,0.1);
+      margin: 20px 0; transition: all 0.2s;
+    }
+    .drop-zone.drag-active {
+      border-color: var(--success);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    /* --- Floating Bottom Bar (App-like) --- */
+    .fab-bar {
+      position: fixed; bottom: var(--safe-b); left: 0; right: 0;
+      padding: 12px 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--surface-border);
+      display: flex; gap: 12px; justify-content: center;
+      z-index: 50;
+      transform: translateY(150%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .fab-bar.show { transform: translateY(0); }
+    .fab-btn {
+      flex: 1; max-width: 200px;
+      height: 50px; font-size: 15px;
+    }
+
+    /* --- Overlays (Viewer & Camera) --- */
+    .overlay {
+      position: fixed; inset: 0;
+      background: #000; z-index: 100;
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    
+    .viewer-layout {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: #0f172a;
+    }
+    .viewer-canvas-area {
+      flex: 1; position: relative; background: #000;
+      touch-action: none; display: flex; align-items: center; justify-content: center;
+    }
+    canvas { max-width: 100%; max-height: 100%; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+    
+    .viewer-tools {
+      height: auto; min-height: 60px;
+      background: var(--surface-glass);
+      border-top: 1px solid var(--surface-border);
+      padding: 12px 20px var(--safe-b);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .tool-scroll {
+      display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+    }
+    .tool-icon {
+      flex: 0 0 48px; height: 48px;
+      border-radius: 12px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; cursor: pointer;
+    }
+    .tool-icon.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+    /* --- Camera UI --- */
+    .cam-view { flex: 1; position: relative; background: #000; }
+    .cam-video { width: 100%; height: 100%; object-fit: cover; }
+    
+    .cam-controls {
+      height: 140px; padding: 20px; padding-bottom: var(--safe-b);
+      background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: space-around;
+    }
+    
+    /* Draggable Shutter */
+    .shutter-btn {
+      position: absolute; left: 50%; top: 80%; transform: translate(-50%, -50%);
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 6px solid rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.2);
       backdrop-filter: blur(4px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      z-index: 50; cursor: grab; touch-action: none;
     }
-    .dragHandle:active {
-      background: #3b82f6;
-      cursor: grabbing;
+    .shutter-btn::after {
+      content: ""; display: block;
+      width: 60px; height: 60px;
+      background: white; border-radius: 50%;
+      position: absolute; top: 4px; left: 4px;
     }
+    .shutter-btn:active { transform: translate(-50%, -50%) scale(0.95); }
+    .shutter-btn.dragging { opacity: 0.8; cursor: grabbing; transform: translate(-50%, -50%) scale(0.9); }
+
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: white;
+      padding: 10px 20px; border-radius: 50px;
+      font-weight: 600; font-size: 14px;
+      pointer-events: none; opacity: 0; transition: opacity 0.3s;
+      z-index: 200; border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
+    .toast.show { opacity: 1; }
+    
+    /* Desktop/Landscape tweak */
+    @media (min-width: 900px) {
+      main { padding: 40px; max-width: 1200px; margin: 0 auto; }
+      .viewer-layout { flex-direction: row; }
+      .viewer-tools { width: 320px; border-top: none; border-left: 1px solid var(--surface-border); }
+      .tool-scroll { flex-wrap: wrap; overflow: visible; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>Mitchell Photos</h1>
+    <div id="subtitle" class="muted">Dashboard</div>
+  </div>
+  <div class="pill"><span id="hdrCount">0</span> photos</div>
+</header>
+
+<main id="mainContainer">
+  <section id="homeView">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2>Job Details</h2>
+        <div class="pill" id="modePill">Loading...</div>
+      </div>
+      
+      <div class="row" style="margin-top:12px;">
+        <input type="text" id="jobName" placeholder="Job Name (e.g., RO-12345_Smith)">
+        <button class="btn" id="clearJobBtn">Clear Job</button>
+      </div>
+      
+      <div id="desktopImportBox" style="display:none; margin-top:16px;">
+        <div class="hr"></div>
+        <div class="row" style="justify-content:space-between">
+          <span class="muted">Have a ZIP from phone?</span>
+          <label class="btn primary sm">
+            Import ZIP
+            <input id="zipInput" type="file" accept=".zip,application/zip" hidden>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin: 24px 0 12px 0;">Folders</h2>
+    <div class="folders-grid" id="foldersGrid"></div>
+
+    <div class="card" style="margin-top: 24px;">
+      <h2>Actions</h2>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn ok full-width" id="exportZipBtn">📦 Export Mitchell ZIP</button>
+        <button class="btn danger full-width" id="wipeBtn">⚠️ Wipe Device</button>
+      </div>
+      <div class="muted" style="margin-top:12px; text-align:center;">
+        Teardown folder order is strictly preserved.
+      </div>
+    </div>
+  </section>
+
+  <section id="folderView" style="display:none; padding-bottom: 80px;">
+    <div class="row" style="margin-bottom: 16px;">
+      <button class="btn sm" id="backHomeBtn">← Folders</button>
+      <div style="flex:1; text-align:right;">
+         <span id="folderTitle" style="font-weight:700; font-size:18px;">Folder</span>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div style="font-weight:600; font-size:16px;">Drop photos here</div>
+      <div class="muted">or use the Upload button below</div>
+    </div>
+
+    <div id="grid" class="photo-grid"></div>
+    
+    <div id="emptyState" class="muted" style="text-align:center; padding: 40px; display:none;">
+      No photos yet.<br>Tap "Upload" or "Camera" below.
+    </div>
+
+    <div class="fab-bar show" id="folderFab">
+      <button class="btn primary fab-btn" id="openCamBtn">📸 Camera</button>
+      <label class="btn ok fab-btn">
+        ⬆️ Upload Photos
+        <input id="fileInput" type="file" accept="image/*" multiple hidden>
+      </label>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="viewerOverlay">
+  <header style="background:black; border:none; padding:10px;">
+    <button class="btn icon" id="closeViewerBtn">✕</button>
+    <div class="pill" id="posPill">0 / 0</div>
+    <button class="btn primary sm" id="saveCloseBtn">Done</button>
+  </header>
+  
+  <div class="viewer-layout">
+    <div class="viewer-canvas-area" id="vLeft">
+      <canvas id="canvas"></canvas>
+      
+      <button class="btn icon" id="prevBtn" style="position:absolute; left:10px; background:rgba(0,0,0,0.5);">‹</button>
+      <button class="btn icon" id="nextBtn" style="position:absolute; right:10px; background:rgba(0,0,0,0.5);">›</button>
+    </div>
+
+    <div class="viewer-tools">
+      <div class="row" style="justify-content:space-between">
+        <span class="muted" id="editModeStatus">VIEW MODE</span>
+        <button class="btn sm" id="toggleEditBtn">Enable Edit</button>
+      </div>
+
+      <textarea id="notesInput" placeholder="Add damage notes..."></textarea>
+
+      <div id="toolsPanel" style="display:none; flex-direction:column; gap:12px;">
+        <div class="tool-scroll" id="toolRow">
+          <div class="tool-icon active" data-tool="arrow">➤</div>
+          <div class="tool-icon" data-tool="circle">◯</div>
+          <div class="tool-icon" data-tool="rect">▢</div>
+          <div class="tool-icon" data-tool="line">/</div>
+          <div class="tool-icon" data-tool="angle">∠</div>
+          <div class="tool-icon" data-tool="text">T</div>
+        </div>
+        <div class="row">
+          <button class="btn sm full-width" id="undoBtn">Undo</button>
+          <button class="btn sm full-width" id="clearAnnoBtn">Clear</button>
+        </div>
+        <div class="row">
+          <button class="btn danger full-width" id="deletePhotoBtn">Delete Photo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="camOverlay">
+  <div class="cam-view" id="camView">
+    <video id="camVideo" class="cam-video" autoplay playsinline muted></video>
+    <div class="shutter-btn" id="camShutter"></div>
+    
+    <div style="position:absolute; top:20px; left:20px; right:20px; display:flex; justify-content:space-between;">
+      <div class="pill"><span id="camCount">0</span> Captured</div>
+      <button class="btn sm" id="camFlipBtn">Flip</button>
+    </div>
+  </div>
+
+  <div class="cam-controls">
+    <button class="btn danger" id="camCancelBtn">Cancel</button>
+    <div id="camThumbs" style="display:flex; gap:8px; overflow-x:auto; max-width:50%;"></div>
+    <button class="btn ok" id="camDoneBtn">Done</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<script>
+(() => {
+  // --- CONFIG ---
+  const FOLDERS = ["Walk Around", "UPD", "Teardown"];
+  const DB_NAME = "mitchell_app_pro_v7"; // Bumped version
+  const DB_VER = 1;
+
+  // --- STATE ---
+  let db;
+  let meta = [];
+  let currentFolder = null;
+  
+  // Dragging
+  let dragItem = null; // { id, el, index }
+  let dragOverItem = null; // { index, side }
+  let isDragging = false;
+  
+  // Editor
+  let mode = "view"; // view | edit
+  let currentId = null;
+  let folderList = [];
+  let indexInFolder = -1;
+  let baseBitmap = null;
+  let view = { scale: 1, tx: 0, ty: 0 };
+  let anno = [];
+  let tool = "arrow";
+  let undoStack = [];
+  let isDown = false;
+  let startPos = {x:0, y:0};
+  let tempShape = null;
+
+  // UI Helper
+  const $ = (id) => document.getElementById(id);
+  const isTouch = navigator.maxTouchPoints > 0;
+  
+  // --- INIT ---
+  async function init() {
+    db = await openDB();
+    setupUI();
+    setupCanvas();
+    setupCamera();
+    
+    // Check localstorage for job name
+    $("jobName").value = localStorage.getItem("mitchell_job") || "";
+    $("jobName").addEventListener("input", e => localStorage.setItem("mitchell_job", e.target.value));
+
+    // Platform detection
+    if(!isTouch) {
+      $("modePill").textContent = "Desktop Mode";
+      $("desktopImportBox").style.display = "block";
+    } else {
+      $("modePill").textContent = "Mobile Mode";
+    }
+
+    await loadFolders();
+    
+    // Restore state
+    const saved = JSON.parse(sessionStorage.getItem("nav") || "null");
+    if(saved && saved.folder) openFolder(saved.folder);
+  }
+
+  // --- DATABASE ---
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = e => {
+        const d = e.target.result;
+        ["orig", "edit", "thumb", "meta"].forEach(k => {
+          if(!d.objectStoreNames.contains(k)) d.createObjectStore(k, {keyPath:"id"});
+        });
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = reject;
+    });
+  }
+  function tx(stores, mode="readonly") { return db.transaction(stores, mode); }
+  function store(name, mode="readonly") { return tx([name], mode).objectStore(name); }
+  
+  async function getAllMeta() {
+    return new Promise(r => {
+      const req = store("meta").getAll();
+      req.onsuccess = () => r(req.result || []);
+    });
+  }
+
+  async function loadFolders() {
+    meta = await getAllMeta();
+    $("hdrCount").textContent = meta.length;
+    
+    const grid = $("foldersGrid");
+    grid.innerHTML = "";
+    
+    for(const f of FOLDERS) {
+      const items = meta.filter(m => m.folder === f).sort((a,b) => a.order - b.order);
+      const card = document.createElement("div");
+      card.className = "folder-card";
+      card.innerHTML = `
+        <div class="folder-card-head">
+          <span class="folder-title">${f}</span>
+          <div class="pill">${items.length}</div>
+        </div>
+        <div class="muted">${getFolderHint(f)}</div>
+        <div class="mini-strip" id="strip-${f}"></div>
+      `;
+      card.onclick = () => openFolder(f);
+      grid.appendChild(card);
+      
+      // Load mini thumbs
+      const strip = card.querySelector(`#strip-${f}`);
+      items.slice(0, 5).forEach(async m => {
+        const img = document.createElement("img");
+        img.className = "mini-thumb";
+        img.src = await getThumbUrl(m.id);
+        strip.appendChild(img);
+      });
+      if(items.length > 5) {
+        const more = document.createElement("div");
+        more.className = "mini-more";
+        more.textContent = `+${items.length-5}`;
+        strip.appendChild(more);
+      }
+    }
+  }
+
+  function getFolderHint(f) {
+    if(f.includes("Walk")) return "Approach & Wide shots";
+    if(f.includes("UPD")) return "Supplements & Progress";
+    return "Numbering strictly preserved";
+  }
+
+  async function getThumbUrl(id) {
+    try {
+      const r = await getRec("thumb", id);
+      if(r) return URL.createObjectURL(r.blob);
+      const o = await getRec("orig", id);
+      if(o) return URL.createObjectURL(o.blob);
+    } catch(e){}
+    return ""; // placeholder
+  }
+  function getRec(s, id) {
+    return new Promise(r => {
+      const req = store(s).get(id);
+      req.onsuccess = () => r(req.result);
+      req.onerror = () => r(null);
+    });
+  }
+
+  // --- FOLDER VIEW ---
+  async function openFolder(name) {
+    currentFolder = name;
+    sessionStorage.setItem("nav", JSON.stringify({folder: name}));
+    
+    $("homeView").style.display = "none";
+    $("folderView").style.display = "block";
+    $("folderTitle").textContent = name;
+    
+    await renderGrid();
+  }
+  
+  $("backHomeBtn").onclick = () => {
+    $("folderView").style.display = "none";
+    $("homeView").style.display = "block";
+    sessionStorage.removeItem("nav");
+    loadFolders(); // refresh counts
+  };
+
+  async function renderGrid() {
+    meta = await getAllMeta(); // fresh
+    const list = meta.filter(m => m.folder === currentFolder).sort((a,b) => a.order - b.order);
+    const grid = $("grid");
+    grid.innerHTML = "";
+    
+    $("emptyState").style.display = list.length ? "none" : "block";
+
+    list.forEach((m, i) => {
+      const div = document.createElement("div");
+      div.className = "thumb";
+      div.dataset.id = m.id;
+      div.dataset.index = i;
+      
+      const num = currentFolder === "Teardown" ? m.order : i+1;
+      
+      div.innerHTML = `
+        <img src="" class="lazy-img">
+        <div class="thumb-num">${num}</div>
+        <div class="drag-handle">⋮⋮</div>
+        <div class="insert-line"></div>
+      `;
+      
+      // Load img
+      getThumbUrl(m.id).then(url => {
+        div.querySelector("img").src = url;
+      });
+
+      // Events
+      div.onclick = (e) => {
+        if(e.target.classList.contains("drag-handle")) return; // skip if handle
+        openEditor(m.id);
+      };
+
+      // DRAG LOGIC
+      const handle = div.querySelector(".drag-handle");
+      handle.onpointerdown = (e) => startDrag(e, div, i);
+      
+      grid.appendChild(div);
+    });
+  }
+
+  // --- DRAG & DROP IMPLEMENTATION ---
+  function startDrag(e, el, index) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    isDragging = true;
+    dragItem = { el, index, id: el.dataset.id };
+    
+    // Create Ghost
+    const rect = el.getBoundingClientRect();
+    const ghost = el.cloneNode(true);
+    ghost.className = "ghost";
+    ghost.style.width = rect.width + "px";
+    ghost.style.height = rect.height + "px";
+    ghost.style.left = rect.left + "px";
+    ghost.style.top = rect.top + "px";
+    document.body.appendChild(ghost);
+    
+    const offX = e.clientX - rect.left;
+    const offY = e.clientY - rect.top;
+    
+    const move = (ev) => {
+      if(!isDragging) return;
+      ev.preventDefault();
+      ghost.style.left = (ev.clientX - offX) + "px";
+      ghost.style.top = (ev.clientY - offY) + "px";
+      
+      // Hit test
+      const hit = document.elementFromPoint(ev.clientX, ev.clientY);
+      const target = hit ? hit.closest(".thumb") : null;
+      
+      document.querySelectorAll(".insert-line").forEach(l => l.style.display = "none");
+      
+      if(target && target !== el) {
+        const tRect = target.getBoundingClientRect();
+        const mid = tRect.left + tRect.width/2;
+        const side = ev.clientX < mid ? "before" : "after";
+        const idx = parseInt(target.dataset.index);
+        
+        dragOverItem = { index: idx, side };
+        
+        const line = target.querySelector(".insert-line");
+        line.style.display = "block";
+        line.style.left = side === "before" ? "0" : "auto";
+        line.style.right = side === "after" ? "0" : "auto";
+      } else {
+        dragOverItem = null;
+      }
+    };
+    
+    const end = async (ev) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      ghost.remove();
+      isDragging = false;
+      document.querySelectorAll(".insert-line").forEach(l => l.style.display = "none");
+      
+      if(dragOverItem) {
+        await reorderItems(dragItem.index, dragOverItem.index, dragOverItem.side);
+      }
+      dragItem = null;
+      dragOverItem = null;
+    };
+    
+    window.addEventListener("pointermove", move, {passive: false});
+    window.addEventListener("pointerup", end);
+  }
+
+  async function reorderItems(fromIdx, toIdx, side) {
+    let list = meta.filter(m => m.folder === currentFolder).sort((a,b) => a.order - b.order);
+    const moved = list.splice(fromIdx, 1)[0];
+    
+    // Adjust target index based on side
+    let target = toIdx;
+    if(side === "after") target++;
+    if(fromIdx < target) target--; // Account for removal
+    
+    list.splice(target, 0, moved);
+    
+    // Update DB
+    const t = tx(["meta"], "readwrite");
+    const s = t.objectStore("meta");
+    
+    for(let i=0; i<list.length; i++) {
+      const m = list[i];
+      m.order = i + 1;
+      await new Promise(r => {
+        const req = s.put(m);
+        req.onsuccess = r;
+      });
+    }
+    
+    renderGrid();
+    toast(`Moved to position ${target + 1}`);
+  }
+
+  // --- UPLOAD ---
+  $("fileInput").onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    e.target.value = "";
+    if(!files.length) return;
+    
+    const t = tx(["orig","meta"], "readwrite");
+    
+    // Get max order
+    const list = meta.filter(m => m.folder === currentFolder);
+    let max = list.reduce((a,b) => Math.max(a, b.order || 0), 0);
+    
+    for(const f of files) {
+      const id = crypto.randomUUID();
+      max++;
+      
+      await new Promise(r => t.objectStore("orig").put({id, blob: f}).onsuccess = r);
+      await new Promise(r => t.objectStore("meta").put({
+        id, folder: currentFolder, order: max,
+        created: new Date().toISOString(),
+        anno: [], notes: ""
+      }).onsuccess = r);
+    }
+    
+    await new Promise(r => t.oncomplete = r);
+    await renderGrid();
+    toast(`Uploaded ${files.length} photos`);
+  };
+
+  // --- EDITOR ---
+  async function openEditor(id) {
+    currentId = id;
+    $("viewerOverlay").classList.add("show");
+    
+    // Load Data
+    const m = meta.find(x => x.id === id);
+    anno = m.anno ? JSON.parse(JSON.stringify(m.anno)) : [];
+    $("notesInput").value = m.notes || "";
+    
+    // Load Image
+    const rec = await getRec("orig", id);
+    if(rec) {
+      baseBitmap = await createImageBitmap(rec.blob);
+      resetCanvas();
+      draw();
+    }
+    
+    setEditMode(false);
+  }
+
+  $("closeViewerBtn").onclick = closeEditor;
+  $("saveCloseBtn").onclick = async () => {
+    await saveEditor();
+    closeEditor();
+  };
+
+  function closeEditor() {
+    $("viewerOverlay").classList.remove("show");
+    baseBitmap = null;
+    renderGrid(); // Update thumbs if changed
+  }
+
+  async function saveEditor() {
+    if(!currentId) return;
+    
+    // Update Meta
+    const t = tx(["meta", "edit", "thumb"], "readwrite");
+    const m = meta.find(x => x.id === currentId);
+    m.anno = anno;
+    m.notes = $("notesInput").value;
+    t.objectStore("meta").put(m);
+    
+    // Burn image if edited
+    if(anno.length > 0) {
+      const b = await burnImage();
+      t.objectStore("edit").put({id: currentId, blob: b});
+      t.objectStore("thumb").put({id: currentId, blob: await resizeBlob(b, 300)});
+    }
+    
+    await new Promise(r => t.oncomplete = r);
+  }
+
+  function setEditMode(edit) {
+    mode = edit ? "edit" : "view";
+    $("toolsPanel").style.display = edit ? "flex" : "none";
+    $("editModeStatus").textContent = edit ? "EDIT MODE" : "VIEW MODE";
+    $("toggleEditBtn").textContent = edit ? "Done Editing" : "Enable Edit";
+    
+    // Toggle active state for button
+    if(edit) $("toggleEditBtn").style.background = "var(--primary)";
+    else $("toggleEditBtn").style.background = "";
+  }
+  
+  $("toggleEditBtn").onclick = () => setEditMode(mode !== "edit");
+
+  // Canvas Logic
+  const canvas = $("canvas");
+  const ctx = canvas.getContext("2d");
+
+  function resetCanvas() {
+    const p = canvas.parentElement;
+    canvas.width = p.clientWidth;
+    canvas.height = p.clientHeight;
+    
+    if(baseBitmap) {
+      const scale = Math.min(canvas.width / baseBitmap.width, canvas.height / baseBitmap.height);
+      view = {
+        scale: scale,
+        tx: (canvas.width - baseBitmap.width * scale) / 2,
+        ty: (canvas.height - baseBitmap.height * scale) / 2
+      };
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if(!baseBitmap) return;
+    
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+    ctx.drawImage(baseBitmap, 0, 0);
+    
+    // Draw Anno
+    [...anno, tempShape].forEach(s => {
+      if(!s) return;
+      ctx.strokeStyle = "#22c55e"; // Neon Green
+      ctx.lineWidth = 4 / view.scale;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      
+      if(s.type === "arrow") {
+        ctx.moveTo(s.x1, s.y1);
+        ctx.lineTo(s.x2, s.y2);
+        // Arrowhead logic simplified
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(s.x2, s.y2, 5/view.scale, 0, Math.PI*2);
+        ctx.fillStyle = "#22c55e";
+        ctx.fill();
+      } else if (s.type === "rect") {
+        ctx.strokeRect(s.x1, s.y1, s.x2-s.x1, s.y2-s.y1);
+      } else if (s.type === "circle") {
+         const r = Math.hypot(s.x2-s.x1, s.y2-s.y1);
+         ctx.beginPath();
+         ctx.arc(s.x1, s.y1, r, 0, Math.PI*2);
+         ctx.stroke();
+      }
+    });
+    
+    ctx.restore();
+  }
+
+  // Canvas Interactions
+  canvas.onpointerdown = e => {
+    if(mode !== "edit") return;
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left - view.tx) / view.scale;
+    const y = (e.clientY - r.top - view.ty) / view.scale;
+    startPos = {x, y};
+    isDown = true;
+  };
+  
+  canvas.onpointermove = e => {
+    if(!isDown) return;
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left - view.tx) / view.scale;
+    const y = (e.clientY - r.top - view.ty) / view.scale;
+    
+    tempShape = { type: tool, x1: startPos.x, y1: startPos.y, x2: x, y2: y };
+    draw();
+  };
+  
+  canvas.onpointerup = () => {
+    if(isDown && tempShape) {
+      anno.push(tempShape);
+      tempShape = null;
+      draw();
+    }
+    isDown = false;
+  };
+
+  // Tool Select
+  $("toolRow").onclick = e => {
+    if(e.target.classList.contains("tool-icon")) {
+      document.querySelectorAll(".tool-icon").forEach(b => b.classList.remove("active"));
+      e.target.classList.add("active");
+      tool = e.target.dataset.tool;
+    }
+  };
+  
+  $("undoBtn").onclick = () => {
+    if(anno.length) anno.pop();
+    draw();
+  };
+  $("clearAnnoBtn").onclick = () => {
+    anno = [];
+    draw();
+  };
+  $("deletePhotoBtn").onclick = async () => {
+    if(confirm("Delete this photo?")) {
+      const t = tx(["meta","orig","thumb","edit"], "readwrite");
+      t.objectStore("meta").delete(currentId);
+      t.objectStore("orig").delete(currentId);
+      t.objectStore("thumb").delete(currentId);
+      t.objectStore("edit").delete(currentId);
+      await new Promise(r => t.oncomplete = r);
+      closeEditor();
+      toast("Photo Deleted");
+    }
+  };
+
+  // --- CAMERA ---
+  let camStream;
+  let camShots = [];
+
+  function setupCamera() {
+    // Shutter Drag Logic
+    const sh = $("camShutter");
+    let isDragShutter = false;
+    
+    sh.onpointerdown = (e) => {
+      isDragShutter = true;
+      sh.setPointerCapture(e.pointerId);
+      sh.classList.add("dragging");
+    };
+    
+    sh.onpointermove = (e) => {
+      if(!isDragShutter) return;
+      // Simple positioning
+      const r = $("camView").getBoundingClientRect();
+      sh.style.left = (e.clientX - r.left) + "px";
+      sh.style.top = (e.clientY - r.top) + "px";
+      sh.style.transform = "translate(-50%, -50%)";
+    };
+    
+    sh.onpointerup = (e) => {
+      isDragShutter = false;
+      sh.classList.remove("dragging");
+      // Snap logic if minimal movement? 
+      // For now, click event handles snap
+    };
+    
+    sh.onclick = (e) => {
+      if(e.target === sh) takePhoto();
+    };
+  }
+
+  $("openCamBtn").onclick = async () => {
+    $("camOverlay").classList.add("show");
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" } 
+      });
+      $("camVideo").srcObject = camStream;
+    } catch(e) {
+      alert("Camera access denied or unavailable.");
+      $("camOverlay").classList.remove("show");
+    }
+  };
+
+  function takePhoto() {
+    const v = $("camVideo");
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext("2d").drawImage(v, 0, 0);
+    
+    c.toBlob(b => {
+      const url = URL.createObjectURL(b);
+      camShots.push({blob: b, url});
+      $("camCount").textContent = camShots.length;
+      
+      const thumb = document.createElement("img");
+      thumb.src = url;
+      thumb.style = "height:40px; width:40px; object-fit:cover; border-radius:6px;";
+      $("camThumbs").appendChild(thumb);
+      
+      // Flash effect
+      v.style.opacity = 0;
+      setTimeout(() => v.style.opacity = 1, 100);
+    }, "image/jpeg", 0.9);
+  }
+
+  $("camDoneBtn").onclick = async () => {
+    if(camShots.length) {
+      const t = tx(["orig","meta"], "readwrite");
+      // Logic similar to upload...
+      let max = meta.filter(m => m.folder === currentFolder).length;
+      
+      for(const s of camShots) {
+        const id = crypto.randomUUID();
+        max++;
+        t.objectStore("orig").put({id, blob: s.blob});
+        t.objectStore("meta").put({
+          id, folder: currentFolder, order: max,
+          created: new Date().toISOString(), anno:[]
+        });
+      }
+      await new Promise(r => t.oncomplete = r);
+      renderGrid();
+    }
+    closeCam();
+  };
+
+  $("camCancelBtn").onclick = closeCam;
+
+  function closeCam() {
+    $("camOverlay").classList.remove("show");
+    if(camStream) camStream.getTracks().forEach(t => t.stop());
+    camShots = [];
+    $("camThumbs").innerHTML = "";
+    $("camCount").textContent = "0";
+  }
+
+  // --- UTILS ---
+  async function burnImage() {
+    const c = document.createElement("canvas");
+    c.width = baseBitmap.width; c.height = baseBitmap.height;
+    const x = c.getContext("2d");
+    x.drawImage(baseBitmap, 0, 0);
+    // Draw anno... similar to draw() but native res
+    return new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
+  }
+  
+  async function resizeBlob(blob, width) {
+    const bmp = await createImageBitmap(blob);
+    const c = document.createElement("canvas");
+    const s = width / bmp.width;
+    c.width = width; c.height = bmp.height * s;
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    return new Promise(r => c.toBlob(r, "image/jpeg", 0.8));
+  }
+
+  function setupUI() {
+    $("clearJobBtn").onclick = async () => {
+      if(confirm("Clear current job?")) {
+        const t = tx(["meta","orig","edit","thumb"], "readwrite");
+        await t.objectStore("meta").clear();
+        await t.objectStore("orig").clear();
+        await t.objectStore("edit").clear();
+        await t.objectStore("thumb").clear();
+        localStorage.removeItem("mitchell_job");
+        $("jobName").value = "";
+        loadFolders();
+      }
+    };
+    
+    // Drop Zone
+    const dz = $("dropZone");
+    dz.ondragover = e => { e.preventDefault(); dz.classList.add("drag-active"); };
+    dz.ondragleave = () => dz.classList.remove("drag-active");
+    dz.ondrop = e => {
+      e.preventDefault();
+      dz.classList.remove("drag-active");
+      $("fileInput").files = e.dataTransfer.files;
+      // Trigger change manually if needed or extract files
+      const ev = new Event("change");
+      Object.defineProperty(ev, 'target', {writable: true, value: {files: e.dataTransfer.files}});
+      $("fileInput").onchange({target: {files: e.dataTransfer.files}});
+    };
+
+    $("exportZipBtn").onclick = async () => {
+      toast("Generating ZIP...");
+      const zip = new JSZip();
+      const meta = await getAllMeta();
+      
+      for(const m of meta) {
+        let b = (await getRec("edit", m.id))?.blob || (await getRec("orig", m.id))?.blob;
+        if(b) zip.folder(m.folder).file(`${m.order}.jpg`, b);
+      }
+      
+      const blob = await zip.generateAsync({type:"blob"});
+      const name = ($("jobName").value || "photos") + ".zip";
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+    };
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
