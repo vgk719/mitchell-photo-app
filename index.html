@@ -26,7 +26,6 @@
       --safe-t: env(safe-area-inset-top, 0px);
 
       --dropBg: rgba(59,130,246,.35);
-      --dropBgStrong: rgba(59,130,246,.55);
       --dropEdge: rgba(59,130,246,.95);
     }
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -79,7 +78,7 @@
     }
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
-    input, textarea, button{ font:inherit; }
+    input, textarea, button, select{ font:inherit; }
     textarea{
       width:100%;
       padding: 12px 12px;
@@ -91,6 +90,16 @@
       min-height: 80px;
       resize: vertical;
     }
+    .field{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(10,16,34,.55);
+      color: var(--text);
+      outline:none;
+    }
+    .label{ font-size:12px; color:var(--muted); font-weight:900; margin-top:10px; }
 
     .btn{
       border: 1px solid rgba(255,255,255,.14);
@@ -224,7 +233,6 @@
       white-space:nowrap;
     }
 
-    /* MOVE BUTTON ON EACH PHOTO */
     .moveBtn{
       position:absolute;
       top:8px; right:8px;
@@ -253,29 +261,20 @@
       box-shadow: 0 0 18px rgba(59,130,246,.5);
     }
 
-    /* SUPER OBVIOUS DROP INDICATORS */
     .dropOverlay{
-      position:absolute;
-      inset:0;
-      display:none;
-      pointer-events:none;
-      z-index: 6;
+      position:absolute; inset:0;
+      display:none; pointer-events:none; z-index: 6;
     }
     .thumb.drop-target .dropOverlay{ display:block; }
 
-    .dropHalf{
-      position:absolute; top:0; bottom:0; width:50%;
-      background: transparent;
-    }
+    .dropHalf{ position:absolute; top:0; bottom:0; width:50%; background: transparent; }
     .dropHalf.left{ left:0; }
     .dropHalf.right{ right:0; }
-
     .thumb.drop-before .dropHalf.left{ background: var(--dropBg); }
     .thumb.drop-after  .dropHalf.right{ background: var(--dropBg); }
 
     .dropLabel{
-      position:absolute;
-      left:50%; top:50%;
+      position:absolute; left:50%; top:50%;
       transform: translate(-50%,-50%);
       padding: 14px 16px;
       border-radius: 999px;
@@ -284,23 +283,15 @@
       font-weight: 1300;
       letter-spacing: 1px;
       text-transform: uppercase;
-      display:flex;
-      align-items:center;
-      gap:12px;
+      display:flex; align-items:center; gap:12px;
       box-shadow: 0 18px 40px rgba(0,0,0,.45);
       white-space:nowrap;
       font-size: 14px;
     }
-    .dropLabel b{
-      color: #d7e8ff;
-      text-shadow: 0 0 22px rgba(59,130,246,.35);
-      font-size: 18px;
-    }
+    .dropLabel b{ color: #d7e8ff; font-size: 18px; text-shadow: 0 0 22px rgba(59,130,246,.35); }
     .dropEdge{
-      position:absolute;
-      top:10px; bottom:10px;
-      width:0;
-      display:none;
+      position:absolute; top:10px; bottom:10px;
+      width:0; display:none;
       border-left: 8px solid var(--dropEdge);
       filter: drop-shadow(0 0 18px rgba(59,130,246,.60));
     }
@@ -308,27 +299,20 @@
     .thumb.drop-after  .dropEdge{ right:10px; display:block; }
 
     .ghost{
-      position:fixed;
-      z-index: 9999;
-      pointer-events:none;
-      opacity:.92;
+      position:fixed; z-index: 9999;
+      pointer-events:none; opacity:.92;
       transform: scale(1.02);
       box-shadow: 0 18px 40px rgba(0,0,0,.55);
-      border-radius: 14px;
-      overflow:hidden;
+      border-radius: 14px; overflow:hidden;
     }
 
     .insertBadge{
-      position: sticky;
-      top: 6px;
-      z-index: 10;
-      margin-top: 8px;
+      position: sticky; top: 6px;
+      z-index: 10; margin-top: 8px;
       display:none;
     }
     .insertBadgeInner{
-      display:inline-flex;
-      gap:10px;
-      align-items:center;
+      display:inline-flex; gap:10px; align-items:center;
       padding: 10px 12px;
       border-radius: 999px;
       border:1px solid rgba(255,255,255,.14);
@@ -342,8 +326,7 @@
     }
 
     .overlay{
-      position:fixed;
-      inset:0;
+      position:fixed; inset:0;
       background: rgba(0,0,0,.72);
       backdrop-filter: blur(10px);
       z-index: 50;
@@ -351,8 +334,7 @@
     }
     .overlay.show{ display:block; }
     .viewer{
-      position:absolute;
-      inset: 10px;
+      position:absolute; inset: 10px;
       border-radius: 18px;
       border:1px solid rgba(255,255,255,.14);
       background: var(--panel2);
@@ -389,7 +371,7 @@
       pointer-events:none;
       z-index: 10;
     }
-    .topbar .group{ display:flex; gap:10px; pointer-events:auto; }
+    .topbar .group{ display:flex; gap:10px; pointer-events:auto; align-items:center; }
 
     .arrowBtn{
       position:absolute;
@@ -412,9 +394,7 @@
     .arrowBtn[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
 
     .toolRow{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+      display:flex; gap:8px; flex-wrap:wrap;
       margin-top: 10px;
     }
     .toolIcon{
@@ -456,7 +436,6 @@
     }
     .toast.show{ display:block; }
 
-    /* Simple "Edit mode" banner style */
     .modeBadge{
       display:inline-flex;
       gap:8px;
@@ -477,6 +456,16 @@
     .modeDot.edit{
       background: rgba(34,197,94,.95);
       box-shadow: 0 0 18px rgba(34,197,94,.5);
+    }
+
+    /* Selected text highlight (on canvas) uses dashed box. */
+    .kbd{
+      padding:2px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      font-weight:1000;
+      font-size:12px;
+      color: var(--muted);
     }
   </style>
 </head>
@@ -585,7 +574,44 @@
         <div class="toolIcon" data-tool="pan" title="Pan">✋</div>
       </div>
 
+      <!-- TEXT PANEL (always visible in photo view; enabled in EDIT) -->
+      <div class="hr"></div>
+      <div style="font-weight:1000;">Text</div>
+      <div class="hint">In EDIT: choose Text tool → press <span class="kbd">Place Text</span> → click where to drop it. Tap a text label to select and edit here.</div>
+
+      <div class="label">Text content</div>
+      <textarea id="textBox" placeholder="Type label here…" style="min-height:64px;"></textarea>
+
+      <div class="row" style="margin-top:10px; align-items:flex-end;">
+        <div style="flex:1; min-width:140px;">
+          <div class="label">Size</div>
+          <select id="textSize" class="field">
+            <option value="28">28</option>
+            <option value="34" selected>34 (default)</option>
+            <option value="42">42</option>
+            <option value="54">54</option>
+            <option value="70">70</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:140px;">
+          <div class="label">Style</div>
+          <select id="textStyle" class="field">
+            <option value="pill" selected>Pill (green)</option>
+            <option value="outline">Outline only</option>
+          </select>
+        </div>
+      </div>
+
       <div class="row" style="margin-top:10px;">
+        <button class="btn ok" id="placeTextBtn">Place Text</button>
+        <button class="btn primary" id="updateTextBtn">Update Selected</button>
+        <button class="btn danger" id="deleteTextBtn">Delete Selected</button>
+      </div>
+      <div class="hint" id="textSelHint">No text selected.</div>
+
+      <div class="hr"></div>
+
+      <div class="row">
         <button class="btn sm" id="undoBtn">Undo</button>
         <button class="btn sm" id="clearBtn">Clear</button>
         <button class="btn sm" id="revertBtn">Revert Original</button>
@@ -597,9 +623,6 @@
 
       <div class="hint" id="angleHint" style="display:none;">
         Angle tool: draw line 1, then draw line 2.
-      </div>
-      <div class="hint" id="textHint" style="display:none;">
-        Text tool: click to place. Double click text to edit.
       </div>
       <div class="hint" id="editHint">Viewer is in VIEW mode. Turn on Edit to draw.</div>
     </div>
@@ -613,7 +636,7 @@
 <script>
 (() => {
   const FOLDERS = ["Walk Around","UPD","Teardown"];
-  const DB_NAME = "mitchell_app_pro_v8_fix_tools";
+  const DB_NAME = "mitchell_app_pro_v9_text_panel_big";
   const DB_VER = 1;
   const STORE_ORIG  = "originals";
   const STORE_EDIT  = "edits";
@@ -655,6 +678,10 @@
   let anno = [];
   let undoStack = [];
   let movingText = null;
+
+  // selection + place mode for text
+  let selectedTextIndex = -1;
+  let placingText = false;
 
   // angle
   let angleStage = 0;
@@ -932,15 +959,12 @@
       num.textContent = String(shownNum);
       div.appendChild(num);
 
-      // MOVE button (drag handle)
       const moveBtn = document.createElement("button");
       moveBtn.type = "button";
       moveBtn.className = "moveBtn";
       moveBtn.innerHTML = `<span class="moveDot"></span> MOVE`;
-      moveBtn.title = "Drag to reorder";
       div.appendChild(moveBtn);
 
-      // Drop overlay
       const dropOverlay = document.createElement("div");
       dropOverlay.className = "dropOverlay";
       dropOverlay.innerHTML = `
@@ -956,14 +980,12 @@
       bar.innerHTML = `<span class="chip">${currentFolder}</span><span class="chip">${pad3(shownNum)}</span>`;
       div.appendChild(bar);
 
-      // Click to view
       div.addEventListener("click", () => {
         if (Date.now() < suppressClickUntil) return;
         if (dragging) return;
         openViewer(currentFolder, idx);
       });
 
-      // Start drag ONLY from MOVE button
       moveBtn.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1034,7 +1056,7 @@
       const thumb = el ? el.closest(".thumb") : null;
 
       if (!thumb || !grid.contains(thumb)){
-        badgeInner.textContent = "Drop to cancel…";
+        badgeInner.textContent = "Release to cancel…";
         return;
       }
 
@@ -1157,10 +1179,9 @@
     renderFolders();
   }
 
-  // ---------- Viewer / Editor (TOOLS FIXED) ----------
+  // ---------- Viewer / Editor ----------
   function setMode(next){
     mode = next;
-    const modeBadge = document.getElementById("modeBadge");
     const modeDot = document.getElementById("modeDot");
     const modeLabel = document.getElementById("modeLabel");
     const toggleBtn = document.getElementById("toggleEditBtn");
@@ -1169,15 +1190,15 @@
       modeDot.classList.add("edit");
       modeLabel.textContent = "EDIT";
       toggleBtn.textContent = "Disable Edit";
-      document.getElementById("editHint").textContent = "EDIT mode: draw on the photo. Pan tool moves the image.";
+      document.getElementById("editHint").textContent = "EDIT mode: draw on the photo. Pan tool moves the image. Tap text to select + edit on the right.";
     } else {
       modeDot.classList.remove("edit");
       modeLabel.textContent = "VIEW";
       toggleBtn.textContent = "Enable Edit";
-      document.getElementById("editHint").textContent = "VIEW mode: enable Edit to use tools.";
+      document.getElementById("editHint").textContent = "VIEW mode: enable Edit to use tools. You can still read notes + navigate photos.";
+      placingText = false;
     }
 
-    // Enable/disable tool UI properly
     const toolsEnabled = (mode === "edit");
     document.querySelectorAll(".toolIcon").forEach(el => {
       el.style.opacity = toolsEnabled ? "1" : "0.55";
@@ -1187,13 +1208,10 @@
     document.getElementById("clearBtn").disabled = !toolsEnabled;
     document.getElementById("revertBtn").disabled = !toolsEnabled;
 
-    // IMPORTANT: keep toolRow visible, just disabled in VIEW (user asked tools work, not disappear)
-    document.getElementById("toolRow").style.display = "";
-
-    // Reset angle stages when switching modes
-    angleStage = 0;
-    setAngleHint();
-    setTextHint();
+    // text panel buttons
+    document.getElementById("placeTextBtn").disabled = !toolsEnabled;
+    document.getElementById("updateTextBtn").disabled = !toolsEnabled;
+    document.getElementById("deleteTextBtn").disabled = !toolsEnabled;
   }
 
   async function openViewer(folder, idx){
@@ -1213,15 +1231,18 @@
     anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
     undoStack = [];
     angleStage = 0;
+    selectedTextIndex = -1;
+    placingText = false;
+
     document.getElementById("notesInput").value = m.notes || "";
+    document.getElementById("textSelHint").textContent = "No text selected.";
+    document.getElementById("textBox").value = "";
 
     await loadOriginalBitmap(currentId);
     resetView();
     redraw();
 
-    // Default to VIEW, but tools will work when toggled
     setMode("view");
-
     setArrows();
     saveNotesSoon();
   }
@@ -1238,6 +1259,8 @@
     angleStage = 0;
     tempShape = null;
     movingText = null;
+    selectedTextIndex = -1;
+    placingText = false;
     clearTimeout(saveTimer);
     saveTimer = null;
   }
@@ -1256,17 +1279,13 @@
     if (next < 0 || next >= folderList.length) return;
     await flushAutosave();
     await openViewer(currentFolder, next);
-    setMode(mode); // keep mode
+    setMode(mode);
   }
 
   async function loadOriginalBitmap(id){
     const t = tx([STORE_ORIG], "readonly");
     const rec = await idbGet(t.objectStore(STORE_ORIG), id);
-    if (!rec?.blob){
-      baseBitmap = null;
-      return;
-    }
-    baseBitmap = await createImageBitmap(rec.blob);
+    baseBitmap = rec?.blob ? await createImageBitmap(rec.blob) : null;
     resizeCanvasToContainer();
   }
 
@@ -1326,14 +1345,8 @@
     tool = next;
     document.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
     angleStage = 0;
-    setAngleHint();
-    setTextHint();
-  }
-  function setAngleHint(){
     document.getElementById("angleHint").style.display = (tool === "angle") ? "" : "none";
-  }
-  function setTextHint(){
-    document.getElementById("textHint").style.display = (tool === "text") ? "" : "none";
+    placingText = false;
   }
 
   function redraw(){
@@ -1354,6 +1367,12 @@
     }
 
     drawShapes(anno, false);
+
+    // Selected text highlight (dashed)
+    if (selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text"){
+      drawTextSelection(anno[selectedTextIndex]);
+    }
+
     if (tempShape) drawShapes([tempShape], true);
     drawAngleLabelIfPresent();
   }
@@ -1369,34 +1388,64 @@
     ctx.closePath();
   }
 
-  function drawTextBox(s, dashed){
+  function measureTextBox(s){
+    const padding = Math.max(10, Math.round((s.size || 34) * 0.35));
+    const fontSize = s.size || 34;
     ctx.save();
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
 
-    const padding = 10;
-    const fontSize = 22;
     ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
     const lines = (s.text || "").split("\n");
-    const lineH = fontSize * 1.2;
+    const lineH = fontSize * 1.22;
     let maxW = 0;
     for (const line of lines) maxW = Math.max(maxW, ctx.measureText(line).width);
-    const w = Math.max(40, maxW + padding*2);
-    const h = Math.max(28, lines.length * lineH + padding*2);
-    s.w = w; s.h = h;
+    const w = Math.max(60, maxW + padding*2);
+    const h = Math.max(fontSize + padding*1.6, lines.length * lineH + padding*2);
+
+    ctx.restore();
+    s.w = w; s.h = h; s._pad = padding; s._lineH = lineH;
+  }
+
+  function drawTextBox(s, dashed){
+    measureTextBox(s);
+
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+
+    const padding = s._pad || 12;
+    const fontSize = s.size || 34;
+    const w = s.w || 120;
+    const h = s.h || 60;
+
+    const pill = (s.style || "pill") === "pill";
 
     ctx.setLineDash(dashed ? [10,8] : []);
-    ctx.fillStyle = GREEN;
-    ctx.strokeStyle = "rgba(0,0,0,0.9)";
-    ctx.lineWidth = 3;
-    roundRect(ctx, s.x, s.y, w, h, 10);
-    ctx.fill();
-    ctx.stroke();
+
+    if (pill){
+      ctx.fillStyle = GREEN;
+      ctx.strokeStyle = "rgba(0,0,0,0.90)";
+      ctx.lineWidth = 3;
+      roundRect(ctx, s.x, s.y, w, h, 14);
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = GREEN;
+      ctx.lineWidth = 6;
+      roundRect(ctx, s.x, s.y, w, h, 14);
+      ctx.stroke();
+    }
+
     ctx.setLineDash([]);
 
-    ctx.fillStyle = "rgba(0,0,0,1)";
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    ctx.fillStyle = pill ? "rgba(0,0,0,1)" : "rgba(255,255,255,0.98)";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+
+    const lines = (s.text || "").split("\n");
+    const lineH = s._lineH || (fontSize*1.2);
     const cx = s.x + w/2;
     const cy = s.y + h/2;
     const totalH = lines.length * lineH;
@@ -1405,6 +1454,20 @@
       ctx.fillText(line, cx, y);
       y += lineH;
     }
+
+    ctx.restore();
+  }
+
+  function drawTextSelection(s){
+    measureTextBox(s);
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+    ctx.setLineDash([10 / view.scale, 8 / view.scale]);
+    ctx.strokeStyle = "rgba(59,130,246,0.95)";
+    ctx.lineWidth = 6 / view.scale;
+    roundRect(ctx, s.x - 6, s.y - 6, (s.w||0) + 12, (s.h||0) + 12, 16);
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -1472,7 +1535,7 @@
       ctx.lineTo(s.x2, s.y2);
       ctx.stroke();
       const dx = s.x2 - s.x1;
-      const dy = s.y2 - s.y1;
+      const dy = s.x2 - s.x1 ? (s.y2 - s.y1) : (s.y2 - s.y1);
       const ang = Math.atan2(dy, dx);
       const headLen = 18 / view.scale;
       const a1 = ang - Math.PI / 8;
@@ -1555,6 +1618,7 @@
 
   function pointInText(s, p){
     if (s.type !== "text") return false;
+    measureTextBox(s);
     const w = s.w || 0, h = s.h || 0;
     return p.x >= s.x && p.x <= s.x + w && p.y >= s.y && p.y <= s.y + h;
   }
@@ -1566,8 +1630,27 @@
     return null;
   }
 
+  function updateTextSelectionUI(){
+    const hint = document.getElementById("textSelHint");
+    const updateBtn = document.getElementById("updateTextBtn");
+    const delBtn = document.getElementById("deleteTextBtn");
+
+    if (selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text"){
+      const s = anno[selectedTextIndex];
+      hint.textContent = "Selected text: edit fields above, then click “Update Selected”.";
+      updateBtn.disabled = (mode !== "edit");
+      delBtn.disabled = (mode !== "edit");
+      document.getElementById("textBox").value = s.text || "";
+      document.getElementById("textSize").value = String(s.size || 34);
+      document.getElementById("textStyle").value = String(s.style || "pill");
+    } else {
+      hint.textContent = placingText ? "Click on the photo where you want the new text." : "No text selected.";
+      updateBtn.disabled = true;
+      delBtn.disabled = true;
+    }
+  }
+
   function setupCanvas(){
-    // Make sure canvas is always listening
     canvas.addEventListener("pointerdown", (e) => {
       if (!baseBitmap) return;
       canvas.setPointerCapture(e.pointerId);
@@ -1575,18 +1658,55 @@
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
 
-      // In VIEW: allow only pan
+      // VIEW: pan only
       const activeTool = (mode === "edit") ? tool : "pan";
 
       isDown = true;
       startW = w;
       tempShape = null;
 
+      // If we are placing a new text label:
+      if (mode === "edit" && placingText){
+        isDown = false;
+        placingText = false;
+
+        const text = (document.getElementById("textBox").value || "").trim();
+        if (!text){
+          toast("Type text first.");
+          updateTextSelectionUI();
+          return;
+        }
+
+        const size = Number(document.getElementById("textSize").value || 34);
+        const style = String(document.getElementById("textStyle").value || "pill");
+
+        pushUndo();
+        const s = {type:"text", x:w.x, y:w.y, text, size, style, w:0, h:0};
+        anno.push(s);
+        selectedTextIndex = anno.length - 1;
+        redraw();
+        scheduleAutosave();
+        toast("Text added.");
+        updateTextSelectionUI();
+        return;
+      }
+
+      // Select text by single tap/click (NO double click)
       if (mode === "edit"){
         const hitText = topmostTextAt(w);
         if (hitText){
+          selectedTextIndex = hitText.index;
+          updateTextSelectionUI();
+          redraw();
+
+          // allow drag-move selected text if user keeps dragging
           movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
           return;
+        } else {
+          selectedTextIndex = -1;
+          movingText = null;
+          updateTextSelectionUI();
+          redraw();
         }
       }
 
@@ -1601,6 +1721,7 @@
 
       const p = pointerPos(e);
 
+      // Drag-move selected text
       if (movingText && mode === "edit"){
         const w = screenToWorld(p.x, p.y);
         const s = anno[movingText.index];
@@ -1637,7 +1758,7 @@
       redraw();
     });
 
-    canvas.addEventListener("pointerup", async (e) => {
+    canvas.addEventListener("pointerup", async () => {
       if (!isDown) return;
       isDown = false;
 
@@ -1649,23 +1770,6 @@
       const activeTool = (mode === "edit") ? tool : "pan";
       if (activeTool === "pan"){ tempShape = null; return; }
       if (mode !== "edit") { tempShape = null; return; }
-
-      if (activeTool === "text"){
-        const p = pointerPos(e);
-        const w = screenToWorld(p.x, p.y);
-        const existing = topmostTextAt(w);
-        if (!existing){
-          const content = prompt("Text:", "ADD NOTE");
-          if (content && content.trim()){
-            pushUndo();
-            anno.push({type:"text", x:w.x, y:w.y, text: content.trim(), w: 0, h: 0});
-            redraw();
-            scheduleAutosave();
-          }
-        }
-        tempShape = null;
-        return;
-      }
 
       if (!tempShape) return;
 
@@ -1693,22 +1797,6 @@
       scheduleAutosave();
     });
 
-    canvas.addEventListener("dblclick", (e) => {
-      if (mode !== "edit") return;
-      const p = pointerPos(e);
-      const w = screenToWorld(p.x, p.y);
-      const hit = topmostTextAt(w);
-      if (hit){
-        const next = prompt("Edit text:", hit.shape.text || "");
-        if (next != null){
-          pushUndo();
-          hit.shape.text = next.trim();
-          redraw();
-          scheduleAutosave();
-        }
-      }
-    });
-
     window.addEventListener("resize", () => {
       if (!overlay.classList.contains("show")) return;
       resizeCanvasToContainer();
@@ -1724,6 +1812,8 @@
     anno = [];
     undoStack = [];
     angleStage = 0;
+    selectedTextIndex = -1;
+    placingText = false;
 
     const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
     await idbDel(t.objectStore(STORE_EDIT), currentId).catch(()=>{});
@@ -1734,6 +1824,7 @@
     await ensureThumb(currentId);
 
     redraw();
+    updateTextSelectionUI();
     toast("Reverted.");
     renderFolderGrid();
     renderFolders();
@@ -1855,137 +1946,4 @@
       req.onerror = resolve;
       req.onblocked = resolve;
     });
-    db = await openDB();
-    meta = [];
-    setHdrCount();
-  }
-
-  // ---------- UI wiring ----------
-  function wireUI(){
-    document.getElementById("backHomeBtn").addEventListener("click", () => {
-      closeViewer();
-      showHome();
-      renderFolders();
-    });
-
-    document.getElementById("wipeBtn").addEventListener("click", async () => {
-      if (!confirm("Wipe EVERYTHING on this device?")) return;
-      await wipeAllDevice();
-      toast("Wiped.");
-      showHome();
-      renderFolders();
-    });
-
-    document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
-    document.getElementById("folderExportZipBtn").addEventListener("click", exportZipAll);
-
-    document.getElementById("folderWipeBtn").addEventListener("click", async () => {
-      if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
-      await wipeFolder(currentFolder);
-      toast("Folder wiped.");
-      await openFolder(currentFolder);
-      await renderFolders();
-    });
-
-    const fileInput = document.getElementById("fileInput");
-    document.getElementById("uploadBtn").addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", async (e) => {
-      const files = Array.from(e.target.files || []);
-      e.target.value = "";
-      if (files.length) await addFilesToFolder(currentFolder, files);
-    });
-
-    // Drop zone
-    const dz = document.getElementById("dropZone");
-    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.add("drag");
-    }));
-    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.remove("drag");
-    }));
-    dz.addEventListener("drop", async (e) => {
-      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-      if (!files.length) return;
-      await addFilesToFolder(currentFolder, files);
-    });
-
-    // Overlay nav + close
-    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
-    document.getElementById("prevBtn").addEventListener("click", () => step(-1));
-    document.getElementById("nextBtn").addEventListener("click", () => step(+1));
-    document.getElementById("bigPrev").addEventListener("click", () => step(-1));
-    document.getElementById("bigNext").addEventListener("click", () => step(+1));
-
-    document.addEventListener("keydown", async (e) => {
-      if (!overlay.classList.contains("show")) return;
-      if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
-      if (e.key === "ArrowLeft") step(-1);
-      if (e.key === "ArrowRight") step(+1);
-    });
-
-    // Toggle edit button (fix tools)
-    document.getElementById("toggleEditBtn").addEventListener("click", async () => {
-      if (mode === "view"){
-        setMode("edit");
-        toast("EDIT enabled");
-      } else {
-        await flushAutosave();
-        setMode("view");
-        toast("EDIT disabled");
-      }
-    });
-
-    // Tools click
-    document.getElementById("toolRow").addEventListener("click", (e) => {
-      const t = e.target.closest(".toolIcon");
-      if (!t) return;
-      if (mode !== "edit") { toast("Enable Edit first"); return; }
-      setTool(t.dataset.tool);
-    });
-
-    // Notes save even in view
-    document.getElementById("notesInput").addEventListener("input", () => {
-      if (mode === "edit") scheduleAutosave();
-      else saveNotesSoon();
-    });
-
-    document.getElementById("undoBtn").addEventListener("click", () => {
-      if (mode !== "edit") return toast("Enable Edit first");
-      if (!undoStack.length) return;
-      anno = undoStack.pop();
-      angleStage = 0;
-      redraw();
-      scheduleAutosave();
-    });
-
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      if (mode !== "edit") return toast("Enable Edit first");
-      if (!anno.length) return;
-      if (!confirm("Clear all markup on this photo?")) return;
-      pushUndo();
-      anno = [];
-      angleStage = 0;
-      redraw();
-      scheduleAutosave();
-    });
-
-    document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
-    document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
-  }
-
-  // ---------- Boot ----------
-  async function init(){
-    db = await openDB();
-    wireUI();
-    setupCanvas();
-    await renderFolders();
-    showHome();
-  }
-
-  init().catch(err => { console.error(err); toast("Failed to load."); });
-})();
-</script>
-</body>
-</html>
+    db
