@@ -25,8 +25,6 @@
       --shadow: 0 18px 44px rgba(0,0,0,.45);
       --safe-b: env(safe-area-inset-bottom, 0px);
       --safe-t: env(safe-area-inset-top, 0px);
-      --green: rgba(0,255,0,0.95);
-      --greenDark: rgba(0,0,0,0.65);
     }
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html,body{ height:100%; }
@@ -61,8 +59,8 @@
       font-weight: 900;
       font-size:12px;
       color: var(--muted);
+      white-space:nowrap;
     }
-
     main{
       height: calc(100% - 58px);
       overflow:auto;
@@ -80,6 +78,15 @@
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
     input, textarea, button{ font:inherit; }
+    input[type="text"]{
+      flex:1; min-width: 220px;
+      padding: 10px 12px; border-radius: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(10,16,34,.55);
+      color: var(--text);
+      outline:none;
+      font-weight: 900;
+    }
     textarea{
       width:100%;
       padding: 12px 12px;
@@ -88,9 +95,10 @@
       background: rgba(10,16,34,.55);
       color: var(--text);
       outline:none;
-      min-height: 80px;
+      min-height: 72px;
       resize: vertical;
     }
+
     .btn{
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.08);
@@ -114,45 +122,16 @@
     }
     .btn.sm{ padding: 8px 10px; border-radius: 10px; font-size: 12px; }
 
-    .folders{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:12px;
-      margin-top: 12px;
-    }
-    @media (max-width: 900px){ .folders{ grid-template-columns: 1fr; } }
-    .folderCard{
-      padding: 16px;
+    .drop{
+      border:2px dashed rgba(255,255,255,.16);
       border-radius: var(--radius);
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(12,18,38,.70);
-      box-shadow: 0 18px 44px rgba(0,0,0,.35);
-      cursor:pointer;
-      user-select:none;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      overflow:hidden;
+      padding: 12px;
+      text-align:center;
+      background: rgba(0,0,0,.10);
     }
-    .folderTitle{ font-weight:1000; font-size: 16px; }
-    .folderHint{ color: var(--muted); font-size: 12px; }
-
-    .miniStrip{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top: 6px; }
-    .miniThumb{
-      width: 34px; height: 34px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.12);
-      object-fit: cover;
-      background: rgba(0,0,0,.25);
-      box-shadow: 0 10px 20px rgba(0,0,0,.20);
-    }
-    .miniMore{
-      width: 34px; height: 34px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 1000; font-size: 12px; color: var(--muted);
+    .drop.drag{
+      border-color: rgba(59,130,246,.85);
+      background: rgba(59,130,246,.10);
     }
 
     .grid{
@@ -172,8 +151,10 @@
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.25);
       aspect-ratio: 1 / 1;
+      cursor:pointer;
       user-select:none;
       box-shadow: 0 10px 20px rgba(0,0,0,.25);
+      touch-action:none;
     }
     .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
     .num{
@@ -188,13 +169,12 @@
       backdrop-filter: blur(10px);
       z-index: 3;
     }
-
-    .thumbBottom{
+    .thumbBar{
       position:absolute;
       left:8px; right:8px; bottom:8px;
       display:flex; justify-content:space-between; gap:8px;
-      z-index: 4;
       pointer-events:none;
+      z-index: 3;
     }
     .chip{
       font-size:11px;
@@ -209,79 +189,61 @@
       white-space:nowrap;
     }
 
-    /* MOVE HANDLE (fixed) */
-    .moveHandle{
+    /* MOVE button on every photo */
+    .moveBtn{
       position:absolute;
-      top:8px; right:8px;
-      z-index: 6;
-      width:42px; height:42px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.35);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:1000;
+      right:8px;
+      top:8px;
+      z-index:4;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 1100;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(59,130,246,.22);
+      color: var(--text);
       cursor: grab;
-      touch-action:none;
+      user-select:none;
+      display:flex; align-items:center; gap:6px;
     }
-    .moveHandle:active{ cursor: grabbing; transform: scale(0.98); }
+    .moveBtn:active{ cursor: grabbing; }
 
-    /* VERY OBVIOUS DROP INDICATOR */
-    .dropOverlay{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      display:none;
-      pointer-events:none;
-      background: rgba(0,255,0,0.07);
-      border: 3px solid rgba(0,255,0,0.0);
-    }
-    .dropOverlay.show{ display:block; }
-    .dropOverlay.before{
-      border-top-color: rgba(0,255,0,0.95);
-      border-left-color: rgba(0,255,0,0.35);
-      border-right-color: rgba(0,255,0,0.35);
-      border-bottom-color: rgba(0,255,0,0.15);
-    }
-    .dropOverlay.after{
-      border-bottom-color: rgba(0,255,0,0.95);
-      border-left-color: rgba(0,255,0,0.35);
-      border-right-color: rgba(0,255,0,0.35);
-      border-top-color: rgba(0,255,0,0.15);
+    /* Drag/drop look like your screenshot */
+    .thumb.dragTarget{
+      outline: 3px solid rgba(34,197,94,.85);
+      outline-offset: -3px;
+      box-shadow: 0 0 0 3px rgba(34,197,94,.25), 0 18px 40px rgba(0,0,0,.45);
     }
     .dropLabel{
       position:absolute;
       left:10px;
-      right:10px;
       top:10px;
-      z-index: 8;
-      display:none;
+      right:10px;
       padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.15);
-      background: rgba(0,0,0,.6);
-      font-weight:1000;
+      border-radius: 12px;
+      background: rgba(0,0,0,.48);
+      border:1px solid rgba(255,255,255,.14);
+      font-weight: 1100;
       text-align:center;
-      letter-spacing:.4px;
+      letter-spacing:.2px;
+      z-index: 5;
+      display:none;
+      pointer-events:none;
+      text-transform: uppercase;
     }
-    .dropLabel.show{ display:block; }
+    .thumb.dragTarget .dropLabel{ display:block; }
 
-    /* Drag ghost */
     .ghost{
       position:fixed;
       z-index: 9999;
       pointer-events:none;
-      opacity:0.92;
+      opacity:.92;
       transform: scale(1.02);
       box-shadow: 0 18px 40px rgba(0,0,0,.55);
       border-radius: 14px;
       overflow:hidden;
-      border:1px solid rgba(255,255,255,.2);
-      background: rgba(0,0,0,.25);
     }
 
-    /* Overlay viewer/editor */
     .overlay{
       position:fixed;
       inset:0;
@@ -309,7 +271,6 @@
       touch-action:none;
     }
     canvas{ width:100%; height:100%; display:block; }
-
     .vRight{
       flex: 0.75;
       border-left:1px solid rgba(255,255,255,.10);
@@ -321,7 +282,6 @@
       .viewer{ flex-direction:column; }
       .vRight{ border-left:none; border-top:1px solid rgba(255,255,255,.10); min-width:0; }
     }
-
     .topbar{
       position:absolute;
       top:10px; left:10px; right:10px;
@@ -329,9 +289,10 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      pointer-events:none;
       z-index: 10;
     }
-    .topbar .group{ display:flex; gap:10px; align-items:center; }
+    .topbar .group{ display:flex; gap:10px; pointer-events:auto; }
 
     .arrowBtn{
       position:absolute;
@@ -346,11 +307,12 @@
       font-weight: 1000;
       cursor:pointer;
       user-select:none;
+      pointer-events:auto;
       z-index: 10;
     }
     .arrowBtn.left{ left:10px; }
     .arrowBtn.right{ right:10px; }
-    .arrowBtn.disabled{ opacity:.35; pointer-events:none; }
+    .arrowBtn[aria-disabled="true"]{ opacity:.4; cursor:not-allowed; }
 
     .toolRow{
       display:flex;
@@ -374,6 +336,7 @@
       border-color: rgba(59,130,246,.40);
     }
 
+    .hint{ color: var(--muted); font-size: 12px; margin-top: 8px; }
     .hr{ height:1px; background: rgba(255,255,255,.10); margin: 10px 0; }
 
     .toast{
@@ -396,38 +359,149 @@
     }
     .toast.show{ display:block; }
 
-    /* Big, obvious text editor row */
-    .textRow{
-      display:flex;
-      gap:8px;
-      margin-top:8px;
-      align-items:center;
+    /* Camera */
+    .camOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(10px);
+      z-index: 80;
+      display:none;
     }
-    .textRow input{
-      flex:1;
-      padding: 12px 12px;
-      border-radius: 12px;
+    .camOverlay.show{ display:block; }
+    .camPanel{
+      position:absolute;
+      inset: 12px;
+      border-radius: 18px;
       border: 1px solid rgba(255,255,255,.14);
-      background: rgba(10,16,34,.55);
+      background: rgba(12,18,38,.92);
+      box-shadow: var(--shadow);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .camTop{
+      padding: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .camBody{
+      flex:1;
+      display:flex;
+      gap:10px;
+      padding: 10px;
+      overflow:hidden;
+    }
+    .camLive{
+      flex: 1.35;
+      border-radius: 16px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      position:relative;
+      min-width:0;
+      touch-action:none;
+    }
+    .camLive video{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+    }
+    .camStrip{
+      flex: 0.65;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      overflow:auto;
+      padding: 10px;
+      min-width: 220px;
+    }
+    .camThumbs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .camThumbs img{
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+    }
+    @media (max-width: 900px){
+      .camBody{ flex-direction:column; }
+      .camStrip{ min-width:0; }
+    }
+
+    /* Big shutter (movable) */
+    .camShutter {
+      position: absolute;
+      left: var(--shutter-x, 50%);
+      top: var(--shutter-y, auto);
+      bottom: var(--shutter-b, 18px);
+      transform: translate(-50%, 0);
+      width: 86px;
+      height: 86px;
+      border-radius: 999px;
+      border: 6px solid rgba(255,255,255,.85);
+      background: rgba(255,255,255,.12);
+      box-shadow: 0 18px 50px rgba(0,0,0,.55);
+      display: block;
+      cursor: pointer;
+      user-select: none;
+      z-index: 5;
+    }
+    .camShutter::after{
+      content:"";
+      display:block;
+      width: 62px;
+      height: 62px;
+      margin: 6px auto 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+    }
+    .camShutter:active{ filter: brightness(1.05); }
+
+    .camOverlay.landscape .camBody{ flex-direction: column; padding: 8px; }
+    .camOverlay.landscape .camStrip{ display:none; }
+
+    .shutterMoveHint{
+      position:absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.55);
+      font-weight: 1000;
+      font-size: 12px;
       color: var(--text);
-      outline:none;
-      font-weight: 900;
+      display:none;
+      z-index: 6;
+    }
+    .camLive.moveMode .shutterMoveHint{ display:block; }
+    .camLive.moveMode .camShutter{
+      box-shadow: 0 18px 55px rgba(59,130,246,.35);
+      outline: 3px solid rgba(59,130,246,.55);
+      outline-offset: 3px;
     }
 
-    .hint{ color: var(--muted); font-size: 12px; margin-top: 8px; }
+    /* Inline text controls (no double click / no prompt) */
+    .inlineBox{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 10px;
+    }
+    .smallLabel{ font-size:12px; color: var(--muted); margin-bottom:6px; }
+    .seg{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    /* Drop zone */
-    .drop{
-      border:2px dashed rgba(255,255,255,.16);
-      border-radius: var(--radius);
-      padding: 12px;
-      text-align:center;
-      background: rgba(0,0,0,.10);
-    }
-    .drop.drag{
-      border-color: rgba(59,130,246,.85);
-      background: rgba(59,130,246,.10);
-    }
   </style>
 </head>
 
@@ -435,70 +509,53 @@
 <header>
   <div>
     <h1>Mitchell Photo App</h1>
-    <div class="muted" id="subtitle">Folders</div>
+    <div class="muted" id="subtitle">Mitchell Upload Order (TEARDOWN_001.JPG…)</div>
   </div>
   <div class="pill"><span id="hdrCount">0</span> photos</div>
 </header>
 
-<main id="scrollHost">
-  <!-- HOME -->
-  <section id="homeView">
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div style="font-weight:1000; font-size:16px;">Folders</div>
-        <div class="pill">Teardown order matters</div>
+<main id="mainScroll">
+  <section class="card">
+    <div class="row" style="justify-content:space-between; align-items:flex-start;">
+      <div style="min-width:260px; flex:1;">
+        <div style="font-weight:1000; font-size:16px;">Job</div>
+        <div class="muted" style="margin-top:2px;">All photos export as <b>TEARDOWN_001.JPG</b>, <b>TEARDOWN_002.JPG</b>… so Mitchell Cloud keeps the adjuster order.</div>
+        <div class="row" style="margin-top:10px;">
+          <input id="jobName" type="text" placeholder="Job name (RO12345_Smith)" />
+          <button class="btn" id="clearJobBtn">Clear Job</button>
+        </div>
       </div>
 
-      <div class="hr"></div>
-
-      <div class="row">
-        <button class="btn ok" id="exportZipBtn">Export ZIP (Mitchell Order)</button>
-        <button class="btn danger" id="wipeBtn">Wipe This Device</button>
+      <div class="row" style="justify-content:flex-end;">
+        <button class="btn ok" id="exportZipBtn">Export ZIP</button>
+        <button class="btn danger" id="wipeBtn">Clear All (This Device)</button>
       </div>
-
-      <div class="hint" style="margin-top:8px;">
-        Tip: Open a folder → upload photos → use the <b>MOVE</b> button on a photo to reorder.
-      </div>
-
-      <div class="folders" id="folders"></div>
     </div>
-  </section>
 
-  <!-- FOLDER -->
-  <section id="folderView" style="display:none;">
-    <div class="card" style="margin-bottom:12px;">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
-          <div class="muted" id="folderSub">Use MOVE button to reorder. Click photo to view/edit.</div>
-        </div>
-        <div class="row">
-          <button class="btn" id="backHomeBtn">← Folders</button>
-          <button class="btn ok" id="folderExportZipBtn">Export ZIP</button>
-        </div>
-      </div>
+    <div class="hr"></div>
 
-      <div class="row" style="margin-top:10px;">
-        <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
-          ⬆️ Upload Photos
-          <input id="fileInput" type="file" accept="image/*" multiple hidden>
-        </label>
-        <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
-      </div>
+    <div class="row">
+      <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+        ⬆️ Upload Photos
+        <input id="fileInput" type="file" accept="image/*" multiple hidden>
+      </label>
 
-      <div class="drop" id="dropZone" style="margin-top:10px;">
-        <b>Drop photos into “<span id="dropFolderName"></span>”</b>
-        <div class="muted">Reorder with the MOVE button on each photo.</div>
-      </div>
+      <button class="btn primary" id="openCamBtn">📸 Camera Mode</button>
 
-      <div class="hint" style="margin-top:8px;">
-        While dragging, the page will <b>auto-scroll</b> if you move near the top/bottom edge.
-      </div>
+      <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+        ⬆️ Import Job ZIP
+        <input id="zipInput" type="file" accept=".zip,application/zip" hidden>
+      </label>
+    </div>
+
+    <div class="drop" id="dropZone" style="margin-top:10px;">
+      <b>Drop photos here</b>
+      <div class="muted">Reorder using the <b>MOVE</b> button on each photo. While dragging, the page auto-scrolls near top/bottom edge.</div>
     </div>
 
     <div id="grid" class="grid"></div>
     <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
-      No photos yet. Upload some above.
+      No photos yet. Upload or use Camera Mode.
     </div>
   </section>
 </main>
@@ -511,7 +568,6 @@
         <div class="group">
           <button class="btn icon" id="closeBtn" title="Close">✕</button>
           <div class="pill" id="posPill">0 / 0</div>
-          <div class="pill" id="folderPill">Folder</div>
         </div>
         <div class="group">
           <button class="btn icon" id="prevBtn" title="Prev">←</button>
@@ -519,8 +575,8 @@
         </div>
       </div>
 
-      <div class="arrowBtn left" id="bigPrev">‹</div>
-      <div class="arrowBtn right" id="bigNext">›</div>
+      <div class="arrowBtn left" id="bigPrev" aria-disabled="false">‹</div>
+      <div class="arrowBtn right" id="bigNext" aria-disabled="false">›</div>
 
       <canvas id="canvas"></canvas>
     </div>
@@ -528,10 +584,9 @@
     <div class="vRight">
       <div class="row" style="justify-content:space-between; align-items:center;">
         <div>
-          <div style="font-weight:1000; margin-bottom:2px;" id="modeTitle">EDIT</div>
-          <div class="muted" id="modeSub">Autosave ON</div>
+          <div style="font-weight:1000; margin-bottom:2px;">EDIT (always on)</div>
+          <div class="muted">Autosave ON</div>
         </div>
-        <button class="btn danger sm" id="deleteBtn">Delete</button>
       </div>
 
       <div class="hr"></div>
@@ -549,32 +604,75 @@
         <div class="toolIcon" data-tool="line" title="Straight Line">／</div>
         <div class="toolIcon" data-tool="angle" title="Angle (2 lines)">∠</div>
         <div class="toolIcon" data-tool="ruler" title="Measure">📏</div>
-        <div class="toolIcon" data-tool="text" title="Add Text">T</div>
+        <div class="toolIcon" data-tool="text" title="Text">T</div>
         <div class="toolIcon" data-tool="pan" title="Pan">✋</div>
       </div>
 
-      <div class="textRow" id="textRow" style="display:none;">
-        <input id="textInput" placeholder="Type text then press ADD…" />
-        <button class="btn ok" id="addTextBtn">ADD</button>
-      </div>
-      <div class="hint" id="textHint" style="display:none;">
-        Text makes a <b>bright green box</b>. After adding, drag it on the photo.
-      </div>
-
-      <div class="hint" id="angleHint" style="display:none;">
-        Angle tool: draw <b>Line 1</b> (start→end), then draw <b>Line 2</b> (start→end). Angle shows between them.
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="row">
+      <div class="row" style="margin-top:10px;">
         <button class="btn sm" id="undoBtn">Undo</button>
         <button class="btn sm" id="clearBtn">Clear</button>
         <button class="btn sm" id="revertBtn">Revert Original</button>
       </div>
 
-      <div class="hint" style="margin-top:10px;">
-        Click-drag on the photo to draw. Use ✋ Pan to move around.
+      <div class="row" style="margin-top:10px;">
+        <button class="btn danger" id="deleteBtn">Delete</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- ✅ Text is always available here (no prompt / no double click) -->
+      <div class="inlineBox">
+        <div class="smallLabel">Text Tool Panel</div>
+        <textarea id="textBox" placeholder="Type text here… (tap a green text box on the image to edit it)" style="min-height:64px;"></textarea>
+        <div class="seg" style="margin-top:8px;">
+          <button class="btn sm ok" id="addTextBtn">Add New Text</button>
+          <button class="btn sm" id="applyTextBtn">Apply to Selected</button>
+          <button class="btn sm danger" id="deleteTextBtn">Delete Selected</button>
+          <div class="pill" id="textSelPill">Selected: none</div>
+        </div>
+        <div class="hint" style="margin-top:8px;">
+          Tip: Select the <b>T</b> tool, then tap a green text box to select it. Drag a green text box to move it.
+        </div>
+      </div>
+
+      <div class="hint" id="angleHint" style="display:none; margin-top:10px;">
+        Angle tool: draw <b>Line 1</b> (start→end), then draw <b>Line 2</b> (start→end). Angle shows between them.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA MODAL -->
+<div class="camOverlay" id="camOverlay" aria-hidden="true">
+  <div class="camPanel">
+    <div class="camTop">
+      <div class="pill"><span id="camCount">0</span> captured</div>
+      <div class="row">
+        <button class="btn ok" id="camTopSnapBtn">Snap</button>
+        <button class="btn primary" id="camMoveShutterBtn">Move Shutter</button>
+        <button class="btn" id="camResetShutterBtn" title="Reset shutter position">Reset</button>
+        <button class="btn" id="camFlipBtn">Flip</button>
+        <button class="btn danger" id="camCancelBtn">Cancel</button>
+        <button class="btn ok" id="camDoneBtn">Done</button>
+      </div>
+    </div>
+
+    <div class="camBody">
+      <div class="camLive" id="camLive">
+        <video id="camVideo" playsinline autoplay muted></video>
+        <div class="camShutter" id="camShutter" title="Snap"></div>
+        <div class="shutterMoveHint">
+          Move Shutter ON: drag the big shutter button where you want it. Tap “Lock Shutter” to finish.
+        </div>
+      </div>
+
+      <div class="camStrip">
+        <div class="row" style="justify-content:space-between;">
+          <button class="btn primary" id="camSnapBtn">Snap</button>
+          <button class="btn danger" id="camClearBtn">Clear</button>
+        </div>
+        <div class="hr"></div>
+        <div class="camThumbs" id="camThumbs"></div>
       </div>
     </div>
   </div>
@@ -586,59 +684,77 @@
 
 <script>
 (() => {
-  const FOLDERS = ["Walk Around","UPD","Teardown"];
-  const DB_NAME = "mitchell_photo_app_github_v1";
+  // Single Mitchell upload stream
+  const PREFIX = "TEARDOWN"; // exported filenames: TEARDOWN_001.JPG ...
+
+  const DB_NAME = "mitchell_easy_pie_v1";
   const DB_VER = 1;
   const STORE_ORIG  = "originals";
   const STORE_EDIT  = "edits";
   const STORE_THUMB = "thumbs";
   const STORE_META  = "meta";
 
-  const scrollHost = document.getElementById("scrollHost");
+  const mainScroll = document.getElementById("mainScroll");
 
-  // UI
-  const homeView = document.getElementById("homeView");
-  const folderView = document.getElementById("folderView");
-  const foldersWrap = document.getElementById("folders");
-  const grid = document.getElementById("grid");
-  const empty = document.getElementById("empty");
-  const subtitle = document.getElementById("subtitle");
-  const hdrCount = document.getElementById("hdrCount");
+  let db;
+  let meta = [];
 
-  const fileInput = document.getElementById("fileInput");
-  const dropZone = document.getElementById("dropZone");
-  const dropFolderName = document.getElementById("dropFolderName");
-  const folderTitle = document.getElementById("folderTitle");
+  // reorder state
+  let dragging = null; // { id, fromIndex, ghost, offsetX, offsetY }
+  let insertTarget = null; // { index, side }
+  let suppressClickUntil = 0;
 
-  // overlay/editor
+  // viewer/editor
   const overlay = document.getElementById("overlay");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
-  const notesInput = document.getElementById("notesInput");
-  const posPill = document.getElementById("posPill");
-  const folderPill = document.getElementById("folderPill");
 
-  const bigPrev = document.getElementById("bigPrev");
-  const bigNext = document.getElementById("bigNext");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
+  let listNow = [];
+  let indexInList = -1;
+  let currentId = null;
 
-  const toolRow = document.getElementById("toolRow");
-  const angleHint = document.getElementById("angleHint");
-  const textHint = document.getElementById("textHint");
-  const textRow = document.getElementById("textRow");
-  const textInput = document.getElementById("textInput");
-  const addTextBtn = document.getElementById("addTextBtn");
+  let baseBitmap = null;
+  let view = { scale: 1, tx: 0, ty: 0 };
 
+  // tools & annotations
+  let tool = "arrow";
+  let isDown = false;
+  let startW = {x:0,y:0};
+  let tempShape = null;
+  let anno = [];
+  let undoStack = [];
+
+  // angle tool state
+  let angleStage = 0;
+  let angleLine1 = null;
+
+  // text selection (no prompts)
+  let selectedTextIndex = -1;
+
+  // autosave
+  let saveTimer = null;
+  const AUTOSAVE_MS = 250;
+
+  // colors
+  const GREEN = "rgba(0,255,0,0.95)";
+  const DARK  = "rgba(0,0,0,0.55)";
+  const WIDTH = 4;
+
+  // toast
   const toastEl = document.getElementById("toast");
   let toastTimer = null;
-
   function toast(msg){
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1400);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1500);
   }
+
+  // Job name
+  const jobNameEl = document.getElementById("jobName");
+  const LS_JOB = "mitchell_job_name_easy";
+  jobNameEl.value = localStorage.getItem(LS_JOB) || "";
+  jobNameEl.addEventListener("input", () => localStorage.setItem(LS_JOB, jobNameEl.value || ""));
 
   function uuid(){
     return crypto.randomUUID ? crypto.randomUUID() : ("id_" + Math.random().toString(16).slice(2) + Date.now());
@@ -646,8 +762,7 @@
   function nowISO(){ return new Date().toISOString(); }
   function pad3(n){ return String(n).padStart(3,"0"); }
 
-  // --- IndexedDB helpers ---
-  let db;
+  // ---------- IndexedDB ----------
   function openDB(){
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VER);
@@ -659,7 +774,11 @@
         if (!d.objectStoreNames.contains(STORE_THUMB)) d.createObjectStore(STORE_THUMB, {keyPath:"id"});
         if (!d.objectStoreNames.contains(STORE_META))  d.createObjectStore(STORE_META,  {keyPath:"id"});
       };
-      req.onsuccess = () => resolve(req.result);
+      req.onsuccess = () => {
+        const d = req.result;
+        d.onversionchange = () => { try{ d.close(); }catch{} };
+        resolve(d);
+      };
     });
   }
   function tx(stores, mode="readonly"){ return db.transaction(stores, mode); }
@@ -699,30 +818,25 @@
     });
   }
 
-  // --- Data state ---
-  let meta = [];
-  let currentFolder = null;
-
   async function refreshMeta(){
     const all = await idbGetAll(tx([STORE_META],"readonly").objectStore(STORE_META));
     meta = all.map(m => ({
       id: m.id,
-      folder: m.folder,
       order: Number.isFinite(m.order) ? m.order : 0,
       filename: m.filename || "photo.jpg",
       created: m.created || nowISO(),
       notes: m.notes || "",
       anno: Array.isArray(m.anno) ? m.anno : []
     }));
-    await ensureFolderOrder("Teardown");
+    await ensureOrder();
   }
-  function folderItems(folder){
-    return meta
-      .filter(m => m.folder === folder)
-      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+
+  function items(){
+    return meta.slice().sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
   }
-  async function ensureFolderOrder(folder){
-    const list = folderItems(folder);
+
+  async function ensureOrder(){
+    const list = items();
     let needs = false;
     list.forEach((x,i)=> { if ((x.order||0) !== i+1) needs = true; });
     if (!needs) return;
@@ -736,14 +850,18 @@
       await idbPut(s, {...cur, order: item.order});
     }
     await waitTxDone(t);
+
     for (const item of list){
       const idx = meta.findIndex(m => m.id === item.id);
       if (idx >= 0) meta[idx].order = item.order;
     }
   }
 
-  function setHdrCount(){ hdrCount.textContent = String(meta.length); }
+  function setHdrCount(){
+    document.getElementById("hdrCount").textContent = String(meta.length);
+  }
 
+  // ---------- Thumbs ----------
   async function getThumbBlob(id){
     try{
       const t = tx([STORE_THUMB], "readonly");
@@ -768,8 +886,9 @@
       const t = tx([STORE_THUMB],"readonly");
       const rec = await idbGet(t.objectStore(STORE_THUMB), id);
       if (rec?.blob) return;
-    }catch{}
-    const blob = await getThumbBlob(id);
+    } catch {}
+
+    let blob = await getThumbBlob(id);
     if (!blob) return;
 
     const bmp = await createImageBitmap(blob);
@@ -788,79 +907,212 @@
     await waitTxDone(t4);
   }
 
-  // --- Navigation ---
-  function showHome(){
-    subtitle.textContent = "Folders";
-    homeView.style.display = "";
-    folderView.style.display = "none";
-    currentFolder = null;
-  }
-  async function openFolder(folder){
-    currentFolder = folder;
-    subtitle.textContent = folder;
-    homeView.style.display = "none";
-    folderView.style.display = "";
-    folderTitle.textContent = folder;
-    dropFolderName.textContent = folder;
+  // ---------- Main Grid ----------
+  async function renderGrid(){
+    await refreshMeta();
+    await ensureOrder();
     await refreshMeta();
     setHdrCount();
-    renderFolderGrid();
-    renderFolders();
-    scrollHost.scrollTop = 0;
-  }
 
-  // --- Render home folders ---
-  async function renderFolders(){
-    await refreshMeta();
-    setHdrCount();
-    foldersWrap.innerHTML = "";
-    for (const f of FOLDERS){
-      const list = folderItems(f);
-      const count = list.length;
-      const hint =
-        f === "Walk Around" ? "Overall / approach / wide shots" :
-        f === "UPD" ? "Updates / supplements / progress" :
-        "Tear-down / hidden damage (Mitchell order)";
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    grid.innerHTML = "";
 
+    const list = items();
+    empty.style.display = list.length ? "none" : "";
+
+    list.forEach((m, idx) => {
       const div = document.createElement("div");
-      div.className = "folderCard";
-      div.innerHTML = `
-        <div class="folderTitle">${f}</div>
-        <div class="folderHint">${hint}</div>
-        <div class="pill"><span>${count}</span> photos</div>
-      `;
+      div.className = "thumb";
+      div.dataset.id = m.id;
+      div.dataset.index = String(idx);
 
-      const strip = document.createElement("div");
-      strip.className = "miniStrip";
-      const preview = list.slice(0, 10);
-      for (const m of preview){
-        const img = document.createElement("img");
-        img.className = "miniThumb";
-        strip.appendChild(img);
-        getThumbBlob(m.id).then(blob => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          img.src = url;
-          img.onload = () => URL.revokeObjectURL(url);
-        }).catch(()=>{});
-      }
-      if (count > preview.length){
-        const more = document.createElement("div");
-        more.className = "miniMore";
-        more.textContent = `+${count - preview.length}`;
-        strip.appendChild(more);
-      }
-      div.appendChild(strip);
+      const img = document.createElement("img");
+      img.alt = m.filename || "photo";
+      div.appendChild(img);
 
-      div.addEventListener("click", () => openFolder(f));
-      foldersWrap.appendChild(div);
+      const num = document.createElement("div");
+      num.className = "num";
+      num.textContent = String(m.order || (idx+1));
+      div.appendChild(num);
+
+      const moveBtn = document.createElement("div");
+      moveBtn.className = "moveBtn";
+      moveBtn.innerHTML = `<span>↕</span> MOVE`;
+      div.appendChild(moveBtn);
+
+      const dropLabel = document.createElement("div");
+      dropLabel.className = "dropLabel";
+      dropLabel.textContent = "DROP";
+      div.appendChild(dropLabel);
+
+      const bar = document.createElement("div");
+      bar.className = "thumbBar";
+      bar.innerHTML = `<span class="chip">${PREFIX}</span><span class="chip">${pad3(m.order || (idx+1))}</span>`;
+      div.appendChild(bar);
+
+      div.addEventListener("click", () => {
+        if (Date.now() < suppressClickUntil) return;
+        openViewer(idx);
+      });
+
+      moveBtn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startMoveDrag(e, div, idx, grid);
+      }, {passive:false});
+
+      grid.appendChild(div);
+
+      getThumbBlob(m.id).then(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        img.src = url;
+        img.onload = () => URL.revokeObjectURL(url);
+      }).catch(()=>{});
+    });
+  }
+
+  function clearDragTargets(grid){
+    grid.querySelectorAll(".thumb.dragTarget").forEach(el => {
+      el.classList.remove("dragTarget");
+      const label = el.querySelector(".dropLabel");
+      if (label) label.textContent = "DROP";
+    });
+  }
+
+  function beginDrag(e, el, fromIndex){
+    const rect = el.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    const ghost = el.cloneNode(true);
+    ghost.classList.add("ghost");
+    ghost.style.left = (e.clientX - offsetX) + "px";
+    ghost.style.top  = (e.clientY - offsetY) + "px";
+    ghost.style.width = rect.width + "px";
+    ghost.style.height = rect.height + "px";
+    document.body.appendChild(ghost);
+
+    dragging = { id: el.dataset.id, fromIndex, ghost, offsetX, offsetY };
+    insertTarget = null;
+  }
+
+  function autoScrollWhileDragging(clientY){
+    const r = mainScroll.getBoundingClientRect();
+    const zone = 90;
+    const maxStep = 22;
+    let delta = 0;
+
+    if (clientY < r.top + zone){
+      const t = (r.top + zone - clientY) / zone;
+      delta = -Math.ceil(maxStep * Math.min(1, t));
+    } else if (clientY > r.bottom - zone){
+      const t = (clientY - (r.bottom - zone)) / zone;
+      delta = Math.ceil(maxStep * Math.min(1, t));
+    }
+    if (delta !== 0) mainScroll.scrollTop += delta;
+  }
+
+  function onDragMove(e, grid){
+    if (!dragging) return;
+    e.preventDefault();
+
+    autoScrollWhileDragging(e.clientY);
+
+    dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
+    dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
+
+    const thumbs = Array.from(grid.querySelectorAll(".thumb"));
+    let hit = null;
+    for (const t of thumbs){
+      const r = t.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
+        hit = { el:t, rect:r, index:Number(t.dataset.index) };
+        break;
+      }
+    }
+
+    clearDragTargets(grid);
+    insertTarget = null;
+
+    if (!hit) return;
+
+    const midX = (hit.rect.left + hit.rect.right) / 2;
+    const side = (e.clientX < midX) ? "before" : "after";
+    insertTarget = { index: hit.index, side };
+
+    hit.el.classList.add("dragTarget");
+    const label = hit.el.querySelector(".dropLabel");
+    const n = hit.index + 1;
+    if (label){
+      // exactly like screenshot feel
+      label.textContent = (side === "before") ? `DROP BEFORE #${n}` : `DROP AFTER #${n}`;
     }
   }
 
-  // --- Add photos ---
-  async function addFilesToFolder(folder, files){
+  async function onDragEnd(e, grid){
+    if (!dragging) return;
+    e.preventDefault();
+
+    clearDragTargets(grid);
+
+    dragging.ghost.remove();
+    suppressClickUntil = Date.now() + 350;
+
+    const from = dragging.fromIndex;
+    let to = from;
+
+    if (insertTarget){
+      to = insertTarget.index + (insertTarget.side === "after" ? 1 : 0);
+      if (to > from) to -= 1;
+    }
+
+    dragging = null;
+    insertTarget = null;
+
     await refreshMeta();
-    const list = folderItems(folder);
+    let list = items();
+    if (!list.length) return;
+
+    to = Math.max(0, Math.min(to, list.length - 1));
+    if (to === from) return;
+
+    const item = list.splice(from, 1)[0];
+    list.splice(to, 0, item);
+    list.forEach((x,i)=> x.order = i+1);
+
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    for (const m of list){
+      const cur = await idbGet(s, m.id);
+      if (!cur) continue;
+      await idbPut(s, {...cur, order: m.order});
+    }
+    await waitTxDone(t);
+
+    toast(`Moved to #${to+1}`);
+    await renderGrid();
+  }
+
+  function startMoveDrag(e, el, idx, grid){
+    beginDrag(e, el, idx);
+
+    const move = (ev) => onDragMove(ev, grid);
+    const up = (ev) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      onDragEnd(ev, grid).catch(console.error);
+    };
+
+    window.addEventListener("pointermove", move, {passive:false});
+    window.addEventListener("pointerup", up, {passive:false});
+  }
+
+  // ---------- Add photos ----------
+  async function addFiles(files){
+    await refreshMeta();
+    const list = items();
     const maxOrder = list.reduce((mx, x) => Math.max(mx, x.order || 0), 0);
 
     const t = tx([STORE_ORIG, STORE_META], "readwrite");
@@ -874,7 +1126,6 @@
       await idbPut(sO, {id, blob: f, type: f.type || "image/jpeg"});
       const m = {
         id,
-        folder,
         order: maxOrder + added + 1,
         filename: f.name || `photo_${added+1}.jpg`,
         created: nowISO(),
@@ -887,277 +1138,14 @@
     }
     await waitTxDone(t);
 
-    const newOnes = folderItems(folder).slice(-added);
+    const newOnes = items().slice(-added);
     for (const m of newOnes) await ensureThumb(m.id);
 
     toast(`Added ${added} photo(s).`);
-    await refreshMeta();
-    setHdrCount();
-    renderFolderGrid();
-    renderFolders();
+    await renderGrid();
   }
 
-  // --- Reorder (pointer-based + auto-scroll) ---
-  let dragState = null; // { id, fromIndex, ghost, offsetX, offsetY, overIndex, overSide, lastClientY }
-  let autoScrollRAF = null;
-  let autoScrollSpeed = 0;
-
-  function startAutoScroll(){
-    if (autoScrollRAF) return;
-    const step = () => {
-      if (autoScrollSpeed !== 0) scrollHost.scrollTop += autoScrollSpeed;
-      autoScrollRAF = requestAnimationFrame(step);
-    };
-    autoScrollRAF = requestAnimationFrame(step);
-  }
-  function stopAutoScroll(){
-    autoScrollSpeed = 0;
-    if (autoScrollRAF) cancelAnimationFrame(autoScrollRAF);
-    autoScrollRAF = null;
-  }
-  function updateAutoScroll(clientY){
-    const EDGE = 95;
-    const rect = scrollHost.getBoundingClientRect();
-    const topDist = clientY - rect.top;
-    const botDist = rect.bottom - clientY;
-    const MAX = 22;
-
-    if (topDist < EDGE){
-      const t = Math.max(0, Math.min(1, (EDGE - topDist) / EDGE));
-      autoScrollSpeed = -Math.ceil(MAX * t);
-      startAutoScroll();
-      return;
-    }
-    if (botDist < EDGE){
-      const t = Math.max(0, Math.min(1, (EDGE - botDist) / EDGE));
-      autoScrollSpeed = Math.ceil(MAX * t);
-      startAutoScroll();
-      return;
-    }
-    autoScrollSpeed = 0;
-  }
-
-  function clearDropMarks(){
-    grid.querySelectorAll(".dropOverlay").forEach(el => {
-      el.classList.remove("show","before","after");
-    });
-    grid.querySelectorAll(".dropLabel").forEach(el => el.classList.remove("show"));
-  }
-
-  function makeGhostFromThumb(thumbEl){
-    const rect = thumbEl.getBoundingClientRect();
-    const ghost = thumbEl.cloneNode(true);
-    ghost.classList.add("ghost");
-    ghost.style.width = rect.width + "px";
-    ghost.style.height = rect.height + "px";
-    ghost.style.left = rect.left + "px";
-    ghost.style.top = rect.top + "px";
-    document.body.appendChild(ghost);
-    return ghost;
-  }
-
-  function hitTestTile(clientX, clientY){
-    const tiles = Array.from(grid.querySelectorAll(".thumb"));
-    for (const tile of tiles){
-      const r = tile.getBoundingClientRect();
-      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom){
-        const midY = (r.top + r.bottom) / 2;
-        const side = (clientY < midY) ? "before" : "after";
-        return { tile, rect: r, index: Number(tile.dataset.index), side };
-      }
-    }
-    return null;
-  }
-
-  async function commitReorder(fromIndex, toIndex){
-    await refreshMeta();
-    let listNow = folderItems(currentFolder);
-    if (!listNow.length) return;
-
-    toIndex = Math.max(0, Math.min(toIndex, listNow.length - 1));
-    if (toIndex === fromIndex) return;
-
-    const item = listNow.splice(fromIndex, 1)[0];
-    listNow.splice(toIndex, 0, item);
-    listNow.forEach((x,i)=> x.order = i+1);
-
-    const t = tx([STORE_META], "readwrite");
-    const s = t.objectStore(STORE_META);
-    for (const m of listNow){
-      const cur = await idbGet(s, m.id);
-      if (!cur) continue;
-      await idbPut(s, {...cur, order: m.order});
-    }
-    await waitTxDone(t);
-
-    toast(`Moved to #${toIndex+1}`);
-    await refreshMeta();
-    renderFolderGrid();
-    renderFolders();
-  }
-
-  // --- Render folder grid ---
-  async function renderFolderGrid(){
-    grid.innerHTML = "";
-    clearDropMarks();
-
-    const list = folderItems(currentFolder);
-    empty.style.display = list.length ? "none" : "";
-
-    list.forEach((m, idx) => {
-      const div = document.createElement("div");
-      div.className = "thumb";
-      div.dataset.id = m.id;
-      div.dataset.index = String(idx);
-
-      const img = document.createElement("img");
-      img.alt = m.filename || "photo";
-      div.appendChild(img);
-
-      const shownNum = (currentFolder === "Teardown") ? (m.order || (idx+1)) : (idx+1);
-
-      const num = document.createElement("div");
-      num.className = "num";
-      num.textContent = String(shownNum);
-      div.appendChild(num);
-
-      const move = document.createElement("div");
-      move.className = "moveHandle";
-      move.textContent = "MOVE";
-      div.appendChild(move);
-
-      const dropOverlay = document.createElement("div");
-      dropOverlay.className = "dropOverlay";
-      div.appendChild(dropOverlay);
-
-      const dropLabel = document.createElement("div");
-      dropLabel.className = "dropLabel";
-      dropLabel.textContent = "DROP";
-      div.appendChild(dropLabel);
-
-      const bar = document.createElement("div");
-      bar.className = "thumbBottom";
-      bar.innerHTML = `<span class="chip">${currentFolder}</span><span class="chip">${pad3(shownNum)}</span>`;
-      div.appendChild(bar);
-
-      // click = open editor
-      div.addEventListener("click", (e) => {
-        if (dragState) return;
-        const target = e.target;
-        if (target && target.classList && target.classList.contains("moveHandle")) return;
-        openViewer(currentFolder, idx);
-      });
-
-      // MOVE handle pointer drag
-      move.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (dragState) return;
-
-        move.setPointerCapture(e.pointerId);
-
-        const rect = div.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left;
-        const offsetY = e.clientY - rect.top;
-
-        const ghost = makeGhostFromThumb(div);
-        dragState = {
-          id: m.id,
-          fromIndex: idx,
-          ghost,
-          offsetX,
-          offsetY,
-          overIndex: idx,
-          overSide: "after",
-          lastClientY: e.clientY
-        };
-
-        clearDropMarks();
-        updateAutoScroll(e.clientY);
-        startAutoScroll();
-      });
-
-      window.addEventListener("pointermove", (e) => {
-        if (!dragState) return;
-
-        dragState.lastClientY = e.clientY;
-        updateAutoScroll(e.clientY);
-
-        // move ghost
-        dragState.ghost.style.left = (e.clientX - dragState.offsetX) + "px";
-        dragState.ghost.style.top  = (e.clientY - dragState.offsetY) + "px";
-
-        // hit test + show VERY obvious before/after
-        const hit = hitTestTile(e.clientX, e.clientY);
-        clearDropMarks();
-
-        if (hit){
-          dragState.overIndex = hit.index;
-          dragState.overSide = hit.side;
-
-          const overlayEl = hit.tile.querySelector(".dropOverlay");
-          const labelEl = hit.tile.querySelector(".dropLabel");
-          overlayEl.classList.add("show", hit.side);
-          labelEl.classList.add("show");
-          labelEl.textContent = hit.side === "before" ? `DROP BEFORE #${hit.index+1}` : `DROP AFTER #${hit.index+1}`;
-        }
-      }, { passive:true });
-
-      window.addEventListener("pointerup", async (e) => {
-        if (!dragState) return;
-
-        stopAutoScroll();
-        clearDropMarks();
-
-        const from = dragState.fromIndex;
-        let to = from;
-
-        // Convert overIndex+side to a final index
-        if (typeof dragState.overIndex === "number"){
-          to = dragState.overIndex + (dragState.overSide === "after" ? 1 : 0);
-          if (to > from) to -= 1;
-        }
-
-        dragState.ghost.remove();
-        dragState = null;
-
-        await commitReorder(from, to);
-      }, { passive:true });
-
-      // Load thumb
-      getThumbBlob(m.id).then(blob => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        img.src = url;
-        img.onload = () => URL.revokeObjectURL(url);
-      }).catch(()=>{});
-
-      grid.appendChild(div);
-    });
-  }
-
-  // --- Drop zone add ---
-  ["dragenter","dragover"].forEach(ev => dropZone.addEventListener(ev, (e) => {
-    e.preventDefault(); e.stopPropagation();
-    dropZone.classList.add("drag");
-  }));
-  ["dragleave","drop"].forEach(ev => dropZone.addEventListener(ev, (e) => {
-    e.preventDefault(); e.stopPropagation();
-    dropZone.classList.remove("drag");
-  }));
-  dropZone.addEventListener("drop", async (e) => {
-    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-    if (!files.length) return;
-    await addFilesToFolder(currentFolder, files);
-  });
-
-  fileInput.addEventListener("change", async (e) => {
-    const files = Array.from(e.target.files || []);
-    e.target.value = "";
-    if (files.length) await addFilesToFolder(currentFolder, files);
-  });
-
-  // --- Export ZIP ---
+  // ---------- Export (Mitchell order) ----------
   function downloadBlob(filename, blob){
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1168,6 +1156,7 @@
     a.remove();
     URL.revokeObjectURL(url);
   }
+
   async function getEditedBlob(id){
     try{
       const t = tx([STORE_EDIT], "readonly");
@@ -1182,37 +1171,88 @@
     return rec2?.blob || null;
   }
 
-  async function exportZipAll(){
+  async function exportZip(){
     if (!window.JSZip){
-      alert("JSZip failed to load. Connect to internet once and refresh.");
+      alert("JSZip failed to load (offline?). Connect once and try again.");
       return;
     }
+
     await refreshMeta();
-    await ensureFolderOrder("Teardown");
+    await ensureOrder();
     await refreshMeta();
 
+    const list = items();
+    if (!list.length){ toast("No photos."); return; }
+
     const zip = new JSZip();
-    for (const folder of FOLDERS){
-      const list = folderItems(folder);
-      const zf = zip.folder(folder);
-      for (let i=0; i<list.length; i++){
-        const m = list[i];
-        let blob = await getEditedBlob(m.id);
-        if (!blob) blob = await getOriginalBlob(m.id);
-        if (!blob) continue;
-        zf.file(`${pad3(i+1)}.jpg`, blob);
-      }
+
+    // ✅ root files: TEARDOWN_001.JPG etc (Mitchell order)
+    for (let i=0; i<list.length; i++){
+      const m = list[i];
+      let blob = await getEditedBlob(m.id);
+      if (!blob) blob = await getOriginalBlob(m.id);
+      if (!blob) continue;
+
+      const name = `${PREFIX}_${pad3(i+1)}.JPG`;
+      zip.file(name, blob);
     }
+
+    const rawName = (jobNameEl.value || "").trim();
+    const safeJob = rawName ? rawName.replace(/[^\w\- ]+/g, "").replace(/\s+/g,"_") : "Job";
+    const date = new Date().toISOString().slice(0,10);
+    const fileName = `Mitchell_${safeJob}_${date}.zip`;
+
     toast("Building ZIP…");
     const out = await zip.generateAsync({type:"blob"});
-    downloadBlob(`Mitchell_Photos_${new Date().toISOString().slice(0,10)}.zip`, out);
+    downloadBlob(fileName, out);
     toast("ZIP downloaded.");
   }
 
-  // --- Wipe folder / device ---
-  async function wipeFolder(folder){
+  // ---------- Import ZIP (tries to keep numeric order if present) ----------
+  function parseLeadingNumber(filename){
+    const base = (filename.split("/").pop() || filename).toUpperCase();
+    // matches TEARDOWN_001.JPG, 001.JPG, etc
+    const m = base.match(/(\d{1,4})/);
+    return m ? parseInt(m[1],10) : null;
+  }
+  async function importZipFile(file){
+    if (!window.JSZip){
+      alert("JSZip failed to load (offline?). Connect once and try again.");
+      return;
+    }
+
     await refreshMeta();
-    const list = folderItems(folder);
+    if (meta.length){
+      const ok = confirm("Importing a ZIP will REPLACE the current photos on this device. Continue?");
+      if (!ok) return;
+      await clearJob();
+    }
+
+    toast("Reading ZIP…");
+    const buf = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+
+    const entries = Object.keys(zip.files);
+    const imgs = [];
+    for (const path of entries){
+      const zf = zip.files[path];
+      if (zf.dir) continue;
+      if (!(/\.(jpg|jpeg|png|webp)$/i.test(path))) continue;
+      const blob = await zf.async("blob");
+      const name = path.split("/").pop() || "photo.jpg";
+      imgs.push({name, blob, order: parseLeadingNumber(name) ?? 999999});
+    }
+    imgs.sort((a,b) => (a.order - b.order) || a.name.localeCompare(b.name));
+
+    const files = imgs.map((x,i)=> new File([x.blob], x.name || `${PREFIX}_${pad3(i+1)}.JPG`, {type: x.blob.type || "image/jpeg"}));
+    await addFiles(files);
+    toast("Import complete.");
+  }
+
+  // ---------- Clear job / clear device ----------
+  async function clearJob(){
+    await refreshMeta();
+    const list = items();
     if (!list.length) return;
 
     const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
@@ -1228,49 +1268,108 @@
       await idbDel(sM, m.id).catch(()=>{});
     }
     await waitTxDone(t);
+
     await refreshMeta();
+    setHdrCount();
+    await renderGrid();
   }
 
-  async function wipeAllDevice(){
+  async function clearAllDevice(){
+    try{ closeViewer(); }catch{}
+    try{ camStop(); }catch{}
+    try{ if (db) db.close(); }catch{}
+
+    localStorage.removeItem(LS_JOB);
+    localStorage.removeItem("mitchell_shutter_pos_easy");
+
     await new Promise((resolve) => {
       const req = indexedDB.deleteDatabase(DB_NAME);
       req.onsuccess = resolve;
       req.onerror = resolve;
-      req.onblocked = resolve;
+      req.onblocked = () => setTimeout(resolve, 250);
     });
+
     db = await openDB();
     meta = [];
     setHdrCount();
+    jobNameEl.value = "";
+    toast("Cleared all.");
+    await renderGrid();
   }
 
-  // --- Viewer/editor implementation ---
-  let folderList = [];
-  let indexInFolder = -1;
-  let currentId = null;
+  // ---------- Viewer / Editor ----------
+  async function openViewer(idx){
+    await refreshMeta();
+    listNow = items();
+    idx = Math.max(0, Math.min(idx, listNow.length - 1));
+    indexInList = idx;
+    currentId = listNow[indexInList]?.id || null;
+    if (!currentId) return;
 
-  let baseBitmap = null;
-  let view = { scale: 1, tx: 0, ty: 0 };
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden","false");
 
-  let tool = "arrow";
-  let isDown = false;
-  let startW = {x:0,y:0};
-  let tempShape = null;
-  let anno = [];
-  let undoStack = [];
+    document.getElementById("posPill").textContent = `${indexInList+1} / ${listNow.length}`;
 
-  // angle tool state
-  let angleStage = 0;
+    const m = listNow[indexInList];
+    anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
+    undoStack = [];
+    angleStage = 0;
+    angleLine1 = null;
+    tempShape = null;
 
-  // text drag
-  let movingText = null;
+    selectedTextIndex = -1;
+    syncTextPanel();
 
-  // autosave
-  let saveTimer = null;
-  const AUTOSAVE_MS = 250;
+    document.getElementById("notesInput").value = m.notes || "";
 
-  const GREEN = "rgba(0,255,0,0.95)";
-  const DARK  = "rgba(0,0,0,0.55)";
-  const WIDTH = 4;
+    await loadOriginalBitmap(currentId);
+    resetView();
+    redraw();
+    setArrows();
+    setAngleHint();
+  }
+
+  async function step(dir){
+    const next = indexInList + dir;
+    if (next < 0 || next >= listNow.length) return;
+    await flushAutosave();
+    await openViewer(next);
+  }
+
+  function closeViewer(){
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden","true");
+    baseBitmap = null;
+    listNow = [];
+    indexInList = -1;
+    currentId = null;
+    anno = [];
+    undoStack = [];
+    angleStage = 0;
+    angleLine1 = null;
+    tempShape = null;
+    selectedTextIndex = -1;
+    syncTextPanel();
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
+  function setArrows(){
+    const canPrev = indexInList > 0;
+    const canNext = indexInList < listNow.length - 1;
+    document.getElementById("prevBtn").disabled = !canPrev;
+    document.getElementById("nextBtn").disabled = !canNext;
+    document.getElementById("bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
+    document.getElementById("bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
+  }
+
+  async function loadOriginalBitmap(id){
+    const t = tx([STORE_ORIG], "readonly");
+    const rec = await idbGet(t.objectStore(STORE_ORIG), id);
+    baseBitmap = rec?.blob ? await createImageBitmap(rec.blob) : null;
+    resizeCanvasToContainer();
+  }
 
   function resizeCanvasToContainer(){
     const host = document.getElementById("vLeft").getBoundingClientRect();
@@ -1280,17 +1379,6 @@
     canvas.style.width = host.width + "px";
     canvas.style.height = host.height + "px";
     ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-
-  async function loadOriginalBitmap(id){
-    const t = tx([STORE_ORIG], "readonly");
-    const rec = await idbGet(t.objectStore(STORE_ORIG), id);
-    if (!rec?.blob){
-      baseBitmap = null;
-      return;
-    }
-    baseBitmap = await createImageBitmap(rec.blob);
-    resizeCanvasToContainer();
   }
 
   function resetView(){
@@ -1316,16 +1404,6 @@
     return { x: (x - view.tx) / view.scale, y: (y - view.ty) / view.scale };
   }
 
-  function setTool(next){
-    tool = next;
-    toolRow.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
-    angleStage = 0;
-    angleHint.style.display = (tool === "angle") ? "" : "none";
-    const isText = (tool === "text");
-    textRow.style.display = isText ? "" : "none";
-    textHint.style.display = isText ? "" : "none";
-  }
-
   function scheduleAutosave(){
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => autosave().catch(console.error), AUTOSAVE_MS);
@@ -1338,11 +1416,6 @@
     }
   }
 
-  function pushUndo(){
-    undoStack.push(structuredClone(anno));
-    if (undoStack.length > 60) undoStack.shift();
-  }
-
   async function persistMetaPatch(id, patch){
     const t = tx([STORE_META], "readwrite");
     const s = t.objectStore(STORE_META);
@@ -1350,6 +1423,7 @@
     if (!cur){ t.abort(); return; }
     await idbPut(s, {...cur, ...patch});
     await waitTxDone(t);
+
     const idx = meta.findIndex(m => m.id === id);
     if (idx >= 0){
       if (patch.notes !== undefined) meta[idx].notes = patch.notes;
@@ -1359,12 +1433,49 @@
 
   async function autosave(){
     if (!currentId) return;
-    const notes = notesInput.value || "";
+    const notes = document.getElementById("notesInput").value || "";
     await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
     await renderAndStoreEdited(currentId);
-    // update thumbnail in grid instantly if we are in folder view
-    if (currentFolder) renderFolderGrid();
-    renderFolders();
+    // refresh thumbs grid in background-feel (cheap)
+    ensureThumb(currentId).catch(()=>{});
+  }
+
+  function pushUndo(){
+    undoStack.push(structuredClone(anno));
+    if (undoStack.length > 60) undoStack.shift();
+  }
+
+  function setTool(next){
+    tool = next;
+    document.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
+    angleStage = 0;
+    angleLine1 = null;
+    setAngleHint();
+  }
+  function setAngleHint(){
+    document.getElementById("angleHint").style.display = (tool === "angle") ? "" : "none";
+  }
+
+  function redraw(){
+    resizeCanvasToContainer();
+    const cw = canvas.clientWidth;
+    const ch = canvas.clientHeight;
+    ctx.clearRect(0,0,cw,ch);
+
+    if (baseBitmap){
+      ctx.save();
+      ctx.translate(view.tx, view.ty);
+      ctx.scale(view.scale, view.scale);
+      ctx.drawImage(baseBitmap, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(0,0,cw,ch);
+    }
+
+    drawShapes(anno, false);
+    if (tempShape) drawShapes([tempShape], true);
+    drawAngleLabelIfPresent();
   }
 
   function roundRect(ctx, x, y, w, h, r){
@@ -1378,41 +1489,51 @@
     ctx.closePath();
   }
 
-  function drawTextBox(ctx2, s){
-    const padding = 14;
-    const fontSize = 34; // BIGGER text
-    ctx2.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+  function drawTextBox(s, dashed, selected){
+    ctx.save();
+    ctx.translate(view.tx, view.ty);
+    ctx.scale(view.scale, view.scale);
+
+    const padding = 10;
+    const fontSize = 22;
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
     const lines = (s.text || "").split("\n");
     const lineH = fontSize * 1.2;
-
     let maxW = 0;
-    for (const line of lines) maxW = Math.max(maxW, ctx2.measureText(line).width);
-    const w = Math.max(90, maxW + padding*2);
-    const h = Math.max(56, lines.length * lineH + padding*2);
-
+    for (const line of lines) maxW = Math.max(maxW, ctx.measureText(line).width);
+    const w = Math.max(40, maxW + padding*2);
+    const h = Math.max(28, lines.length * lineH + padding*2);
     s.w = w; s.h = h;
 
-    ctx2.fillStyle = GREEN;
-    ctx2.strokeStyle = "rgba(0,0,0,0.9)";
-    ctx2.lineWidth = 4;
-    roundRect(ctx2, s.x, s.y, w, h, 12);
-    ctx2.fill();
-    ctx2.stroke();
+    ctx.setLineDash(dashed ? [10,8] : []);
+    ctx.fillStyle = GREEN;
+    ctx.strokeStyle = selected ? "rgba(59,130,246,0.95)" : "rgba(0,0,0,0.9)";
+    ctx.lineWidth = selected ? 5 : 3;
+    roundRect(ctx, s.x, s.y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-    ctx2.fillStyle = "rgba(0,0,0,1)";
-    ctx2.textAlign = "center";
-    ctx2.textBaseline = "middle";
+    ctx.fillStyle = "rgba(0,0,0,1)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     const cx = s.x + w/2;
     const cy = s.y + h/2;
     const totalH = lines.length * lineH;
     let y = cy - totalH/2 + lineH/2;
     for (const line of lines){
-      ctx2.fillText(line, cx, y);
+      ctx.fillText(line, cx, y);
       y += lineH;
     }
+    ctx.restore();
   }
 
-  function drawShapeStroke(s, color, width, dashed){
+  function drawShapeStroke(s, color, width, dashed, selected){
+    if (s.type === "text"){
+      drawTextBox(s, dashed, selected);
+      return;
+    }
+
     ctx.save();
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
@@ -1426,21 +1547,14 @@
     const label = (txt, x, y) => {
       ctx.save();
       ctx.setLineDash([]);
-      ctx.font = `${18 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      ctx.font = `${14 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
       ctx.fillStyle = color;
       ctx.strokeStyle = "rgba(0,0,0,0.65)";
-      ctx.lineWidth = 6 / view.scale;
+      ctx.lineWidth = 4 / view.scale;
       ctx.strokeText(txt, x, y);
       ctx.fillText(txt, x, y);
       ctx.restore();
     };
-
-    if (s.type === "text"){
-      // draw text in world coords
-      drawTextBox(ctx, s);
-      ctx.restore();
-      return;
-    }
 
     if (["line","ruler","angleLine"].includes(s.type)){
       ctx.beginPath();
@@ -1449,7 +1563,7 @@
       ctx.stroke();
       if (s.type === "ruler"){
         const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
-        label(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 10, (s.y1+s.y2)/2 - 10);
+        label(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 8, (s.y1+s.y2)/2 - 8);
       }
     } else if (s.type === "rect"){
       const x = Math.min(s.x1, s.x2);
@@ -1480,7 +1594,7 @@
       const dx = s.x2 - s.x1;
       const dy = s.y2 - s.y1;
       const ang = Math.atan2(dy, dx);
-      const headLen = 22 / view.scale;
+      const headLen = 18 / view.scale;
       const a1 = ang - Math.PI / 8;
       const a2 = ang + Math.PI / 8;
       ctx.beginPath();
@@ -1495,9 +1609,11 @@
   }
 
   function drawShapes(list, dashed){
-    for (const s of list){
-      drawShapeStroke(s, DARK, WIDTH+2, dashed);
-      drawShapeStroke(s, GREEN, WIDTH, dashed);
+    for (let i=0; i<list.length; i++){
+      const s = list[i];
+      const isSelectedText = (s.type === "text" && i === selectedTextIndex);
+      drawShapeStroke(s, DARK, WIDTH+2, dashed, isSelectedText);
+      drawShapeStroke(s, GREEN, WIDTH, dashed, isSelectedText);
     }
   }
 
@@ -1517,76 +1633,122 @@
     ctx.save();
     ctx.translate(view.tx, view.ty);
     ctx.scale(view.scale, view.scale);
-    ctx.font = `${22 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    ctx.font = `${16 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
     ctx.fillStyle = GREEN;
     ctx.strokeStyle = "rgba(0,0,0,0.65)";
-    ctx.lineWidth = 7 / view.scale;
+    ctx.lineWidth = 5 / view.scale;
     const txt = `${deg.toFixed(1)}°`;
-    const x = l2.x1 + 14;
-    const y = l2.y1 - 14;
+    const x = l2.x1 + 10;
+    const y = l2.y1 - 10;
     ctx.strokeText(txt, x, y);
     ctx.fillText(txt, x, y);
     ctx.restore();
   }
 
-  function redraw(){
-    resizeCanvasToContainer();
-    const cw = canvas.clientWidth;
-    const ch = canvas.clientHeight;
-    ctx.clearRect(0,0,cw,ch);
-
-    if (baseBitmap){
-      ctx.save();
-      ctx.translate(view.tx, view.ty);
-      ctx.scale(view.scale, view.scale);
-      ctx.drawImage(baseBitmap, 0, 0);
-      ctx.restore();
-    }
-
-    drawShapes(anno, false);
-    if (tempShape) drawShapes([tempShape], true);
-    drawAngleLabelIfPresent();
-  }
-
   async function renderAndStoreEdited(id){
     if (!baseBitmap) return;
+
     const w = baseBitmap.width;
     const h = baseBitmap.height;
 
     const off = document.createElement("canvas");
-    off.width = w;
-    off.height = h;
+    off.width = w; off.height = h;
     const octx = off.getContext("2d");
     octx.drawImage(baseBitmap, 0, 0);
 
-    const drawOne = (s, color, ww) => {
-      if (s.type === "text"){
-        octx.save();
-        octx.fillStyle = color === GREEN ? GREEN : "rgba(0,0,0,0.55)";
-        // for text we always draw green fill + black outline + black text
-        drawTextBox(octx, s);
-        octx.restore();
-        return;
-      }
+    const roundRect2 = (c, x, y, ww, hh, r) => {
+      const rr = Math.min(r, ww/2, hh/2);
+      c.beginPath();
+      c.moveTo(x+rr, y);
+      c.arcTo(x+ww, y, x+ww, y+hh, rr);
+      c.arcTo(x+ww, y+hh, x, y+hh, rr);
+      c.arcTo(x, y+hh, x, y, rr);
+      c.arcTo(x, y, x+ww, y, rr);
+      c.closePath();
+    };
 
+    const drawText = (s, selected) => {
+      const padding = 10;
+      const fontSize = 22;
+      octx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      const lines = (s.text || "").split("\n");
+      const lineH = fontSize * 1.2;
+      let maxW = 0;
+      for (const line of lines) maxW = Math.max(maxW, octx.measureText(line).width);
+      const ww = Math.max(40, maxW + padding*2);
+      const hh = Math.max(28, lines.length * lineH + padding*2);
+      s.w = ww; s.h = hh;
+
+      octx.fillStyle = GREEN;
+      octx.strokeStyle = "rgba(0,0,0,0.9)";
+      octx.lineWidth = 3;
+      roundRect2(octx, s.x, s.y, ww, hh, 10);
+      octx.fill();
+      octx.stroke();
+
+      octx.fillStyle = "rgba(0,0,0,1)";
+      octx.textAlign = "center";
+      octx.textBaseline = "middle";
+      const cx = s.x + ww/2;
+      const cy = s.y + hh/2;
+      const totalH = lines.length * lineH;
+      let y = cy - totalH/2 + lineH/2;
+      for (const line of lines){
+        octx.fillText(line, cx, y);
+        y += lineH;
+      }
+    };
+
+    const drawLine = (s, color, ww) => {
       octx.save();
       octx.strokeStyle = color;
       octx.lineWidth = ww;
       octx.lineCap = "round";
       octx.lineJoin = "round";
+      octx.beginPath();
+      octx.moveTo(s.x1,s.y1);
+      octx.lineTo(s.x2,s.y2);
+      octx.stroke();
+      octx.restore();
+    };
 
+    const drawLabel = (txt, x, y, color) => {
+      octx.save();
+      octx.font = `18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      octx.fillStyle = color;
+      octx.strokeStyle = "rgba(0,0,0,0.65)";
+      octx.lineWidth = 6;
+      octx.strokeText(txt, x, y);
+      octx.fillText(txt, x, y);
+      octx.restore();
+    };
+
+    const drawShape = (s, color, ww) => {
+      if (s.type === "text"){ drawText(s); return; }
       if (["line","ruler","angleLine"].includes(s.type)){
-        octx.beginPath();
-        octx.moveTo(s.x1,s.y1);
-        octx.lineTo(s.x2,s.y2);
-        octx.stroke();
-      } else if (s.type === "rect"){
+        drawLine(s, color, ww);
+        if (s.type === "ruler"){
+          const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+          drawLabel(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 10, (s.y1+s.y2)/2 - 10, color);
+        }
+        return;
+      }
+      if (s.type === "rect"){
         const x = Math.min(s.x1,s.x2), y=Math.min(s.y1,s.y2);
         const ww2 = Math.abs(s.x2-s.x1), hh2=Math.abs(s.y2-s.y1);
+        octx.save();
+        octx.strokeStyle = color;
+        octx.lineWidth = ww;
         octx.strokeRect(x,y,ww2,hh2);
-      } else if (s.type === "circle"){
+        octx.restore();
+        return;
+      }
+      if (s.type === "circle"){
         const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2;
         const rx=Math.abs(s.x2-s.x1)/2, ry=Math.abs(s.y2-s.y1)/2;
+        octx.save();
+        octx.strokeStyle = color;
+        octx.lineWidth = ww;
         octx.beginPath();
         if (octx.ellipse) octx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
         else {
@@ -1594,32 +1756,33 @@
           octx.arc(0,0,1,0,Math.PI*2); octx.restore();
         }
         octx.stroke();
-      } else if (s.type === "arrow"){
-        octx.beginPath();
-        octx.moveTo(s.x1,s.y1);
-        octx.lineTo(s.x2,s.y2);
-        octx.stroke();
+        octx.restore();
+        return;
+      }
+      if (s.type === "arrow"){
+        drawLine(s, color, ww);
         const dx=s.x2-s.x1, dy=s.y2-s.y1;
         const ang=Math.atan2(dy,dx);
         const head=28;
         const a1=ang-Math.PI/8, a2=ang+Math.PI/8;
+        octx.save();
+        octx.strokeStyle = color;
+        octx.lineWidth = ww;
         octx.beginPath();
         octx.moveTo(s.x2,s.y2);
         octx.lineTo(s.x2-Math.cos(a1)*head, s.y2-Math.sin(a1)*head);
         octx.moveTo(s.x2,s.y2);
         octx.lineTo(s.x2-Math.cos(a2)*head, s.y2-Math.sin(a2)*head);
         octx.stroke();
+        octx.restore();
       }
-
-      octx.restore();
     };
 
     for (const s of anno){
-      drawOne(s, DARK, WIDTH+2);
-      drawOne(s, GREEN, WIDTH);
+      drawShape(s, DARK, WIDTH+2);
+      drawShape(s, GREEN, WIDTH);
     }
 
-    // angle label baked
     const lines = anno.filter(s => s.type === "angleLine");
     if (lines.length >= 2){
       const l2 = lines[lines.length-1];
@@ -1631,17 +1794,7 @@
       const lb = Math.hypot(b.x,b.y);
       if (la && lb){
         const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
-        octx.save();
-        octx.font = `28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-        octx.fillStyle = GREEN;
-        octx.strokeStyle = "rgba(0,0,0,0.65)";
-        octx.lineWidth = 8;
-        const txt = `${deg.toFixed(1)}°`;
-        const x = l2.x1 + 16;
-        const y = l2.y1 - 16;
-        octx.strokeText(txt, x, y);
-        octx.fillText(txt, x, y);
-        octx.restore();
+        drawLabel(`${deg.toFixed(1)}°`, l2.x1 + 12, l2.y1 - 12, GREEN);
       }
     }
 
@@ -1660,12 +1813,28 @@
     const tc = document.createElement("canvas");
     tc.width = tw; tc.height = th;
     tc.getContext("2d").drawImage(off, 0, 0, tw, th);
+
     const thumbBlob = await new Promise(res => tc.toBlob(res, "image/jpeg", 0.85));
     if (thumbBlob){
       const t2 = tx([STORE_THUMB], "readwrite");
       await idbPut(t2.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
       await waitTxDone(t2);
     }
+  }
+
+  // ---- Text selection + panel sync (no prompts) ----
+  const textBoxEl = document.getElementById("textBox");
+  const textSelPill = document.getElementById("textSelPill");
+
+  function syncTextPanel(){
+    if (selectedTextIndex < 0 || !anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text"){
+      textSelPill.textContent = "Selected: none";
+      // do not wipe user's typed content unless it's empty
+      return;
+    }
+    const s = anno[selectedTextIndex];
+    textSelPill.textContent = `Selected: #${selectedTextIndex+1}`;
+    textBoxEl.value = s.text || "";
   }
 
   function pointInText(s, p){
@@ -1676,94 +1845,47 @@
   function topmostTextAt(p){
     for (let i = anno.length - 1; i >= 0; i--){
       const s = anno[i];
-      if (s.type === "text" && pointInText(s, p)) return {shape:s, index:i};
+      if (s.type === "text" && pointInText(s, p)) return i;
     }
-    return null;
+    return -1;
   }
 
-  async function openViewer(folder, idx){
-    await refreshMeta();
-    currentFolder = folder;
-    folderList = folderItems(folder);
-    indexInFolder = Math.max(0, Math.min(idx, folderList.length - 1));
-    currentId = folderList[indexInFolder]?.id || null;
-    if (!currentId) return;
+  let movingText = null;
 
-    folderPill.textContent = folder;
-    overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden","false");
-
-    posPill.textContent = `${indexInFolder+1} / ${folderList.length}`;
-
-    const m = folderList[indexInFolder];
-    anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
-    undoStack = [];
-    angleStage = 0;
-    notesInput.value = m.notes || "";
-
-    await loadOriginalBitmap(currentId);
-    resetView();
-    redraw();
-    setArrows();
-  }
-
-  function closeViewer(){
-    overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden","true");
-    baseBitmap = null;
-    folderList = [];
-    indexInFolder = -1;
-    currentId = null;
-    anno = [];
-    undoStack = [];
-    angleStage = 0;
-    tempShape = null;
-    movingText = null;
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-
-  function setArrows(){
-    const canPrev = indexInFolder > 0;
-    const canNext = indexInFolder < folderList.length - 1;
-    bigPrev.classList.toggle("disabled", !canPrev);
-    bigNext.classList.toggle("disabled", !canNext);
-    prevBtn.disabled = !canPrev;
-    nextBtn.disabled = !canNext;
-  }
-
-  async function step(dir){
-    const next = indexInFolder + dir;
-    if (next < 0 || next >= folderList.length) return;
-    await flushAutosave();
-    await openViewer(currentFolder, next);
-  }
-
-  // canvas interactions
   function setupCanvas(){
     canvas.addEventListener("pointerdown", (e) => {
       if (!baseBitmap) return;
-      canvas.setPointerCapture(e.pointerId);
+      canvas.setPointerCapture(e.pointerId); // keep smooth drag
+
       isDown = true;
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
 
-      if (tool === "pan"){
-        startW = { x:w.x, y:w.y, _sx:p.x, _sy:p.y, _tx:view.tx, _ty:view.ty };
+      // selecting / moving a text box
+      const hitIdx = topmostTextAt(w);
+      if (hitIdx >= 0){
+        selectedTextIndex = hitIdx;
+        syncTextPanel();
+        redraw();
+
+        const s = anno[hitIdx];
+        movingText = { index: hitIdx, dx: w.x - s.x, dy: w.y - s.y };
+        tempShape = null;
         return;
       }
 
-      // move text if grabbed
-      const hitText = topmostTextAt(w);
-      if (hitText){
-        movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
-        tempShape = null;
-        redraw();
-        return;
-      }
+      // if clicked elsewhere, clear text selection
+      selectedTextIndex = -1;
+      syncTextPanel();
+      redraw();
 
       startW = w;
       tempShape = null;
+
+      if (tool === "pan"){
+        startW._sx = p.x; startW._sy = p.y;
+        startW._tx = view.tx; startW._ty = view.ty;
+      }
     });
 
     canvas.addEventListener("pointermove", (e) => {
@@ -1824,101 +1946,58 @@
         return;
       }
 
-      // angle: two lines
+      // angle tool: two lines
       if (angleStage === 0){
+        angleLine1 = structuredClone(tempShape);
         pushUndo();
-        anno.push(structuredClone(tempShape));
+        anno.push(angleLine1);
         angleStage = 1;
         tempShape = null;
         redraw();
         scheduleAutosave();
       } else {
+        const line2 = structuredClone(tempShape);
         pushUndo();
-        anno.push(structuredClone(tempShape));
+        anno.push(line2);
         angleStage = 0;
+        angleLine1 = null;
         tempShape = null;
         redraw();
         scheduleAutosave();
       }
     });
-
-    window.addEventListener("resize", () => {
-      if (!overlay.classList.contains("show")) return;
-      redraw();
-    }, { passive:true });
   }
 
-  // --- Buttons in editor ---
-  toolRow.addEventListener("click", (e) => {
-    const t = e.target.closest(".toolIcon");
-    if (!t) return;
-    setTool(t.dataset.tool);
-  });
-
-  addTextBtn.addEventListener("click", () => {
-    const txt = (textInput.value || "").trim();
-    if (!txt){ toast("Type text first"); return; }
-    if (!baseBitmap) return;
-
-    // place near top-left of the visible image
-    pushUndo();
-    // convert screen point to world point
-    const p = { x: 80, y: 110 };
-    const w = screenToWorld(p.x, p.y);
-
-    anno.push({ type:"text", x:w.x, y:w.y, text: txt, w:0, h:0 });
-    textInput.value = "";
-    redraw();
-    scheduleAutosave();
-  });
-
-  notesInput.addEventListener("input", scheduleAutosave);
-
-  document.getElementById("undoBtn").addEventListener("click", () => {
-    if (!undoStack.length) return;
-    anno = undoStack.pop();
-    angleStage = 0;
-    redraw();
-    scheduleAutosave();
-  });
-
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    if (!anno.length) return;
-    if (!confirm("Clear all markup on this photo?")) return;
-    pushUndo();
-    anno = [];
-    angleStage = 0;
-    redraw();
-    scheduleAutosave();
-  });
-
-  document.getElementById("revertBtn").addEventListener("click", async () => {
+  async function revertToOriginal(){
     if (!currentId) return;
-    if (!confirm("Revert this photo back to ORIGINAL (remove edits/markup)?")) return;
+    if (!confirm("Revert this photo back to ORIGINAL (remove all edits/markup)?")) return;
+
     anno = [];
     undoStack = [];
     angleStage = 0;
+    angleLine1 = null;
+    selectedTextIndex = -1;
+    syncTextPanel();
 
     const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
     await idbDel(t.objectStore(STORE_EDIT), currentId).catch(()=>{});
     await idbDel(t.objectStore(STORE_THUMB), currentId).catch(()=>{});
     await waitTxDone(t);
 
-    await persistMetaPatch(currentId, { anno: [], notes: notesInput.value || "" });
+    await persistMetaPatch(currentId, { anno: [], notes: document.getElementById("notesInput").value || "" });
     await ensureThumb(currentId);
 
     redraw();
+    scheduleAutosave();
     toast("Reverted.");
-    renderFolderGrid();
-    renderFolders();
-  });
+    renderGrid();
+  }
 
-  document.getElementById("deleteBtn").addEventListener("click", async () => {
+  async function deleteCurrent(){
     if (!currentId) return;
     if (!confirm("Delete this photo?")) return;
 
     const id = currentId;
-    const folder = currentFolder;
 
     const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
     await idbDel(t.objectStore(STORE_ORIG), id).catch(()=>{});
@@ -1928,70 +2007,410 @@
     await waitTxDone(t);
 
     await refreshMeta();
-    if (folder === "Teardown") await ensureFolderOrder("Teardown");
+    await ensureOrder();
     await refreshMeta();
 
-    toast("Deleted.");
+    const newList = items();
+    if (!newList.length){
+      closeViewer();
+      toast("Deleted.");
+      await renderGrid();
+      return;
+    }
+    const nextIndex = Math.min(indexInList, newList.length - 1);
     closeViewer();
-    await openFolder(folder);
-  });
-
-  // overlay nav
-  document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
-  prevBtn.addEventListener("click", () => step(-1));
-  nextBtn.addEventListener("click", () => step(+1));
-  bigPrev.addEventListener("click", () => step(-1));
-  bigNext.addEventListener("click", () => step(+1));
-
-  document.addEventListener("keydown", async (e) => {
-    if (!overlay.classList.contains("show")) return;
-    if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
-    if (e.key === "ArrowLeft") step(-1);
-    if (e.key === "ArrowRight") step(+1);
-  });
-
-  // --- Top-level buttons ---
-  document.getElementById("backHomeBtn").addEventListener("click", () => {
-    if (overlay.classList.contains("show")) closeViewer();
-    showHome();
-    renderFolders();
-  });
-
-  document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
-  document.getElementById("folderExportZipBtn").addEventListener("click", exportZipAll);
-
-  document.getElementById("wipeBtn").addEventListener("click", async () => {
-    if (!confirm("Wipe EVERYTHING on this device?")) return;
-    await wipeAllDevice();
-    toast("Wiped.");
-    showHome();
-    renderFolders();
-  });
-
-  document.getElementById("folderWipeBtn").addEventListener("click", async () => {
-    if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
-    await wipeFolder(currentFolder);
-    toast("Folder wiped.");
-    await openFolder(currentFolder);
-    await renderFolders();
-  });
-
-  // --- Boot ---
-  async function init(){
-    db = await openDB();
-    setupCanvas();
-    setTool("arrow");
-    showHome();
-    await renderFolders();
-    toast("Ready");
+    await renderGrid();
+    toast("Deleted.");
+    openViewer(nextIndex);
   }
 
-  init().catch(err => {
-    console.error(err);
-    alert("Failed to load app (IndexedDB blocked?). Try another browser profile/incognito off.");
-  });
+  // ---------- Camera Mode ----------
+  const camOverlay = document.getElementById("camOverlay");
+  const camVideo = document.getElementById("camVideo");
+  const camThumbs = document.getElementById("camThumbs");
+  const camCount = document.getElementById("camCount");
+  const camLive = document.getElementById("camLive");
+
+  let camStream = null;
+  let camFacing = "environment";
+  let camShots = [];
+
+  const LS_SHUTTER = "mitchell_shutter_pos_easy";
+  let shutterMoveMode = false;
+  let shutterDrag = null;
+
+  function playSnapSound(){
+    try{
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = ac.currentTime;
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(1200, t0);
+      osc.frequency.exponentialRampToValueAtTime(250, t0 + 0.03);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.07);
+      setTimeout(()=>ac.close().catch(()=>{}), 200);
+    }catch{}
+  }
+
+  function loadShutterPos(){
+    try{
+      const raw = localStorage.getItem(LS_SHUTTER);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || typeof obj.x !== "number" || typeof obj.y !== "number") return null;
+      return obj;
+    }catch{ return null; }
+  }
+  function saveShutterPos(x, y){
+    localStorage.setItem(LS_SHUTTER, JSON.stringify({x, y}));
+  }
+  function applyShutterPos(x, y){
+    camLive.style.setProperty("--shutter-x", x + "%");
+    camLive.style.setProperty("--shutter-y", y + "%");
+    camLive.style.setProperty("--shutter-b", "auto");
+  }
+  function resetShutterPos(){
+    camLive.style.removeProperty("--shutter-x");
+    camLive.style.removeProperty("--shutter-y");
+    camLive.style.removeProperty("--shutter-b");
+    localStorage.removeItem(LS_SHUTTER);
+  }
+
+  function updateCamLayout(){
+    if (!camOverlay.classList.contains("show")) return;
+    const landscape = window.matchMedia("(orientation: landscape)").matches || (window.innerWidth > window.innerHeight);
+    camOverlay.classList.toggle("landscape", landscape);
+  }
+
+  async function camStart(){
+    camShots = [];
+    renderCamThumbs();
+    camOverlay.classList.add("show");
+    camOverlay.setAttribute("aria-hidden","false");
+
+    const pos = loadShutterPos();
+    if (pos) applyShutterPos(pos.x, pos.y);
+
+    updateCamLayout();
+    window.addEventListener("resize", updateCamLayout, {passive:true});
+    window.addEventListener("orientationchange", updateCamLayout, {passive:true});
+
+    if (!navigator.mediaDevices?.getUserMedia){
+      alert("Camera Mode not supported on this browser. Use Upload Photos instead.");
+      camStop();
+      return;
+    }
+    await camOpenStream();
+  }
+
+  async function camOpenStream(){
+    if (camStream){
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+    try{
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: camFacing },
+        audio: false
+      });
+      camVideo.srcObject = camStream;
+      await camVideo.play().catch(()=>{});
+      updateCamLayout();
+    }catch(err){
+      console.error(err);
+      alert("Camera permission blocked. Allow camera access, then try again.");
+      camStop();
+    }
+  }
+
+  function camStop(){
+    camOverlay.classList.remove("show");
+    camOverlay.classList.remove("landscape");
+    camOverlay.setAttribute("aria-hidden","true");
+
+    shutterMoveMode = false;
+    camLive.classList.remove("moveMode");
+    document.getElementById("camMoveShutterBtn").textContent = "Move Shutter";
+
+    window.removeEventListener("resize", updateCamLayout);
+    window.removeEventListener("orientationchange", updateCamLayout);
+
+    if (camStream){
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+    camVideo.srcObject = null;
+  }
+
+  function renderCamThumbs(){
+    camThumbs.innerHTML = "";
+    camCount.textContent = String(camShots.length);
+    for (const s of camShots){
+      const img = document.createElement("img");
+      img.src = s.url;
+      camThumbs.appendChild(img);
+    }
+  }
+
+  async function camSnap(){
+    if (!camVideo.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = camVideo.videoWidth;
+    c.height = camVideo.videoHeight;
+    const cctx = c.getContext("2d");
+    cctx.drawImage(camVideo, 0, 0, c.width, c.height);
+    const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
+    if (!blob) return;
+
+    playSnapSound();
+
+    const url = URL.createObjectURL(blob);
+    camShots.push({blob, url});
+    renderCamThumbs();
+    toast(`Captured ${camShots.length}`);
+  }
+
+  async function camDone(){
+    if (!camShots.length){
+      camStop();
+      return;
+    }
+    const files = camShots.map((s, i) => new File([s.blob], `${PREFIX}_${Date.now()}_${i+1}.JPG`, {type:"image/jpeg"}));
+    camShots.forEach(s => URL.revokeObjectURL(s.url));
+    camShots = [];
+    renderCamThumbs();
+    camStop();
+    await addFiles(files);
+  }
+
+  function camCancel(){
+    camShots.forEach(s => URL.revokeObjectURL(s.url));
+    camShots = [];
+    renderCamThumbs();
+    camStop();
+  }
+
+  function camClear(){
+    camShots.forEach(s => URL.revokeObjectURL(s.url));
+    camShots = [];
+    renderCamThumbs();
+  }
+
+  async function camFlip(){
+    camFacing = (camFacing === "environment") ? "user" : "environment";
+    await camOpenStream();
+  }
+
+  function toggleMoveShutter(){
+    shutterMoveMode = !shutterMoveMode;
+    camLive.classList.toggle("moveMode", shutterMoveMode);
+    document.getElementById("camMoveShutterBtn").textContent = shutterMoveMode ? "Lock Shutter" : "Move Shutter";
+    toast(shutterMoveMode ? "Drag shutter to place it." : "Shutter locked.");
+  }
+
+  function percentFromPoint(clientX, clientY){
+    const r = camLive.getBoundingClientRect();
+    const x = ((clientX - r.left) / r.width) * 100;
+    const y = ((clientY - r.top) / r.height) * 100;
+    return {
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y))
+    };
+  }
+
+  // ---------- UI wiring ----------
+  function wireUI(){
+    // upload photos
+    const fileInput = document.getElementById("fileInput");
+    fileInput.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (files.length) await addFiles(files);
+    });
+
+    // drop zone
+    const dz = document.getElementById("dropZone");
+    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.add("drag");
+    }));
+    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.remove("drag");
+    }));
+    dz.addEventListener("drop", async (e) => {
+      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
+      if (!files.length) return;
+      await addFiles(files);
+    });
+
+    // export
+    document.getElementById("exportZipBtn").addEventListener("click", exportZip);
+
+    // clear job
+    document.getElementById("clearJobBtn").addEventListener("click", async () => {
+      if (!confirm("Clear this job (remove all photos on this device)?")) return;
+      await clearJob();
+      toast("Job cleared.");
+    });
+
+    // clear device
+    document.getElementById("wipeBtn").addEventListener("click", async () => {
+      if (!confirm("CLEAR ALL on this device? (Removes everything stored in this browser)")) return;
+      await clearAllDevice();
+    });
+
+    // import zip
+    const zipInput = document.getElementById("zipInput");
+    zipInput.addEventListener("change", async (e) => {
+      const file = (e.target.files || [])[0];
+      e.target.value = "";
+      if (!file) return;
+      await importZipFile(file);
+      await renderGrid();
+    });
+
+    // overlay
+    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
+    document.getElementById("prevBtn").addEventListener("click", () => step(-1));
+    document.getElementById("nextBtn").addEventListener("click", () => step(+1));
+    document.getElementById("bigPrev").addEventListener("click", () => step(-1));
+    document.getElementById("bigNext").addEventListener("click", () => step(+1));
+
+    document.addEventListener("keydown", async (e) => {
+      if (!overlay.classList.contains("show")) return;
+      if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
+      if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "ArrowRight") step(+1);
+    });
+
+    // tools
+    document.getElementById("toolRow").addEventListener("click", (e) => {
+      const t = e.target.closest(".toolIcon");
+      if (!t) return;
+      setTool(t.dataset.tool);
+    });
+
+    document.getElementById("notesInput").addEventListener("input", () => scheduleAutosave());
+
+    document.getElementById("undoBtn").addEventListener("click", () => {
+      if (!undoStack.length) return;
+      anno = undoStack.pop();
+      angleStage = 0; angleLine1 = null;
+      selectedTextIndex = -1;
+      syncTextPanel();
+      redraw();
+      scheduleAutosave();
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (!anno.length) return;
+      if (!confirm("Clear all markup on this photo?")) return;
+      pushUndo();
+      anno = [];
+      angleStage = 0; angleLine1 = null;
+      selectedTextIndex = -1;
+      syncTextPanel();
+      redraw();
+      scheduleAutosave();
+    });
+
+    document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
+    document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
+
+    // text panel
+    document.getElementById("addTextBtn").addEventListener("click", () => {
+      const txt = (textBoxEl.value || "").trim();
+      if (!txt) { toast("Type text first."); return; }
+      if (!baseBitmap) return;
+
+      // Add near top-left of image (visible)
+      pushUndo();
+      anno.push({type:"text", x: 40, y: 40, text: txt, w: 0, h: 0});
+      selectedTextIndex = anno.length - 1;
+      syncTextPanel();
+      redraw();
+      scheduleAutosave();
+      toast("Text added.");
+    });
+
+    document.getElementById("applyTextBtn").addEventListener("click", () => {
+      const txt = (textBoxEl.value || "").trim();
+      if (selectedTextIndex < 0) { toast("Select a text box first."); return; }
+      if (!anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text") { toast("Select a text box first."); return; }
+      pushUndo();
+      anno[selectedTextIndex].text = txt;
+      redraw();
+      scheduleAutosave();
+      toast("Text updated.");
+    });
+
+    document.getElementById("deleteTextBtn").addEventListener("click", () => {
+      if (selectedTextIndex < 0) { toast("Select a text box first."); return; }
+      if (!anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text") { toast("Select a text box first."); return; }
+      pushUndo();
+      anno.splice(selectedTextIndex, 1);
+      selectedTextIndex = -1;
+      syncTextPanel();
+      redraw();
+      scheduleAutosave();
+      toast("Text deleted.");
+    });
+
+    // camera
+    document.getElementById("openCamBtn").addEventListener("click", camStart);
+    document.getElementById("camSnapBtn").addEventListener("click", camSnap);
+    document.getElementById("camTopSnapBtn").addEventListener("click", camSnap);
+
+    const camShutter = document.getElementById("camShutter");
+    camShutter.addEventListener("click", () => { if (!shutterMoveMode) camSnap(); });
+
+    document.getElementById("camDoneBtn").addEventListener("click", camDone);
+    document.getElementById("camCancelBtn").addEventListener("click", camCancel);
+    document.getElementById("camClearBtn").addEventListener("click", camClear);
+    document.getElementById("camFlipBtn").addEventListener("click", camFlip);
+
+    document.getElementById("camMoveShutterBtn").addEventListener("click", toggleMoveShutter);
+    document.getElementById("camResetShutterBtn").addEventListener("click", () => { resetShutterPos(); toast("Shutter reset."); });
+
+    // drag shutter when move-mode
+    camShutter.addEventListener("pointerdown", (e) => {
+      if (!shutterMoveMode) return;
+      e.preventDefault();
+      camShutter.setPointerCapture(e.pointerId);
+      shutterDrag = { active: true };
+      const p = percentFromPoint(e.clientX, e.clientY);
+      applyShutterPos(p.x, p.y);
+      saveShutterPos(p.x, p.y);
+    }, {passive:false});
+
+    camShutter.addEventListener("pointermove", (e) => {
+      if (!shutterMoveMode || !shutterDrag?.active) return;
+      e.preventDefault();
+      const p = percentFromPoint(e.clientX, e.clientY);
+      applyShutterPos(p.x, p.y);
+      saveShutterPos(p.x, p.y);
+    }, {passive:false});
+
+    camShutter.addEventListener("pointerup", () => { shutterDrag = null; });
+  }
+
+  // ---------- Boot ----------
+  async function init(){
+    db = await openDB();
+    wireUI();
+    setupCanvas();
+    await renderGrid();
+  }
+  init().catch(err => { console.error(err); toast("Failed to load."); });
 })();
 </script>
 </body>
 </html>
-
