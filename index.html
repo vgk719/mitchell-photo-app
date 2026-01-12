@@ -306,25 +306,44 @@
       display: flex; align-items: center; justify-content: space-around;
     }
     
-    /* Draggable Shutter */
+    /* UPDATED: Shutter Button */
     .shutter-btn {
-      position: absolute; left: 50%; top: 80%; transform: translate(-50%, -50%);
+      position: absolute;
+      /* Default Portrait: Bottom Center */
+      left: 50%; top: 85%;
+      transform: translate(-50%, -50%);
+      
       width: 80px; height: 80px;
       border-radius: 50%;
       border: 6px solid rgba(255,255,255,0.8);
       background: rgba(255,255,255,0.2);
       backdrop-filter: blur(4px);
       box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-      z-index: 50; cursor: grab; touch-action: none;
+      z-index: 100; /* Higher Z-index to sit above everything */
+      cursor: grab;
+      touch-action: none; /* Crucial for dragging */
     }
+    
+    /* Landscape: Move to Right Center */
+    @media (orientation: landscape) {
+      .shutter-btn {
+        left: 90%; top: 50%;
+      }
+    }
+
     .shutter-btn::after {
       content: ""; display: block;
       width: 60px; height: 60px;
       background: white; border-radius: 50%;
       position: absolute; top: 4px; left: 4px;
+      pointer-events: none;
     }
-    .shutter-btn:active { transform: translate(-50%, -50%) scale(0.95); }
-    .shutter-btn.dragging { opacity: 0.8; cursor: grabbing; transform: translate(-50%, -50%) scale(0.9); }
+    
+    .shutter-btn.dragging {
+      opacity: 0.8; cursor: grabbing;
+      transform: translate(-50%, -50%) scale(1.1);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    }
 
     .toast {
       position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
@@ -1008,39 +1027,61 @@
     }
   };
 
-  // --- CAMERA ---
+  // --- CAMERA FIX START ---
   let camStream;
   let camShots = [];
 
   function setupCamera() {
-    // Shutter Drag Logic
     const sh = $("camShutter");
-    let isDragShutter = false;
+    const view = $("camView");
     
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    
+    // 1. TOUCH START
     sh.onpointerdown = (e) => {
-      isDragShutter = true;
+      e.preventDefault();
+      isDragging = true;
       sh.setPointerCapture(e.pointerId);
       sh.classList.add("dragging");
+      
+      // Record where we started so we can measure movement later
+      startX = e.clientX;
+      startY = e.clientY;
     };
     
+    // 2. DRAGGING
     sh.onpointermove = (e) => {
-      if(!isDragShutter) return;
-      // Simple positioning
-      const r = $("camView").getBoundingClientRect();
-      sh.style.left = (e.clientX - r.left) + "px";
-      sh.style.top = (e.clientY - r.top) + "px";
-      sh.style.transform = "translate(-50%, -50%)";
+      if(!isDragging) return;
+      e.preventDefault();
+      
+      // Move the button
+      const r = view.getBoundingClientRect();
+      // Clamp values so it stays inside the camera view
+      let newX = e.clientX - r.left;
+      let newY = e.clientY - r.top;
+      
+      // Apply position
+      sh.style.left = newX + "px";
+      sh.style.top = newY + "px";
     };
     
+    // 3. TOUCH END (The Logic Fix)
     sh.onpointerup = (e) => {
-      isDragShutter = false;
+      e.preventDefault();
+      isDragging = false;
       sh.classList.remove("dragging");
-      // Snap logic if minimal movement? 
-      // For now, click event handles snap
-    };
-    
-    sh.onclick = (e) => {
-      if(e.target === sh) takePhoto();
+      sh.releasePointerCapture(e.pointerId);
+      
+      // Calculate how far we moved
+      const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+      
+      // If we moved LESS than 10 pixels, treat it as a CLICK (Take Photo)
+      // If we moved MORE, it was just a drag.
+      if (dist < 10) {
+        takePhoto();
+      }
     };
   }
 
@@ -1109,6 +1150,7 @@
     $("camThumbs").innerHTML = "";
     $("camCount").textContent = "0";
   }
+  // --- CAMERA FIX END ---
 
   // --- UTILS ---
   async function burnImage() {
