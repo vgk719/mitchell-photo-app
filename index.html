@@ -1946,4 +1946,186 @@
       req.onerror = resolve;
       req.onblocked = resolve;
     });
-    db
+    db = await openDB();
+    meta = [];
+    setHdrCount();
+  }
+
+  // ---------- UI wiring ----------
+  function wireUI(){
+    document.getElementById("backHomeBtn").addEventListener("click", () => {
+      closeViewer();
+      showHome();
+      renderFolders();
+    });
+
+    document.getElementById("wipeBtn").addEventListener("click", async () => {
+      if (!confirm("Wipe EVERYTHING on this device?")) return;
+      await wipeAllDevice();
+      toast("Wiped.");
+      showHome();
+      renderFolders();
+    });
+
+    document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
+    document.getElementById("folderExportZipBtn").addEventListener("click", exportZipAll);
+
+    document.getElementById("folderWipeBtn").addEventListener("click", async () => {
+      if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
+      await wipeFolder(currentFolder);
+      toast("Folder wiped.");
+      await openFolder(currentFolder);
+      await renderFolders();
+    });
+
+    const fileInput = document.getElementById("fileInput");
+    document.getElementById("uploadBtn").addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (files.length) await addFilesToFolder(currentFolder, files);
+    });
+
+    const dz = document.getElementById("dropZone");
+    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.add("drag");
+    }));
+    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.remove("drag");
+    }));
+    dz.addEventListener("drop", async (e) => {
+      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
+      if (!files.length) return;
+      await addFilesToFolder(currentFolder, files);
+    });
+
+    // Overlay nav + close
+    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
+    document.getElementById("prevBtn").addEventListener("click", () => step(-1));
+    document.getElementById("nextBtn").addEventListener("click", () => step(+1));
+    document.getElementById("bigPrev").addEventListener("click", () => step(-1));
+    document.getElementById("bigNext").addEventListener("click", () => step(+1));
+
+    document.addEventListener("keydown", async (e) => {
+      if (!overlay.classList.contains("show")) return;
+      if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
+      if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "ArrowRight") step(+1);
+    });
+
+    document.getElementById("toggleEditBtn").addEventListener("click", async () => {
+      if (mode === "view"){
+        setMode("edit");
+        toast("EDIT enabled");
+      } else {
+        await flushAutosave();
+        setMode("view");
+        toast("EDIT disabled");
+      }
+      updateTextSelectionUI();
+      redraw();
+    });
+
+    document.getElementById("toolRow").addEventListener("click", (e) => {
+      const t = e.target.closest(".toolIcon");
+      if (!t) return;
+      if (mode !== "edit") { toast("Enable Edit first"); return; }
+      setTool(t.dataset.tool);
+    });
+
+    document.getElementById("notesInput").addEventListener("input", () => {
+      if (mode === "edit") scheduleAutosave();
+      else saveNotesSoon();
+    });
+
+    document.getElementById("undoBtn").addEventListener("click", () => {
+      if (mode !== "edit") return toast("Enable Edit first");
+      if (!undoStack.length) return;
+      anno = undoStack.pop();
+      angleStage = 0;
+      selectedTextIndex = -1;
+      placingText = false;
+      updateTextSelectionUI();
+      redraw();
+      scheduleAutosave();
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (mode !== "edit") return toast("Enable Edit first");
+      if (!anno.length) return;
+      if (!confirm("Clear all markup on this photo?")) return;
+      pushUndo();
+      anno = [];
+      angleStage = 0;
+      selectedTextIndex = -1;
+      placingText = false;
+      updateTextSelectionUI();
+      redraw();
+      scheduleAutosave();
+    });
+
+    document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
+    document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
+
+    // TEXT PANEL BUTTONS
+    document.getElementById("placeTextBtn").addEventListener("click", () => {
+      if (mode !== "edit") return toast("Enable Edit first");
+      setTool("text");
+      placingText = true;
+      selectedTextIndex = -1;
+      updateTextSelectionUI();
+      toast("Click on the photo to place text.");
+      redraw();
+    });
+
+    document.getElementById("updateTextBtn").addEventListener("click", () => {
+      if (mode !== "edit") return toast("Enable Edit first");
+      if (!(selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text")) return;
+
+      const text = (document.getElementById("textBox").value || "").trim();
+      const size = Number(document.getElementById("textSize").value || 34);
+      const style = String(document.getElementById("textStyle").value || "pill");
+
+      pushUndo();
+      anno[selectedTextIndex].text = text || anno[selectedTextIndex].text || "TEXT";
+      anno[selectedTextIndex].size = size;
+      anno[selectedTextIndex].style = style;
+
+      placingText = false;
+      redraw();
+      scheduleAutosave();
+      toast("Text updated.");
+      updateTextSelectionUI();
+    });
+
+    document.getElementById("deleteTextBtn").addEventListener("click", () => {
+      if (mode !== "edit") return toast("Enable Edit first");
+      if (!(selectedTextIndex >= 0 && anno[selectedTextIndex]?.type === "text")) return;
+
+      pushUndo();
+      anno.splice(selectedTextIndex, 1);
+      selectedTextIndex = -1;
+      placingText = false;
+      redraw();
+      scheduleAutosave();
+      toast("Text deleted.");
+      updateTextSelectionUI();
+    });
+  }
+
+  // ---------- Boot ----------
+  async function init(){
+    db = await openDB();
+    wireUI();
+    setupCanvas();
+    await renderFolders();
+    showHome();
+  }
+
+  init().catch(err => { console.error(err); toast("Failed to load."); });
+})();
+</script>
+</body>
+</html>
