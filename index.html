@@ -3,526 +3,501 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Mitchell App v10 (Fixed)</title>
-
-  <meta name="theme-color" content="#0f172a">
+  <title>Mitchell v11</title>
+  <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <style>
-    :root{
-      --bg: #0f172a;
-      --surface-glass: rgba(30, 41, 59, 0.85);
-      --surface-border: rgba(255, 255, 255, 0.15);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #3b82f6;
-      --danger: #ef4444;
-      --success: #22c55e;
-      --radius-md: 18px;
-      --safe-t: env(safe-area-inset-top, 20px);
-      --safe-b: env(safe-area-inset-bottom, 20px);
-    }
+    /* RESET */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+    body { margin: 0; background: #121212; color: #fff; font-family: -apple-system, system-ui, sans-serif; height: 100vh; overflow: hidden; }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; margin: 0; background: #0f172a; color: white; font-family: sans-serif; overflow: hidden; }
-
-    /* --- LAYOUT --- */
+    /* LAYOUT */
+    #app { display: flex; flex-direction: column; height: 100%; }
+    
     header {
-      padding: 10px 20px;
-      padding-top: max(10px, var(--safe-t));
-      background: rgba(15, 23, 42, 0.9);
-      border-bottom: 1px solid var(--surface-border);
+      padding: 15px; background: #1e1e1e; border-bottom: 1px solid #333;
       display: flex; justify-content: space-between; align-items: center;
-      z-index: 20; position: relative;
+      padding-top: max(15px, env(safe-area-inset-top));
     }
+    h1 { margin: 0; font-size: 18px; font-weight: 800; }
     
-    main {
-      height: 100%; overflow-y: auto; padding: 20px;
-      padding-bottom: 100px; /* Space for bottom bar */
-    }
+    /* SCROLLABLE MAIN AREA */
+    main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
 
-    /* --- BUTTONS & CARDS --- */
+    /* BIG BUTTONS */
     .btn {
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-      color: white; padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: 14px;
-      display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+      background: #333; border: none; color: white; padding: 12px 20px;
+      border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
     }
-    .btn.primary { background: var(--primary); border: none; }
-    .btn.danger { background: rgba(239,68,68,0.3); border-color: var(--danger); }
-    .btn.icon { width: 44px; height: 44px; padding: 0; font-size: 20px; border-radius: 50%; }
+    .btn:active { opacity: 0.7; }
+    .btn.primary { background: #3b82f6; } /* Blue */
+    .btn.danger { background: #ef4444; }  /* Red */
+    .btn.success { background: #22c55e; color: #000; } /* Green */
     
-    .card {
-      background: var(--surface-glass); border: 1px solid var(--surface-border);
-      border-radius: 20px; padding: 20px; margin-bottom: 20px;
+    /* INPUTS */
+    input[type=text] {
+      width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #444;
+      background: #222; color: white; font-size: 16px; margin-bottom: 20px;
     }
 
-    /* --- PHOTO GRID --- */
-    .photo-grid {
+    /* MASSIVE THUMBNAILS (2 per row) */
+    .grid {
       display: grid; 
-      /* BIGGER THUMBNAILS: min 150px wide */
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
-      gap: 12px; margin-top: 15px;
+      grid-template-columns: 1fr 1fr; /* 2 PER ROW - HUGE */
+      gap: 15px; margin-top: 20px;
     }
-    .thumb {
-      aspect-ratio: 1; position: relative; background: black;
-      border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2);
+    .card {
+      aspect-ratio: 1; background: #000; border-radius: 12px; overflow: hidden;
+      position: relative; border: 2px solid #333;
     }
-    .thumb img { width: 100%; height: 100%; object-fit: cover; }
-    
-    .thumb-num {
-      position: absolute; top: 6px; left: 6px;
-      background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 20px;
-      font-size: 12px; font-weight: 700; pointer-events: none;
+    .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .card-num {
+      position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7);
+      color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold;
     }
 
-    /* DRAG HANDLE & DROP */
-    .drag-handle {
-      position: absolute; top: 0; right: 0;
-      width: 50px; height: 50px; /* Large touch target */
-      background: radial-gradient(circle, rgba(0,0,0,0.5) 0%, transparent 70%);
+    /* DRAG HANDLE (Yellow) */
+    .handle {
+      position: absolute; top: 0; right: 0; width: 60px; height: 60px;
+      background: rgba(255, 200, 0, 0.2); /* Slight yellow tint */
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px; z-index: 10; cursor: grab;
-    }
-    .ghost {
-      position: fixed; z-index: 9999; pointer-events: none; opacity: 0.8;
-      transform: scale(0.6); /* SMALLER GHOST */
-      border: 2px solid var(--success); border-radius: 14px;
-    }
-    .insert-line {
-      position: absolute; top: 0; bottom: 0; width: 6px; background: var(--success);
-      box-shadow: 0 0 10px var(--success); display: none; z-index: 5; pointer-events: none;
+      font-size: 30px; z-index: 10;
     }
 
-    /* --- OVERLAYS --- */
-    .overlay {
-      position: fixed; inset: 0; background: black; z-index: 100;
+    /* CAMERA OVERLAY */
+    #camUI {
+      position: fixed; inset: 0; background: #000; z-index: 900;
       display: none; flex-direction: column;
     }
-    .overlay.show { display: flex; }
+    #camUI.show { display: flex; }
+    
+    #camView { flex: 1; position: relative; background: #111; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    
+    /* FIXED SHUTTER BUTTON */
+    #shutter {
+      width: 80px; height: 80px; border-radius: 50%; background: white;
+      border: 4px solid #ccc; position: absolute; bottom: 30px; left: 50%;
+      transform: translateX(-50%); z-index: 910;
+    }
+    #shutter:active { transform: translateX(-50%) scale(0.9); background: #eee; }
 
-    /* Camera Specific */
-    .cam-view { flex: 1; position: relative; overflow: hidden; }
-    .cam-video { width: 100%; height: 100%; object-fit: cover; }
+    /* EDITOR OVERLAY */
+    #editUI {
+      position: fixed; inset: 0; background: #111; z-index: 800;
+      display: none; flex-direction: column;
+    }
+    #editUI.show { display: flex; }
     
-    /* SHUTTER BUTTON (Redesigned) */
-    .shutter-btn {
-      position: absolute; 
-      left: 50%; top: 85%; transform: translate(-50%, -50%);
-      width: 80px; height: 80px;
-      background: rgba(255,255,255,0.3);
-      border: 4px solid white; border-radius: 50%;
-      z-index: 200; cursor: grab;
-      touch-action: none; /* Stops browser scrolling */
-      display: flex; align-items: center; justify-content: center;
-    }
-    .shutter-btn-inner {
-      width: 60px; height: 60px; background: white; border-radius: 50%; pointer-events: none;
-      transition: transform 0.1s;
-    }
-    .shutter-btn:active .shutter-btn-inner { transform: scale(0.9); background: #ddd; }
-    
-    .cam-mode-label {
-      position: absolute; top: 20px; left: 0; right: 0; 
-      text-align: center; color: rgba(255,255,255,0.5); font-weight: 900; letter-spacing: 2px;
-      pointer-events: none;
-    }
+    #canvasWrap { flex: 1; position: relative; overflow: hidden; touch-action: none; }
+    canvas { display: block; width: 100%; height: 100%; }
 
-    /* Editor Canvas */
-    .canvas-area { flex: 1; position: relative; background: #111; overflow: hidden; }
-    canvas { display: block; touch-action: none; }
-    
-    .editor-tools {
-      padding: 15px; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.1);
-      display: flex; flex-direction: column; gap: 10px;
-      padding-bottom: max(20px, var(--safe-b));
+    .toolbar {
+      padding: 20px; background: #222; border-top: 1px solid #444;
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      display: flex; gap: 10px; overflow-x: auto;
     }
-    .tool-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
-    .tool-btn {
-      flex: 0 0 50px; height: 50px; background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+    .tool {
+      flex: 0 0 50px; height: 50px; background: #333; border-radius: 10px;
       display: flex; align-items: center; justify-content: center; font-size: 20px;
     }
-    .tool-btn.active { background: var(--primary); border-color: var(--primary); }
+    .tool.active { background: #3b82f6; color: white; }
 
-    .toast {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.85); padding: 15px 25px; border-radius: 30px;
-      font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 300;
+    /* GHOST (Dragging) */
+    .ghost {
+      position: fixed; width: 100px; height: 100px; border: 2px solid #22c55e;
+      background: rgba(0,0,0,0.8); z-index: 9999; pointer-events: none;
+      border-radius: 12px;
     }
-    .toast.show { opacity: 1; }
+    .drop-line {
+      position: absolute; top: 0; bottom: 0; width: 5px; background: #22c55e;
+      display: none; z-index: 5; box-shadow: 0 0 10px #22c55e;
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <b>Mitchell App v10 (Fixed)</b>
-  <div class="pill"><span id="count">0</span> photos</div>
-</header>
+<div id="app">
+  <header>
+    <div>
+      <h1 style="color: hotpink;">Mitchell v11</h1>
+      <small style="color:#888" id="status">Ready</small>
+    </div>
+    <div class="btn success" style="padding: 5px 12px; font-size:12px;" id="count">0</div>
+  </header>
 
-<main id="home">
-  <div class="card">
-    <input id="jobName" placeholder="Job Name (e.g. RO-12345)" style="width:100%; padding:10px; border-radius:8px; border:none; background:rgba(0,0,0,0.3); color:white; font-size:16px;">
-  </div>
+  <main>
+    <input type="text" id="jobName" placeholder="Job Name...">
 
-  <div style="display:flex; gap:10px; margin-bottom:15px; overflow-x:auto;">
-    <button class="btn primary" onclick="app.setFolder('Walk Around')">Walk Around</button>
-    <button class="btn" onclick="app.setFolder('UPD')">UPD</button>
-    <button class="btn" onclick="app.setFolder('Teardown')">Teardown</button>
-  </div>
-  
-  <h2 id="folderTitle" style="margin:0">Walk Around</h2>
-  
-  <div id="grid" class="photo-grid"></div>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button class="btn primary" onclick="ui.setFolder('Walk Around')">Walk</button>
+      <button class="btn" onclick="ui.setFolder('UPD')">UPD</button>
+      <button class="btn" onclick="ui.setFolder('Teardown')">Tear</button>
+    </div>
 
-  <div style="position:fixed; bottom:0; left:0; right:0; padding:20px; padding-bottom:max(20px, var(--safe-b)); background:rgba(15,23,42,0.9); display:flex; gap:10px; border-top:1px solid #333;">
-    <button class="btn primary" style="flex:1; height:50px; font-size:16px;" onclick="app.openCamera()">📸 Take Photos</button>
-    <label class="btn" style="flex:1; height:50px; font-size:16px; background:#22c55e; border:none; color:black;">
-      ⬆️ Upload
-      <input type="file" multiple accept="image/*" hidden onchange="app.handleUpload(this)">
-    </label>
-  </div>
-</main>
-
-<div class="overlay" id="camOverlay">
-  <div class="cam-view" id="camView">
-    <div class="cam-mode-label">PHOTO MODE</div>
-    <video id="camVideo" class="cam-video" autoplay playsinline muted></video>
+    <h2 id="folderHeader">Walk Around</h2>
     
-    <div id="shutterBtn" class="shutter-btn"><div class="shutter-btn-inner"></div></div>
-    
-    <button class="btn" onclick="app.toggleCam()" style="position:absolute; top:20px; right:20px; z-index:20;">Flip</button>
-  </div>
-  <div style="padding:20px; background:black; display:flex; justify-content:space-between; align-items:center;">
-    <button class="btn danger" onclick="app.closeCamera()">Done</button>
-    <div style="color:#888"><span id="camSessionCount">0</span> captured</div>
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <div style="padding: 20px; background: #1e1e1e; border-top: 1px solid #333; display: flex; gap: 10px; padding-bottom: max(20px, env(safe-area-inset-bottom));">
+    <button class="btn primary" style="flex:1" onclick="cam.open()">📸 PHOTO</button>
+    <button class="btn success" style="flex:1" onclick="document.getElementById('upl').click()">⬆️ UPLOAD</button>
+    <input type="file" id="upl" hidden multiple accept="image/*" onchange="ui.handleUpload(this)">
   </div>
 </div>
 
-<div class="overlay" id="editorOverlay">
-  <div class="canvas-area" id="canvasWrap">
-    <canvas id="canvas"></canvas>
-  </div>
-  <div class="editor-tools">
-    <div class="tool-row" id="tools">
-      <div class="tool-btn active" data-tool="arrow">➤</div>
-      <div class="tool-btn" data-tool="circle">◯</div>
-      <div class="tool-btn" data-tool="rect">▢</div>
-      <div class="tool-btn" data-tool="text">T</div>
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button class="btn" style="flex:1" onclick="app.editorUndo()">Undo</button>
-      <button class="btn danger" style="flex:1" onclick="app.editorDelete()">Delete</button>
-      <button class="btn primary" style="flex:1" onclick="app.closeEditor()">Save</button>
-    </div>
+<div id="camUI">
+  <div id="camView">
+    <video id="vid" autoplay playsinline muted></video>
+    <div id="shutter" onclick="cam.snap()"></div>
+    <button class="btn" style="position: absolute; top: 20px; right: 20px; z-index:920;" onclick="cam.close()">Done</button>
   </div>
 </div>
 
-<div class="toast" id="toast">Saved</div>
+<div id="editUI">
+  <div id="canvasWrap">
+    <canvas id="cvs"></canvas>
+  </div>
+  <div class="toolbar">
+    <div class="tool active" onclick="editor.setTool('arrow', this)">➤</div>
+    <div class="tool" onclick="editor.setTool('circle', this)">◯</div>
+    <div class="tool" onclick="editor.setTool('rect', this)">▢</div>
+    <div class="tool" onclick="editor.setTool('text', this)">T</div>
+    <div style="width: 20px;"></div>
+    <button class="btn" onclick="editor.undo()">Undo</button>
+    <button class="btn danger" onclick="editor.del()">Delete</button>
+    <button class="btn primary" onclick="editor.close()">Save</button>
+  </div>
+</div>
 
 <script>
-const app = (() => {
-  let db, folder="Walk Around", meta=[], camStream;
-  let editId=null, editImg=null, anno=[], tool="arrow";
+// --- DATA STORE (IndexedDB) ---
+const dbName = "Mitchell_v11_Pro";
+let db = null;
+let currentFolder = "Walk Around";
+let metaData = [];
 
-  // --- INIT ---
-  async function init(){
-    // DB Setup
-    db = await new Promise((res, rej) => {
-      const r = indexedDB.open("Mitchell_v10_Final", 1);
-      r.onupgradeneeded = e => {
-        const d = e.target.result;
-        d.createObjectStore("images", {keyPath:"id"});
-        d.createObjectStore("meta", {keyPath:"id"});
-      };
-      r.onsuccess = () => res(r.result);
-      r.onerror = rej;
-    });
-    
-    // Check Job Name
-    document.getElementById("jobName").value = localStorage.getItem("jobName") || "";
-    document.getElementById("jobName").oninput = e => localStorage.setItem("jobName", e.target.value);
-    
-    refresh();
-    setupCameraLogic();
-    setupEditorLogic();
-  }
+function initDB() {
+  const req = indexedDB.open(dbName, 1);
+  req.onupgradeneeded = e => {
+    const d = e.target.result;
+    d.createObjectStore("files", { keyPath: "id" });
+    d.createObjectStore("meta", { keyPath: "id" });
+  };
+  req.onsuccess = e => {
+    db = e.target.result;
+    loadData();
+  };
+}
 
-  async function refresh(){
-    const tx = db.transaction("meta", "readonly");
-    meta = await new Promise(r => tx.objectStore("meta").getAll().onsuccess = e => r(e.target.result));
-    render();
-  }
+function loadData() {
+  if (!db) return;
+  const tx = db.transaction("meta", "readonly");
+  const store = tx.objectStore("meta");
+  const req = store.getAll();
+  req.onsuccess = () => {
+    metaData = req.result || [];
+    ui.render();
+  };
+}
 
-  function render(){
-    const list = meta.filter(m => m.folder === folder).sort((a,b) => a.order - b.order);
-    document.getElementById("count").textContent = meta.length;
-    document.getElementById("folderTitle").textContent = folder;
+function saveData(id, blob, folder) {
+  const tx = db.transaction(["files", "meta"], "readwrite");
+  const meta = {
+    id: id,
+    folder: folder,
+    order: Date.now(), // Simple ordering
+    anno: []
+  };
+  tx.objectStore("files").put({ id: id, blob: blob });
+  tx.objectStore("meta").put(meta);
+  tx.oncomplete = () => loadData();
+}
+
+// --- UI LOGIC ---
+const ui = {
+  setFolder: (name) => {
+    currentFolder = name;
+    document.getElementById("folderHeader").textContent = name;
+    ui.render();
+  },
+  
+  render: () => {
+    const list = metaData.filter(m => m.folder === currentFolder)
+                         .sort((a,b) => a.order - b.order);
     
+    document.getElementById("count").textContent = metaData.length;
     const grid = document.getElementById("grid");
     grid.innerHTML = "";
-    
-    list.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "thumb";
-      div.innerHTML = `
-        <img src="" id="img-${m.id}">
-        <div class="thumb-num">${m.order}</div>
-        <div class="drag-handle" onpointerdown="app.startDrag(event, '${m.id}')">⋮⋮</div>
-        <div class="insert-line"></div>
+
+    list.forEach((m, i) => {
+      const el = document.createElement("div");
+      el.className = "card";
+      // Massive Thumbnails (2 per row)
+      el.innerHTML = `
+        <img id="img-${m.id}" />
+        <div class="card-num">${i+1}</div>
+        <div class="handle" ontouchstart="drag.start(event, '${m.id}')">⋮</div>
+        <div class="drop-line"></div>
       `;
-      div.onclick = (e) => { if(!e.target.classList.contains("drag-handle")) openEditor(m.id); };
-      grid.appendChild(div);
-      
-      // Load thumb
-      db.transaction("images").objectStore("images").get(m.id).onsuccess = e => {
-        if(e.target.result) document.getElementById(`img-${m.id}`).src = URL.createObjectURL(e.target.result.blob);
+      // Load Image
+      const tx = db.transaction("files", "readonly");
+      tx.objectStore("files").get(m.id).onsuccess = (e) => {
+        if (e.target.result) {
+          document.getElementById("img-"+m.id).src = URL.createObjectURL(e.target.result.blob);
+        }
       };
+      // Edit Click
+      el.onclick = (e) => {
+        if(!e.target.classList.contains("handle")) editor.open(m.id);
+      }
+      grid.appendChild(el);
+    });
+  },
+
+  handleUpload: (input) => {
+    [...input.files].forEach(file => {
+      saveData(crypto.randomUUID(), file, currentFolder);
     });
   }
+};
 
-  // --- CAMERA (FIXED BUTTON) ---
-  function setupCameraLogic(){
-    const btn = document.getElementById("shutterBtn");
-    let isDragging = false, startX=0, startY=0;
-
-    const start = (e) => {
-      e.preventDefault();
-      isDragging = true;
-      const t = e.touches ? e.touches[0] : e;
-      startX = t.clientX; startY = t.clientY;
-    };
-
-    const move = (e) => {
-      if(!isDragging) return;
-      e.preventDefault();
-      const t = e.touches ? e.touches[0] : e;
-      const p = document.getElementById("camView").getBoundingClientRect();
-      btn.style.left = (t.clientX - p.left) + "px";
-      btn.style.top = (t.clientY - p.top) + "px";
-    };
-
-    const end = (e) => {
-      isDragging = false;
-      const t = e.changedTouches ? e.changedTouches[0] : e;
-      const dist = Math.hypot(t.clientX - startX, t.clientY - startY);
-      // Increased tolerance: moving less than 30px counts as a TAP
-      if(dist < 30) takePhoto(); 
-    };
-
-    btn.addEventListener("touchstart", start, {passive:false});
-    btn.addEventListener("touchmove", move, {passive:false});
-    btn.addEventListener("touchend", end);
-    btn.addEventListener("mousedown", start);
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", e => { if(isDragging) end(e); });
-  }
-
-  async function openCamera(){
-    document.getElementById("camOverlay").classList.add("show");
-    try{
-      // AUDIO FALSE IS KEY for photo mode
-      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-      document.getElementById("camVideo").srcObject = camStream;
-    }catch(e){ alert("Camera failed: " + e.message); }
-  }
-
-  function takePhoto(){
-    const v = document.getElementById("camVideo");
+// --- CAMERA (SIMPLE) ---
+const cam = {
+  stream: null,
+  open: async () => {
+    document.getElementById("camUI").classList.add("show");
+    try {
+      // Audio false prevents "recording" mode on some browsers
+      cam.stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" }, 
+        audio: false 
+      });
+      document.getElementById("vid").srcObject = cam.stream;
+    } catch(e) {
+      alert("Camera Error: " + e.message);
+    }
+  },
+  snap: () => {
+    const vid = document.getElementById("vid");
     const cvs = document.createElement("canvas");
-    cvs.width = v.videoWidth; cvs.height = v.videoHeight;
-    cvs.getContext("2d").drawImage(v, 0, 0);
+    cvs.width = vid.videoWidth;
+    cvs.height = vid.videoHeight;
+    cvs.getContext("2d").drawImage(vid, 0, 0);
     
     cvs.toBlob(blob => {
-      saveImage(blob);
-      showToast("Photo Taken");
-      // Flash effect
-      v.style.opacity = 0.5; setTimeout(()=> v.style.opacity=1, 100);
-      document.getElementById("camSessionCount").textContent = parseInt(document.getElementById("camSessionCount").textContent)+1;
+      saveData(crypto.randomUUID(), blob, currentFolder);
+      // Visual Flash
+      vid.style.opacity = 0;
+      setTimeout(() => vid.style.opacity = 1, 100);
     }, "image/jpeg", 0.8);
+  },
+  close: () => {
+    document.getElementById("camUI").classList.remove("show");
+    if(cam.stream) cam.stream.getTracks().forEach(t => t.stop());
   }
+};
 
-  function closeCamera(){
-    document.getElementById("camOverlay").classList.remove("show");
-    if(camStream) camStream.getTracks().forEach(t=>t.stop());
-    document.getElementById("camSessionCount").textContent = "0";
-    refresh();
-  }
-
-  // --- EDITOR & AUTOSAVE ---
-  async function openEditor(id){
-    editId = id;
-    const tx = db.transaction(["images","meta"]);
+// --- EDITOR (TOUCH FRIENDLY) ---
+const editor = {
+  id: null,
+  img: null,
+  anno: [],
+  tool: 'arrow',
+  
+  open: async (id) => {
+    editor.id = id;
+    const m = metaData.find(x => x.id === id);
+    editor.anno = m.anno || [];
     
-    const m = await new Promise(r => tx.objectStore("meta").get(id).onsuccess = e=>r(e.target.result));
-    const i = await new Promise(r => tx.objectStore("images").get(id).onsuccess = e=>r(e.target.result));
-    
-    editImg = new Image();
-    editImg.onload = () => {
-      anno = m.anno || [];
-      drawEditor();
-      document.getElementById("editorOverlay").classList.add("show");
+    // Get Image
+    const tx = db.transaction("files", "readonly");
+    tx.objectStore("files").get(id).onsuccess = (e) => {
+      const blob = e.target.result.blob;
+      editor.img = new Image();
+      editor.img.onload = () => {
+        document.getElementById("editUI").classList.add("show");
+        editor.resize();
+        editor.draw();
+      };
+      editor.img.src = URL.createObjectURL(blob);
     };
-    editImg.src = URL.createObjectURL(i.blob);
-  }
-
-  const cvs = document.getElementById("canvas");
-  const ctx = cvs.getContext("2d");
-  let isDraw=false, startP={x:0,y:0};
-
-  function setupEditorLogic(){
-    // Fit canvas
+  },
+  
+  resize: () => {
     const wrap = document.getElementById("canvasWrap");
-    new ResizeObserver(() => {
-      cvs.width = wrap.clientWidth; cvs.height = wrap.clientHeight;
-      if(editImg) drawEditor();
-    }).observe(wrap);
-
-    // Tool click
-    document.getElementById("tools").onclick = e => {
-      if(e.target.classList.contains("tool-btn")){
-        document.querySelectorAll(".tool-btn").forEach(b=>b.classList.remove("active"));
-        e.target.classList.add("active");
-        tool = e.target.dataset.tool;
-      }
-    };
-
-    // Draw events
-    cvs.onpointerdown = e => {
-      isDraw = true;
-      const r = cvs.getBoundingClientRect();
-      startP = {x: e.clientX - r.left, y: e.clientY - r.top};
-    };
-    cvs.onpointermove = e => {
-      if(!isDraw) return;
-      const r = cvs.getBoundingClientRect();
-      const curr = {x: e.clientX - r.left, y: e.clientY - r.top};
-      drawEditor();
-      drawShape(tool, startP, curr, "lime"); // Preview
-    };
-    cvs.onpointerup = e => {
-      if(!isDraw) return;
-      isDraw = false;
-      const r = cvs.getBoundingClientRect();
-      const curr = {x: e.clientX - r.left, y: e.clientY - r.top};
-      // Normalize to 0-1 coords for resolution independence
-      anno.push({
-        type: tool,
-        x1: startP.x/cvs.width, y1: startP.y/cvs.height,
-        x2: curr.x/cvs.width, y2: curr.y/cvs.height
-      });
-      drawEditor();
-      autoSave(); // INSTANT SAVE
-    };
-  }
-
-  function drawEditor(){
+    const cvs = document.getElementById("cvs");
+    cvs.width = wrap.clientWidth;
+    cvs.height = wrap.clientHeight;
+  },
+  
+  draw: () => {
+    const cvs = document.getElementById("cvs");
+    const ctx = cvs.getContext("2d");
     ctx.clearRect(0,0,cvs.width,cvs.height);
-    // Draw Image (Contain)
-    const scale = Math.min(cvs.width/editImg.width, cvs.height/editImg.height);
-    const x = (cvs.width - editImg.width*scale)/2;
-    const y = (cvs.height - editImg.height*scale)/2;
-    ctx.drawImage(editImg, x, y, editImg.width*scale, editImg.height*scale);
+    
+    // Draw Image Scaled
+    const sc = Math.min(cvs.width/editor.img.width, cvs.height/editor.img.height);
+    const x = (cvs.width - editor.img.width*sc)/2;
+    const y = (cvs.height - editor.img.height*sc)/2;
+    ctx.drawImage(editor.img, x, y, editor.img.width*sc, editor.img.height*sc);
     
     // Draw Anno
-    anno.forEach(a => {
-      drawShape(a.type, {x:a.x1*cvs.width, y:a.y1*cvs.height}, {x:a.x2*cvs.width, y:a.y2*cvs.height}, "#22c55e");
-    });
-  }
-
-  function drawShape(t, p1, p2, color){
-    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.beginPath();
-    if(t==="arrow"){
-      ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-      ctx.beginPath(); ctx.arc(p2.x, p2.y, 4, 0, 7); ctx.fillStyle=color; ctx.fill();
-    }
-    if(t==="rect") ctx.strokeRect(p1.x, p1.y, p2.x-p1.x, p2.y-p1.y);
-    if(t==="circle"){
-      const r = Math.hypot(p2.x-p1.x, p2.y-p1.y);
-      ctx.beginPath(); ctx.arc(p1.x, p1.y, r, 0, 7); ctx.stroke();
-    }
-  }
-
-  function autoSave(){
-    const tx = db.transaction("meta", "readwrite");
-    tx.objectStore("meta").get(editId).onsuccess = e => {
-      const m = e.target.result;
-      m.anno = anno;
-      tx.objectStore("meta").put(m);
-      showToast("Auto-saved");
-    };
-  }
-
-  // --- GENERAL ---
-  function saveImage(blob){
-    const id = crypto.randomUUID();
-    const tx = db.transaction(["images","meta"], "readwrite");
-    const order = meta.filter(m=>m.folder===folder).length + 1;
-    tx.objectStore("images").put({id, blob});
-    tx.objectStore("meta").put({id, folder, order, anno:[]});
-  }
-
-  function showToast(msg){
-    const t = document.getElementById("toast");
-    t.textContent = msg; t.classList.add("show");
-    setTimeout(()=>t.classList.remove("show"), 1500);
-  }
-
-  // --- DRAG ---
-  let dragId=null;
-  function startDrag(e, id){
-    e.preventDefault();
-    dragId = id;
-    const ghost = document.createElement("div");
-    ghost.className = "ghost";
-    ghost.style.width = "100px"; ghost.style.height = "100px";
-    ghost.style.background = "rgba(0,0,0,0.5)";
-    document.body.appendChild(ghost);
-    
-    const move = (ev) => {
-      const t = ev.touches?ev.touches[0]:ev;
-      ghost.style.left = t.clientX + "px"; ghost.style.top = t.clientY + "px";
-      // Find drop target
-      const el = document.elementFromPoint(t.clientX, t.clientY)?.closest(".thumb");
-      document.querySelectorAll(".insert-line").forEach(l=>l.style.display="none");
-      if(el){
-        el.querySelector(".insert-line").style.display="block";
+    editor.anno.forEach(a => {
+      const sx = a.x1 * cvs.width;
+      const sy = a.y1 * cvs.height;
+      const ex = a.x2 * cvs.width;
+      const ey = a.y2 * cvs.height;
+      
+      ctx.strokeStyle = "#22c55e";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      
+      if(a.type === 'rect') ctx.strokeRect(sx, sy, ex-sx, ey-sy);
+      if(a.type === 'circle') {
+        const r = Math.hypot(ex-sx, ey-sy);
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.stroke();
       }
-    };
-    const up = (ev) => {
-      window.removeEventListener("touchmove", move);
-      window.removeEventListener("touchend", up);
-      ghost.remove();
-      // Simple reorder to end for now to keep code safe/small
-      const el = document.elementFromPoint(ev.changedTouches[0].clientX, ev.changedTouches[0].clientY)?.closest(".thumb");
-      if(el) showToast("Moved (Refresh to see order)"); 
-    };
-    window.addEventListener("touchmove", move);
-    window.addEventListener("touchend", up);
+      if(a.type === 'arrow') {
+        ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.beginPath(); ctx.arc(ex, ey, 5, 0, 7); ctx.fillStyle="#22c55e"; ctx.fill();
+      }
+    });
+  },
+  
+  setTool: (t, el) => {
+    editor.tool = t;
+    document.querySelectorAll(".tool").forEach(x => x.classList.remove("active"));
+    el.classList.add("active");
+  },
+  undo: () => { editor.anno.pop(); editor.draw(); },
+  del: () => {
+    if(confirm("Delete?")) {
+      const tx = db.transaction(["files","meta"], "readwrite");
+      tx.objectStore("files").delete(editor.id);
+      tx.objectStore("meta").delete(editor.id);
+      tx.oncomplete = () => {
+        editor.close();
+        loadData();
+      };
+    }
+  },
+  close: () => {
+    // Save Anno
+    const tx = db.transaction("meta", "readwrite");
+    const m = metaData.find(x => x.id === editor.id);
+    m.anno = editor.anno;
+    tx.objectStore("meta").put(m);
+    tx.oncomplete = () => {
+      document.getElementById("editUI").classList.remove("show");
+      loadData();
+    }
   }
+};
 
-  // Exports
-  return {
-    setFolder: f => { folder=f; refresh(); },
-    openCamera, closeCamera, toggleCam: () => alert("Flip"),
-    handleUpload: e => {
-      [...e.files].forEach(saveImage);
-      setTimeout(refresh, 500);
-    },
-    startDrag,
-    editorUndo: () => { anno.pop(); drawEditor(); autoSave(); },
-    editorDelete: async () => {
-      const tx = db.transaction(["images","meta"], "readwrite");
-      tx.objectStore("images").delete(editId);
-      tx.objectStore("meta").delete(editId);
-      document.getElementById("editorOverlay").classList.remove("show");
-      refresh();
-    },
-    closeEditor: () => document.getElementById("editorOverlay").classList.remove("show")
-  };
-})();
+// --- DRAWING LOGIC (TOUCH) ---
+const cvs = document.getElementById("cvs");
+let isDrawing = false;
+let startX=0, startY=0;
 
-init();
+const getPos = (e) => {
+  const r = cvs.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return { x: t.clientX - r.left, y: t.clientY - r.top };
+}
+
+cvs.addEventListener("touchstart", e => {
+  e.preventDefault();
+  isDrawing = true;
+  const p = getPos(e);
+  startX = p.x; startY = p.y;
+}, {passive:false});
+
+cvs.addEventListener("touchmove", e => {
+  if(!isDrawing) return;
+  e.preventDefault();
+  editor.draw();
+  // Preview
+  const ctx = cvs.getContext("2d");
+  const p = getPos(e);
+  ctx.strokeStyle = "white"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(p.x, p.y); ctx.stroke();
+}, {passive:false});
+
+cvs.addEventListener("touchend", e => {
+  if(!isDrawing) return;
+  isDrawing = false;
+  const p = getPos(e.changedTouches ? e.changedTouches[0] : e);
+  
+  editor.anno.push({
+    type: editor.tool,
+    x1: startX / cvs.width,
+    y1: startY / cvs.height,
+    x2: p.x / cvs.width,
+    y2: p.y / cvs.height
+  });
+  editor.draw();
+});
+
+// --- DRAG LOGIC ---
+const drag = {
+  id: null,
+  ghost: null,
+  start: (e, id) => {
+    e.preventDefault();
+    drag.id = id;
+    
+    // Create Ghost
+    drag.ghost = document.createElement("div");
+    drag.ghost.className = "ghost";
+    document.body.appendChild(drag.ghost);
+    
+    // Attach move listener
+    document.addEventListener("touchmove", drag.move, {passive:false});
+    document.addEventListener("touchend", drag.end);
+  },
+  move: (e) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    drag.ghost.style.left = t.clientX + "px";
+    drag.ghost.style.top = t.clientY + "px";
+    
+    // Detect Drop Target
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const card = el ? el.closest(".card") : null;
+    document.querySelectorAll(".drop-line").forEach(l => l.style.display="none");
+    if(card) {
+      card.querySelector(".drop-line").style.display = "block";
+    }
+  },
+  end: (e) => {
+    document.removeEventListener("touchmove", drag.move);
+    document.removeEventListener("touchend", drag.end);
+    if(drag.ghost) drag.ghost.remove();
+    
+    const t = e.changedTouches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const card = el ? el.closest(".card") : null;
+    
+    if(card) {
+      // Reorder Logic (Simple Swap for robustness)
+      const tx = db.transaction("meta", "readwrite");
+      const s = tx.objectStore("meta");
+      const movedItem = metaData.find(x => x.id === drag.id);
+      // Simply push to end for safety in this version, or alert
+      movedItem.order = Date.now(); // Moves to bottom
+      s.put(movedItem);
+      tx.oncomplete = () => loadData();
+    }
+  }
+};
+
+// Start
+initDB();
+
 </script>
 </body>
 </html>
