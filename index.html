@@ -59,7 +59,6 @@
       font-weight: 900;
       font-size:12px;
       color: var(--muted);
-      white-space:nowrap;
     }
     main{
       height: calc(100% - 58px);
@@ -78,15 +77,6 @@
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
     input, textarea, button{ font:inherit; }
-    input[type="text"]{
-      flex:1; min-width: 220px;
-      padding: 10px 12px; border-radius: 12px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(10,16,34,.55);
-      color: var(--text);
-      outline:none;
-      font-weight: 900;
-    }
     textarea{
       width:100%;
       padding: 12px 12px;
@@ -95,7 +85,7 @@
       background: rgba(10,16,34,.55);
       color: var(--text);
       outline:none;
-      min-height: 72px;
+      min-height: 80px;
       resize: vertical;
     }
 
@@ -132,6 +122,47 @@
     .drop.drag{
       border-color: rgba(59,130,246,.85);
       background: rgba(59,130,246,.10);
+    }
+
+    .folders{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px){ .folders{ grid-template-columns: 1fr; } }
+    .folderCard{
+      padding: 16px;
+      border-radius: var(--radius);
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(12,18,38,.70);
+      box-shadow: 0 18px 44px rgba(0,0,0,.35);
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:hidden;
+    }
+    .folderTitle{ font-weight:1000; font-size: 16px; }
+    .folderHint{ color: var(--muted); font-size: 12px; }
+
+    .miniStrip{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top: 6px; }
+    .miniThumb{
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      object-fit: cover;
+      background: rgba(0,0,0,.25);
+      box-shadow: 0 10px 20px rgba(0,0,0,.20);
+    }
+    .miniMore{
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000; font-size: 12px; color: var(--muted);
     }
 
     .grid{
@@ -189,48 +220,6 @@
       white-space:nowrap;
     }
 
-    .moveBtn{
-      position:absolute;
-      right:8px;
-      top:8px;
-      z-index:4;
-      border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 12px;
-      font-weight: 1100;
-      border:1px solid rgba(255,255,255,.16);
-      background: rgba(59,130,246,.22);
-      color: var(--text);
-      cursor: grab;
-      user-select:none;
-      display:flex; align-items:center; gap:6px;
-    }
-    .moveBtn:active{ cursor: grabbing; }
-
-    .thumb.dragTarget{
-      outline: 3px solid rgba(34,197,94,.85);
-      outline-offset: -3px;
-      box-shadow: 0 0 0 3px rgba(34,197,94,.25), 0 18px 40px rgba(0,0,0,.45);
-    }
-    .dropLabel{
-      position:absolute;
-      left:10px;
-      top:10px;
-      right:10px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(0,0,0,.48);
-      border:1px solid rgba(255,255,255,.14);
-      font-weight: 1100;
-      text-align:center;
-      letter-spacing:.2px;
-      z-index: 5;
-      display:none;
-      pointer-events:none;
-      text-transform: uppercase;
-    }
-    .thumb.dragTarget .dropLabel{ display:block; }
-
     .ghost{
       position:fixed;
       z-index: 9999;
@@ -238,8 +227,37 @@
       opacity:.92;
       transform: scale(1.02);
       box-shadow: 0 18px 40px rgba(0,0,0,.55);
-      border-radius: 14px;
+    }
+    .insertLine{
+      position:absolute; top:0; bottom:0;
+      width:0;
+      border-left: 3px solid rgba(59,130,246,.95);
+      filter: drop-shadow(0 0 10px rgba(59,130,246,.35));
+      pointer-events:none;
+      display:none;
+      z-index: 2;
+    }
+    .insertBadge{
+      position: sticky;
+      top: 6px;
+      z-index: 10;
+      margin-top: 8px;
+      display:none;
+    }
+    .insertBadgeInner{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.55);
+      font-weight: 1000;
+      font-size: 12px;
+      max-width: 100%;
+      white-space: nowrap;
       overflow:hidden;
+      text-overflow: ellipsis;
     }
 
     .overlay{
@@ -274,7 +292,7 @@
       border-left:1px solid rgba(255,255,255,.10);
       padding:12px;
       overflow:auto;
-      min-width: 320px;
+      min-width: 300px;
     }
     @media (max-width: 950px){
       .viewer{ flex-direction:column; }
@@ -401,7 +419,6 @@
       background: rgba(0,0,0,.25);
       position:relative;
       min-width:0;
-      touch-action:none;
     }
     .camLive video{
       width:100%;
@@ -436,68 +453,13 @@
       .camStrip{ min-width:0; }
     }
 
-    .camShutter {
-      position: absolute;
-      left: var(--shutter-x, 50%);
-      top: var(--shutter-y, auto);
-      bottom: var(--shutter-b, 18px);
-      transform: translate(-50%, 0);
-      width: 86px;
-      height: 86px;
-      border-radius: 999px;
-      border: 6px solid rgba(255,255,255,.85);
-      background: rgba(255,255,255,.12);
-      box-shadow: 0 18px 50px rgba(0,0,0,.55);
-      display: block;
-      cursor: pointer;
-      user-select: none;
-      z-index: 5;
+    .bigPhoneBtn{
+      width:100%;
+      padding: 14px 14px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 1100;
     }
-    .camShutter::after{
-      content:"";
-      display:block;
-      width: 62px;
-      height: 62px;
-      margin: 6px auto 0;
-      border-radius: 999px;
-      background: rgba(255,255,255,.92);
-    }
-    .camShutter:active{ filter: brightness(1.05); }
-
-    .camOverlay.landscape .camBody{ flex-direction: column; padding: 8px; }
-    .camOverlay.landscape .camStrip{ display:none; }
-
-    .shutterMoveHint{
-      position:absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.55);
-      font-weight: 1000;
-      font-size: 12px;
-      color: var(--text);
-      display:none;
-      z-index: 6;
-    }
-    .camLive.moveMode .shutterMoveHint{ display:block; }
-    .camLive.moveMode .camShutter{
-      box-shadow: 0 18px 55px rgba(59,130,246,.35);
-      outline: 3px solid rgba(59,130,246,.55);
-      outline-offset: 3px;
-    }
-
-    .inlineBox{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      border-radius: 14px;
-      padding: 10px;
-    }
-    .smallLabel{ font-size:12px; color: var(--muted); margin-bottom:6px; }
-    .seg{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-
   </style>
 </head>
 
@@ -505,53 +467,111 @@
 <header>
   <div>
     <h1>Mitchell Photo App</h1>
-    <div class="muted" id="subtitle">Mitchell Upload Order (TEARDOWN_001.JPG…)</div>
+    <div class="muted" id="subtitle">Folders</div>
   </div>
   <div class="pill"><span id="hdrCount">0</span> photos</div>
 </header>
 
-<main id="mainScroll">
-  <section class="card">
-    <div class="row" style="justify-content:space-between; align-items:flex-start;">
-      <div style="min-width:260px; flex:1;">
+<main>
+  <!-- HOME -->
+  <section id="homeView">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
         <div style="font-weight:1000; font-size:16px;">Job</div>
-        <div class="muted" style="margin-top:2px;">All photos export as <b>TEARDOWN_001.JPG</b>, <b>TEARDOWN_002.JPG</b>… so Mitchell Cloud keeps the adjuster order.</div>
-        <div class="row" style="margin-top:10px;">
-          <input id="jobName" type="text" placeholder="Job name (RO12345_Smith)" />
-          <button class="btn" id="clearJobBtn">Clear Job</button>
+        <div class="pill" id="modePill">Mode</div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="jobName" placeholder="Job name (RO12345_Smith)" style="
+          flex:1; min-width: 220px;
+          padding: 10px 12px; border-radius: 12px;
+          border:1px solid rgba(255,255,255,.14);
+          background: rgba(10,16,34,.55);
+          color: var(--text);
+          outline:none;
+          font-weight: 900;
+        ">
+        <button class="btn" id="clearJobBtn">Clear Job</button>
+      </div>
+      <div class="muted" style="margin-top:6px;">Tip: Job name is used in the ZIP file name.</div>
+
+      <div class="hr"></div>
+
+      <!-- Desktop import -->
+      <div id="desktopImportBox" style="display:none;">
+        <div class="row" style="justify-content:space-between;">
+          <div style="font-weight:1000;">Computer Tools</div>
+          <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+            ⬆️ Import Job ZIP
+            <input id="zipInput" type="file" accept=".zip,application/zip" hidden>
+          </label>
+        </div>
+        <div class="muted" style="margin-top:6px;">Upload a ZIP and it will unpack into Walk Around / UPD / Teardown automatically.</div>
+        <div class="hr"></div>
+      </div>
+
+      <!-- Phone capture shortcuts -->
+      <div id="phoneQuickBox" style="display:none;">
+        <div style="font-weight:1000;">Phone Capture</div>
+        <div class="muted" style="margin-top:6px;">Capture photos on your phone → send ZIP to the office → edit/order on computer.</div>
+        <div class="hr"></div>
+        <button class="btn primary bigPhoneBtn" id="phoneGoTeardown">📸 Teardown (Camera Mode)</button>
+        <button class="btn ok bigPhoneBtn" id="phoneSendOffice" style="margin-top:10px;">📦 Send to Office (ZIP)</button>
+        <div class="muted" style="margin-top:8px;">This exports ORIGINAL photos (best for editing later on the computer).</div>
+        <div class="hr"></div>
+      </div>
+
+      <div style="font-weight:1000; font-size:16px;">Folders</div>
+      <div class="muted">Tap a folder. Drag to reorder. (Desktop: click=view, double click=edit.)</div>
+      <div class="folders" id="folders"></div>
+
+      <div class="hr"></div>
+      <div class="row">
+        <button class="btn ok" id="exportZipBtn">Export ZIP (Mitchell Order)</button>
+        <button class="btn danger" id="wipeBtn">Clear All (This Device)</button>
+      </div>
+
+      <div class="hint">Teardown is the only folder that must be in Mitchell order — this app keeps that exact numbering.</div>
+    </div>
+  </section>
+
+  <!-- FOLDER -->
+  <section id="folderView" style="display:none;">
+    <div class="card" style="margin-bottom:12px;">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
+          <div class="muted" id="folderSub">Drag to reorder. Desktop: click=view, double click=edit.</div>
+        </div>
+        <div class="row">
+          <button class="btn" id="backHomeBtn">← Folders</button>
+          <button class="btn ok" id="folderExportZipBtn">Export ZIP</button>
         </div>
       </div>
 
-      <div class="row" style="justify-content:flex-end;">
-        <button class="btn ok" id="exportZipBtn">Export ZIP</button>
-        <button class="btn danger" id="wipeBtn">Clear All (This Device)</button>
+      <div class="row" style="margin-top:10px;">
+        <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+          ⬆️ Upload Photos
+          <input id="fileInput" type="file" accept="image/*" multiple hidden>
+        </label>
+
+        <button class="btn primary" id="openCamBtn">📸 Camera Mode</button>
+        <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
       </div>
-    </div>
 
-    <div class="hr"></div>
+      <div class="drop" id="dropZone" style="margin-top:10px;">
+        <b>Drop photos into “<span id="dropFolderName"></span>”</b>
+        <div class="muted">Reorder by dragging. (Dragging will NOT open view/edit.)</div>
+      </div>
 
-    <div class="row">
-      <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
-        ⬆️ Upload Photos
-        <input id="fileInput" type="file" accept="image/*" multiple hidden>
-      </label>
-
-      <button class="btn primary" id="openCamBtn">📸 Camera Mode</button>
-
-      <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
-        ⬆️ Import Job ZIP
-        <input id="zipInput" type="file" accept=".zip,application/zip" hidden>
-      </label>
-    </div>
-
-    <div class="drop" id="dropZone" style="margin-top:10px;">
-      <b>Drop photos here</b>
-      <div class="muted">Reorder using the <b>MOVE</b> button on each photo. While dragging, the page auto-scrolls near top/bottom edge.</div>
+      <div class="insertBadge" id="insertBadge">
+        <div class="insertBadgeInner" id="insertBadgeInner">Dragging…</div>
+      </div>
     </div>
 
     <div id="grid" class="grid"></div>
     <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
-      No photos yet. Upload or use Camera Mode.
+      No photos yet. Add some above.
     </div>
   </section>
 </main>
@@ -580,8 +600,8 @@
     <div class="vRight">
       <div class="row" style="justify-content:space-between; align-items:center;">
         <div>
-          <div style="font-weight:1000; margin-bottom:2px;">EDIT (always on)</div>
-          <div class="muted">Autosave ON</div>
+          <div style="font-weight:1000; margin-bottom:2px;" id="modeTitle">EDIT (always on)</div>
+          <div class="muted" id="modeSub">Autosave ON</div>
         </div>
       </div>
 
@@ -600,7 +620,7 @@
         <div class="toolIcon" data-tool="line" title="Straight Line">／</div>
         <div class="toolIcon" data-tool="angle" title="Angle (2 lines)">∠</div>
         <div class="toolIcon" data-tool="ruler" title="Measure">📏</div>
-        <div class="toolIcon" data-tool="text" title="Text">T</div>
+        <div class="toolIcon" data-tool="text" title="Add Text">T</div>
         <div class="toolIcon" data-tool="pan" title="Pan">✋</div>
       </div>
 
@@ -614,25 +634,13 @@
         <button class="btn danger" id="deleteBtn">Delete</button>
       </div>
 
-      <div class="hr"></div>
-
-      <div class="inlineBox">
-        <div class="smallLabel">Text Tool Panel</div>
-        <textarea id="textBox" placeholder="Type text here… (tap a green text box on the image to select it)" style="min-height:64px;"></textarea>
-        <div class="seg" style="margin-top:8px;">
-          <button class="btn sm ok" id="addTextBtn">Add New Text</button>
-          <button class="btn sm" id="applyTextBtn">Apply to Selected</button>
-          <button class="btn sm danger" id="deleteTextBtn">Delete Selected</button>
-          <div class="pill" id="textSelPill">Selected: none</div>
-        </div>
-        <div class="hint" style="margin-top:8px;">
-          Tip: New text drops centered. Drag the green box to move it anywhere.
-        </div>
-      </div>
-
-      <div class="hint" id="angleHint" style="display:none; margin-top:10px;">
+      <div class="hint" id="angleHint" style="display:none;">
         Angle tool: draw <b>Line 1</b> (start→end), then draw <b>Line 2</b> (start→end). Angle shows between them.
       </div>
+      <div class="hint" id="textHint" style="display:none;">
+        Text tool: tap to place. Drag to move. Tap a green text box to select, then use the prompt to change text.
+      </div>
+      <div class="hint" id="editHint">Edits auto-save and ZIP export will match exactly.</div>
     </div>
   </div>
 </div>
@@ -643,9 +651,6 @@
     <div class="camTop">
       <div class="pill"><span id="camCount">0</span> captured</div>
       <div class="row">
-        <button class="btn ok" id="camTopSnapBtn">Snap</button>
-        <button class="btn primary" id="camMoveShutterBtn">Move Shutter</button>
-        <button class="btn" id="camResetShutterBtn" title="Reset shutter position">Reset</button>
         <button class="btn" id="camFlipBtn">Flip</button>
         <button class="btn danger" id="camCancelBtn">Cancel</button>
         <button class="btn ok" id="camDoneBtn">Done</button>
@@ -653,12 +658,8 @@
     </div>
 
     <div class="camBody">
-      <div class="camLive" id="camLive">
+      <div class="camLive">
         <video id="camVideo" playsinline autoplay muted></video>
-        <div class="camShutter" id="camShutter" title="Snap"></div>
-        <div class="shutterMoveHint">
-          Move Shutter ON: drag the big shutter button where you want it. Tap “Lock Shutter” to finish.
-        </div>
       </div>
 
       <div class="camStrip">
@@ -679,40 +680,45 @@
 
 <script>
 (() => {
-  const PREFIX = "TEARDOWN";
+  const FOLDERS = ["Walk Around","UPD","Teardown"];
 
-  // ✅ Text default settings (bigger + centered drop)
-  const TEXT_DEFAULT_FONT = 72;      // much larger default text
-  const TEXT_MIN_FONT = 54;
-  const TEXT_MAX_FONT = 120;
-
-  const DB_NAME = "mitchell_easy_pie_v1";
+  const DB_NAME = "mitchell_app_pro_v6";
   const DB_VER = 1;
   const STORE_ORIG  = "originals";
   const STORE_EDIT  = "edits";
   const STORE_THUMB = "thumbs";
   const STORE_META  = "meta";
 
-  const mainScroll = document.getElementById("mainScroll");
+  // Device mode
+  const isTouch = matchMedia("(pointer: coarse)").matches || ("ontouchstart" in window);
+  const isSmall = matchMedia("(max-width: 900px)").matches;
+  const isPhoneMode = isTouch && isSmall;   // capture-first
+  const isDesktopMode = !isPhoneMode;
 
   let db;
   let meta = [];
+  let currentFolder = null;
 
+  // drag reorder
+  let dragCandidate = null;
   let dragging = null;
   let insertTarget = null;
   let suppressClickUntil = 0;
 
+  // overlay viewer/editor
   const overlay = document.getElementById("overlay");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
 
-  let listNow = [];
-  let indexInList = -1;
+  let folderList = [];
+  let indexInFolder = -1;
   let currentId = null;
 
+  // base original + view transform
   let baseBitmap = null;
   let view = { scale: 1, tx: 0, ty: 0 };
 
+  // tools + shapes
   let tool = "arrow";
   let isDown = false;
   let startW = {x:0,y:0};
@@ -720,32 +726,65 @@
   let anno = [];
   let undoStack = [];
 
+  // angle tool state
   let angleStage = 0;
   let angleLine1 = null;
 
-  // ✅ selected text index
-  let selectedTextIndex = -1;
-
+  // autosave
   let saveTimer = null;
   const AUTOSAVE_MS = 250;
 
+  // colors
   const GREEN = "rgba(0,255,0,0.95)";
-  const DARK  = "rgba(0,0,0,0.55)";
-  const WIDTH = 4;
+  const DARK  = "rgba(0,0,0,0.60)";
 
+  // --- Snap sound (synth click) ---
+  let audioCtx = null;
+  function playSnapSound(){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const ac = audioCtx;
+      const t0 = ac.currentTime;
+
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+
+      osc.type = "square";
+      osc.frequency.setValueAtTime(1200, t0);
+      osc.frequency.exponentialRampToValueAtTime(250, t0 + 0.03);
+
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.07);
+    }catch{}
+  }
+
+  // Job name
+  const jobNameEl = document.getElementById("jobName");
+  const LS_JOB = "mitchell_job_name";
+  jobNameEl.value = localStorage.getItem(LS_JOB) || "";
+  jobNameEl.addEventListener("input", () => localStorage.setItem(LS_JOB, jobNameEl.value || ""));
+
+  // mode pill UI
+  const modePill = document.getElementById("modePill");
+  modePill.textContent = isPhoneMode ? "Phone Capture Mode" : "Desktop Editor Mode";
+  document.getElementById("desktopImportBox").style.display = isDesktopMode ? "" : "none";
+  document.getElementById("phoneQuickBox").style.display = isPhoneMode ? "" : "none";
+
+  // toast
   const toastEl = document.getElementById("toast");
   let toastTimer = null;
   function toast(msg){
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1500);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1600);
   }
-
-  const jobNameEl = document.getElementById("jobName");
-  const LS_JOB = "mitchell_job_name_easy";
-  jobNameEl.value = localStorage.getItem(LS_JOB) || "";
-  jobNameEl.addEventListener("input", () => localStorage.setItem(LS_JOB, jobNameEl.value || ""));
 
   function uuid(){
     return crypto.randomUUID ? crypto.randomUUID() : ("id_" + Math.random().toString(16).slice(2) + Date.now());
@@ -765,11 +804,7 @@
         if (!d.objectStoreNames.contains(STORE_THUMB)) d.createObjectStore(STORE_THUMB, {keyPath:"id"});
         if (!d.objectStoreNames.contains(STORE_META))  d.createObjectStore(STORE_META,  {keyPath:"id"});
       };
-      req.onsuccess = () => {
-        const d = req.result;
-        d.onversionchange = () => { try{ d.close(); }catch{} };
-        resolve(d);
-      };
+      req.onsuccess = () => resolve(req.result);
     });
   }
   function tx(stores, mode="readonly"){ return db.transaction(stores, mode); }
@@ -813,21 +848,24 @@
     const all = await idbGetAll(tx([STORE_META],"readonly").objectStore(STORE_META));
     meta = all.map(m => ({
       id: m.id,
+      folder: m.folder,
       order: Number.isFinite(m.order) ? m.order : 0,
       filename: m.filename || "photo.jpg",
       created: m.created || nowISO(),
       notes: m.notes || "",
       anno: Array.isArray(m.anno) ? m.anno : []
     }));
-    await ensureOrder();
+    await ensureFolderOrder("Teardown");
   }
 
-  function items(){
-    return meta.slice().sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  function folderItems(folder){
+    return meta
+      .filter(m => m.folder === folder)
+      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
   }
 
-  async function ensureOrder(){
-    const list = items();
+  async function ensureFolderOrder(folder){
+    const list = folderItems(folder);
     let needs = false;
     list.forEach((x,i)=> { if ((x.order||0) !== i+1) needs = true; });
     if (!needs) return;
@@ -852,7 +890,7 @@
     document.getElementById("hdrCount").textContent = String(meta.length);
   }
 
-  // ---------- Thumbs ----------
+  // ---------- Home UI ----------
   async function getThumbBlob(id){
     try{
       const t = tx([STORE_THUMB], "readonly");
@@ -870,6 +908,391 @@
       return rec?.blob || null;
     }catch{}
     return null;
+  }
+
+  async function renderFolders(){
+    await refreshMeta();
+    setHdrCount();
+
+    const wrap = document.getElementById("folders");
+    wrap.innerHTML = "";
+
+    for (const f of FOLDERS){
+      const list = folderItems(f);
+      const count = list.length;
+
+      const hint =
+        f === "Walk Around" ? "Overall / approach / wide shots" :
+        f === "UPD" ? "Updates / supplements / progress" :
+        "Tear-down / hidden damage (Mitchell order)";
+
+      const div = document.createElement("div");
+      div.className = "folderCard";
+
+      div.innerHTML = `
+        <div class="folderTitle">${f}</div>
+        <div class="folderHint">${hint}</div>
+        <div class="pill"><span>${count}</span> photos</div>
+      `;
+
+      const strip = document.createElement("div");
+      strip.className = "miniStrip";
+      const preview = list.slice(0, 10);
+      for (const m of preview){
+        const img = document.createElement("img");
+        img.className = "miniThumb";
+        img.alt = "";
+        strip.appendChild(img);
+        getThumbBlob(m.id).then(blob => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          img.src = url;
+          img.onload = () => URL.revokeObjectURL(url);
+        }).catch(()=>{});
+      }
+      if (count > preview.length){
+        const more = document.createElement("div");
+        more.className = "miniMore";
+        more.textContent = `+${count - preview.length}`;
+        strip.appendChild(more);
+      }
+      div.appendChild(strip);
+
+      div.addEventListener("click", () => openFolder(f));
+      wrap.appendChild(div);
+    }
+  }
+
+  function showHome(){
+    document.getElementById("subtitle").textContent = "Folders";
+    document.getElementById("homeView").style.display = "";
+    document.getElementById("folderView").style.display = "none";
+    currentFolder = null;
+  }
+
+  async function openFolder(folder){
+    currentFolder = folder;
+    document.getElementById("subtitle").textContent = folder;
+    document.getElementById("homeView").style.display = "none";
+    document.getElementById("folderView").style.display = "";
+    document.getElementById("folderTitle").textContent = folder;
+    document.getElementById("dropFolderName").textContent = folder;
+
+    const folderSub = document.getElementById("folderSub");
+    folderSub.textContent = isPhoneMode
+      ? "Drag to reorder. (Phone: capture here, edit later on computer.)"
+      : "Drag to reorder. Desktop: click=view, double click=edit.";
+
+    await refreshMeta();
+    setHdrCount();
+    renderFolderGrid();
+  }
+
+  // ---------- Folder Grid + drag reorder ----------
+  async function renderFolderGrid(){
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    const badgeWrap = document.getElementById("insertBadge");
+    const badgeInner = document.getElementById("insertBadgeInner");
+
+    grid.innerHTML = "";
+    badgeWrap.style.display = "none";
+
+    const list = folderItems(currentFolder);
+    empty.style.display = list.length ? "none" : "";
+
+    list.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "thumb";
+      div.dataset.id = m.id;
+      div.dataset.index = String(idx);
+
+      const img = document.createElement("img");
+      img.alt = m.filename || "photo";
+      div.appendChild(img);
+
+      const num = document.createElement("div");
+      num.className = "num";
+      const shownNum = (currentFolder === "Teardown") ? (m.order || (idx+1)) : (idx+1);
+      num.textContent = String(shownNum);
+      div.appendChild(num);
+
+      const bar = document.createElement("div");
+      bar.className = "thumbBar";
+      bar.innerHTML = `<span class="chip">${currentFolder}</span><span class="chip">${pad3(shownNum)}</span>`;
+      div.appendChild(bar);
+
+      const insertLine = document.createElement("div");
+      insertLine.className = "insertLine";
+      div.appendChild(insertLine);
+
+      // Desktop: click=view, dblclick=edit
+      if (isDesktopMode){
+        let clickTimer = null;
+        div.addEventListener("click", () => {
+          if (Date.now() < suppressClickUntil) return;
+          clearTimeout(clickTimer);
+          clickTimer = setTimeout(() => openViewer(currentFolder, idx), 200);
+        });
+        div.addEventListener("dblclick", () => {
+          if (Date.now() < suppressClickUntil) return;
+          clearTimeout(clickTimer);
+          openViewer(currentFolder, idx);
+        });
+      } else {
+        // Phone: tap=view/edit
+        div.addEventListener("click", () => {
+          if (Date.now() < suppressClickUntil) return;
+          openViewer(currentFolder, idx);
+        });
+      }
+
+      // Drag threshold
+      div.addEventListener("pointerdown", (e) => {
+        if (overlay.classList.contains("show")) return;
+        if (e.button !== undefined && e.button !== 0) return;
+
+        dragCandidate = {
+          startX: e.clientX,
+          startY: e.clientY,
+          el: div,
+          idx,
+          badgeWrap,
+          badgeInner,
+          grid
+        };
+
+        const move = (ev) => dragCandidateMove(ev);
+        const up = (ev) => dragCandidateUp(ev, move, up);
+        window.addEventListener("pointermove", move, {passive:false});
+        window.addEventListener("pointerup", up, {passive:false});
+      });
+
+      grid.appendChild(div);
+      loadThumbInto(m.id, img);
+    });
+
+    async function loadThumbInto(id, imgEl){
+      let blob = await getThumbBlob(id);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      imgEl.src = url;
+      imgEl.onload = () => URL.revokeObjectURL(url);
+    }
+  }
+
+  function dragCandidateMove(e){
+    if (!dragCandidate) return;
+
+    // auto-scroll page while dragging near top/bottom
+    tryAutoScroll(e.clientY);
+
+    if (dragging){
+      onDragMove(e, dragCandidate.grid, dragCandidate.badgeInner);
+      return;
+    }
+    const dx = e.clientX - dragCandidate.startX;
+    const dy = e.clientY - dragCandidate.startY;
+    if (Math.hypot(dx,dy) < 10) return;
+    beginDrag(e, dragCandidate.el, dragCandidate.idx, dragCandidate.badgeWrap, dragCandidate.badgeInner, dragCandidate.grid);
+  }
+
+  function dragCandidateUp(e, moveHandler, upHandler){
+    window.removeEventListener("pointermove", moveHandler);
+    window.removeEventListener("pointerup", upHandler);
+
+    if (dragging){
+      onDragEnd(e, dragCandidate.grid, dragCandidate.badgeWrap);
+    }
+    dragCandidate = null;
+    stopAutoScroll();
+  }
+
+  function beginDrag(e, el, fromIndex, badgeWrap, badgeInner, grid){
+    e.preventDefault();
+
+    const rect = el.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    const ghost = el.cloneNode(true);
+    ghost.classList.add("ghost");
+    ghost.style.left = (e.clientX - offsetX) + "px";
+    ghost.style.top  = (e.clientY - offsetY) + "px";
+    ghost.style.width = rect.width + "px";
+    ghost.style.height = rect.height + "px";
+    document.body.appendChild(ghost);
+
+    dragging = { id: el.dataset.id, fromIndex, ghost, offsetX, offsetY };
+    insertTarget = null;
+
+    badgeWrap.style.display = "";
+    badgeInner.textContent = "Dragging…";
+  }
+
+  function clearInsertIndicators(grid){
+    grid.querySelectorAll(".insertLine").forEach(l => l.style.display = "none");
+  }
+
+  function onDragMove(e, grid, badgeInner){
+    if (!dragging) return;
+    e.preventDefault();
+
+    dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
+    dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
+
+    const thumbs = Array.from(grid.querySelectorAll(".thumb"));
+    let hit = null;
+    for (const t of thumbs){
+      const r = t.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
+        hit = { el:t, rect:r, index:Number(t.dataset.index) };
+        break;
+      }
+    }
+
+    clearInsertIndicators(grid);
+    insertTarget = null;
+
+    if (!hit){
+      badgeInner.textContent = "Move to a position…";
+      return;
+    }
+
+    const midX = (hit.rect.left + hit.rect.right) / 2;
+    const side = (e.clientX < midX) ? "before" : "after";
+
+    const line = hit.el.querySelector(".insertLine");
+    line.style.display = "block";
+    line.style.left = (side === "before") ? "8px" : "calc(100% - 8px)";
+
+    insertTarget = { index: hit.index, side };
+
+    const placeNum = hit.index + 1;
+    badgeInner.textContent = side === "before"
+      ? `Place BEFORE #${placeNum} (IN FRONT)`
+      : `Place AFTER #${placeNum} (BEHIND)`;
+  }
+
+  async function onDragEnd(e, grid, badgeWrap){
+    if (!dragging) return;
+    e.preventDefault();
+
+    clearInsertIndicators(grid);
+    badgeWrap.style.display = "none";
+    dragging.ghost.remove();
+
+    suppressClickUntil = Date.now() + 350;
+
+    const from = dragging.fromIndex;
+    let to = from;
+
+    if (insertTarget){
+      to = insertTarget.index + (insertTarget.side === "after" ? 1 : 0);
+      if (to > from) to -= 1;
+    }
+
+    dragging = null;
+    insertTarget = null;
+    stopAutoScroll();
+
+    await refreshMeta();
+    let listNow = folderItems(currentFolder);
+    if (!listNow.length) return;
+
+    to = Math.max(0, Math.min(to, listNow.length - 1));
+    if (to === from) return;
+
+    const item = listNow.splice(from, 1)[0];
+    listNow.splice(to, 0, item);
+    listNow.forEach((x,i)=> x.order = i+1);
+
+    const t = tx([STORE_META], "readwrite");
+    const s = t.objectStore(STORE_META);
+    for (const m of listNow){
+      const cur = await idbGet(s, m.id);
+      if (!cur) continue;
+      await idbPut(s, {...cur, order: m.order});
+    }
+    await waitTxDone(t);
+
+    toast(`Moved to #${to+1}`);
+    await refreshMeta();
+    renderFolderGrid();
+    renderFolders();
+  }
+
+  // --- Auto-scroll while dragging (important for long lists) ---
+  let autoScrollRAF = null;
+  let autoScrollDir = 0; // -1 up, +1 down
+  function tryAutoScroll(clientY){
+    const margin = 70;
+    const top = 58 + 10; // header + a little
+    const bottom = window.innerHeight - 20;
+    if (clientY < top + margin) autoScrollDir = -1;
+    else if (clientY > bottom - margin) autoScrollDir = 1;
+    else autoScrollDir = 0;
+
+    if (autoScrollDir !== 0 && !autoScrollRAF){
+      const step = () => {
+        if (!autoScrollDir){ autoScrollRAF = null; return; }
+        const main = document.querySelector("main");
+        main.scrollTop += autoScrollDir * 18;
+        autoScrollRAF = requestAnimationFrame(step);
+      };
+      autoScrollRAF = requestAnimationFrame(step);
+    }
+    if (autoScrollDir === 0 && autoScrollRAF){
+      cancelAnimationFrame(autoScrollRAF);
+      autoScrollRAF = null;
+    }
+  }
+  function stopAutoScroll(){
+    autoScrollDir = 0;
+    if (autoScrollRAF){
+      cancelAnimationFrame(autoScrollRAF);
+      autoScrollRAF = null;
+    }
+  }
+
+  // ---------- Add photos ----------
+  async function addFilesToFolder(folder, files){
+    await refreshMeta();
+    const list = folderItems(folder);
+    const maxOrder = list.reduce((mx, x) => Math.max(mx, x.order || 0), 0);
+
+    const t = tx([STORE_ORIG, STORE_META], "readwrite");
+    const sO = t.objectStore(STORE_ORIG);
+    const sM = t.objectStore(STORE_META);
+
+    let added = 0;
+    for (const f of files){
+      if (!f.type.startsWith("image/")) continue;
+      const id = uuid();
+      await idbPut(sO, {id, blob: f, type: f.type || "image/jpeg"});
+      const m = {
+        id,
+        folder,
+        order: maxOrder + added + 1,
+        filename: f.name || `photo_${added+1}.jpg`,
+        created: nowISO(),
+        notes: "",
+        anno: []
+      };
+      await idbPut(sM, m);
+      meta.push(m);
+      added++;
+    }
+    await waitTxDone(t);
+
+    const newOnes = folderItems(folder).slice(-added);
+    for (const m of newOnes) await ensureThumb(m.id);
+
+    toast(`Added ${added} photo(s).`);
+    await refreshMeta();
+    setHdrCount();
+    renderFolderGrid();
+    renderFolders();
   }
 
   async function ensureThumb(id){
@@ -898,464 +1321,76 @@
     await waitTxDone(t4);
   }
 
-  // ---------- Main Grid ----------
-  async function renderGrid(){
+  // ---------- Viewer / Editor (always on) ----------
+  async function openViewer(folder, idx){
     await refreshMeta();
-    await ensureOrder();
-    await refreshMeta();
-    setHdrCount();
-
-    const grid = document.getElementById("grid");
-    const empty = document.getElementById("empty");
-    grid.innerHTML = "";
-
-    const list = items();
-    empty.style.display = list.length ? "none" : "";
-
-    list.forEach((m, idx) => {
-      const div = document.createElement("div");
-      div.className = "thumb";
-      div.dataset.id = m.id;
-      div.dataset.index = String(idx);
-
-      const img = document.createElement("img");
-      img.alt = m.filename || "photo";
-      div.appendChild(img);
-
-      const num = document.createElement("div");
-      num.className = "num";
-      num.textContent = String(m.order || (idx+1));
-      div.appendChild(num);
-
-      const moveBtn = document.createElement("div");
-      moveBtn.className = "moveBtn";
-      moveBtn.innerHTML = `<span>↕</span> MOVE`;
-      div.appendChild(moveBtn);
-
-      const dropLabel = document.createElement("div");
-      dropLabel.className = "dropLabel";
-      dropLabel.textContent = "DROP";
-      div.appendChild(dropLabel);
-
-      const bar = document.createElement("div");
-      bar.className = "thumbBar";
-      bar.innerHTML = `<span class="chip">${PREFIX}</span><span class="chip">${pad3(m.order || (idx+1))}</span>`;
-      div.appendChild(bar);
-
-      div.addEventListener("click", () => {
-        if (Date.now() < suppressClickUntil) return;
-        openViewer(idx);
-      });
-
-      moveBtn.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        startMoveDrag(e, div, idx, grid);
-      }, {passive:false});
-
-      grid.appendChild(div);
-
-      getThumbBlob(m.id).then(blob => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        img.src = url;
-        img.onload = () => URL.revokeObjectURL(url);
-      }).catch(()=>{});
-    });
-  }
-
-  function clearDragTargets(grid){
-    grid.querySelectorAll(".thumb.dragTarget").forEach(el => {
-      el.classList.remove("dragTarget");
-      const label = el.querySelector(".dropLabel");
-      if (label) label.textContent = "DROP";
-    });
-  }
-
-  function beginDrag(e, el, fromIndex){
-    const rect = el.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-
-    const ghost = el.cloneNode(true);
-    ghost.classList.add("ghost");
-    ghost.style.left = (e.clientX - offsetX) + "px";
-    ghost.style.top  = (e.clientY - offsetY) + "px";
-    ghost.style.width = rect.width + "px";
-    ghost.style.height = rect.height + "px";
-    document.body.appendChild(ghost);
-
-    dragging = { id: el.dataset.id, fromIndex, ghost, offsetX, offsetY };
-    insertTarget = null;
-  }
-
-  function autoScrollWhileDragging(clientY){
-    const r = mainScroll.getBoundingClientRect();
-    const zone = 90;
-    const maxStep = 22;
-    let delta = 0;
-
-    if (clientY < r.top + zone){
-      const t = (r.top + zone - clientY) / zone;
-      delta = -Math.ceil(maxStep * Math.min(1, t));
-    } else if (clientY > r.bottom - zone){
-      const t = (clientY - (r.bottom - zone)) / zone;
-      delta = Math.ceil(maxStep * Math.min(1, t));
-    }
-    if (delta !== 0) mainScroll.scrollTop += delta;
-  }
-
-  function onDragMove(e, grid){
-    if (!dragging) return;
-    e.preventDefault();
-
-    autoScrollWhileDragging(e.clientY);
-
-    dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
-    dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
-
-    const thumbs = Array.from(grid.querySelectorAll(".thumb"));
-    let hit = null;
-    for (const t of thumbs){
-      const r = t.getBoundingClientRect();
-      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
-        hit = { el:t, rect:r, index:Number(t.dataset.index) };
-        break;
-      }
-    }
-
-    clearDragTargets(grid);
-    insertTarget = null;
-
-    if (!hit) return;
-
-    const midX = (hit.rect.left + hit.rect.right) / 2;
-    const side = (e.clientX < midX) ? "before" : "after";
-    insertTarget = { index: hit.index, side };
-
-    hit.el.classList.add("dragTarget");
-    const label = hit.el.querySelector(".dropLabel");
-    const n = hit.index + 1;
-    if (label){
-      label.textContent = (side === "before") ? `DROP BEFORE #${n}` : `DROP AFTER #${n}`;
-    }
-  }
-
-  async function onDragEnd(e, grid){
-    if (!dragging) return;
-    e.preventDefault();
-
-    clearDragTargets(grid);
-
-    dragging.ghost.remove();
-    suppressClickUntil = Date.now() + 350;
-
-    const from = dragging.fromIndex;
-    let to = from;
-
-    if (insertTarget){
-      to = insertTarget.index + (insertTarget.side === "after" ? 1 : 0);
-      if (to > from) to -= 1;
-    }
-
-    dragging = null;
-    insertTarget = null;
-
-    await refreshMeta();
-    let list = items();
-    if (!list.length) return;
-
-    to = Math.max(0, Math.min(to, list.length - 1));
-    if (to === from) return;
-
-    const item = list.splice(from, 1)[0];
-    list.splice(to, 0, item);
-    list.forEach((x,i)=> x.order = i+1);
-
-    const t = tx([STORE_META], "readwrite");
-    const s = t.objectStore(STORE_META);
-    for (const m of list){
-      const cur = await idbGet(s, m.id);
-      if (!cur) continue;
-      await idbPut(s, {...cur, order: m.order});
-    }
-    await waitTxDone(t);
-
-    toast(`Moved to #${to+1}`);
-    await renderGrid();
-  }
-
-  function startMoveDrag(e, el, idx, grid){
-    beginDrag(e, el, idx);
-
-    const move = (ev) => onDragMove(ev, grid);
-    const up = (ev) => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      onDragEnd(ev, grid).catch(console.error);
-    };
-
-    window.addEventListener("pointermove", move, {passive:false});
-    window.addEventListener("pointerup", up, {passive:false});
-  }
-
-  // ---------- Add photos ----------
-  async function addFiles(files){
-    await refreshMeta();
-    const list = items();
-    const maxOrder = list.reduce((mx, x) => Math.max(mx, x.order || 0), 0);
-
-    const t = tx([STORE_ORIG, STORE_META], "readwrite");
-    const sO = t.objectStore(STORE_ORIG);
-    const sM = t.objectStore(STORE_META);
-
-    let added = 0;
-    for (const f of files){
-      if (!f.type.startsWith("image/")) continue;
-      const id = uuid();
-      await idbPut(sO, {id, blob: f, type: f.type || "image/jpeg"});
-      const m = {
-        id,
-        order: maxOrder + added + 1,
-        filename: f.name || `photo_${added+1}.jpg`,
-        created: nowISO(),
-        notes: "",
-        anno: []
-      };
-      await idbPut(sM, m);
-      meta.push(m);
-      added++;
-    }
-    await waitTxDone(t);
-
-    const newOnes = items().slice(-added);
-    for (const m of newOnes) await ensureThumb(m.id);
-
-    toast(`Added ${added} photo(s).`);
-    await renderGrid();
-  }
-
-  // ---------- Export (Mitchell order) ----------
-  function downloadBlob(filename, blob){
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  async function getEditedBlob(id){
-    try{
-      const t = tx([STORE_EDIT], "readonly");
-      const rec = await idbGet(t.objectStore(STORE_EDIT), id);
-      if (rec?.blob) return rec.blob;
-    }catch{}
-    return null;
-  }
-  async function getOriginalBlob(id){
-    const t2 = tx([STORE_ORIG], "readonly");
-    const rec2 = await idbGet(t2.objectStore(STORE_ORIG), id);
-    return rec2?.blob || null;
-  }
-
-  async function exportZip(){
-    if (!window.JSZip){
-      alert("JSZip failed to load (offline?). Connect once and try again.");
-      return;
-    }
-
-    await refreshMeta();
-    await ensureOrder();
-    await refreshMeta();
-
-    const list = items();
-    if (!list.length){ toast("No photos."); return; }
-
-    const zip = new JSZip();
-
-    for (let i=0; i<list.length; i++){
-      const m = list[i];
-      let blob = await getEditedBlob(m.id);
-      if (!blob) blob = await getOriginalBlob(m.id);
-      if (!blob) continue;
-
-      const name = `${PREFIX}_${pad3(i+1)}.JPG`;
-      zip.file(name, blob);
-    }
-
-    const rawName = (jobNameEl.value || "").trim();
-    const safeJob = rawName ? rawName.replace(/[^\w\- ]+/g, "").replace(/\s+/g,"_") : "Job";
-    const date = new Date().toISOString().slice(0,10);
-    const fileName = `Mitchell_${safeJob}_${date}.zip`;
-
-    toast("Building ZIP…");
-    const out = await zip.generateAsync({type:"blob"});
-    downloadBlob(fileName, out);
-    toast("ZIP downloaded.");
-  }
-
-  // ---------- Import ZIP ----------
-  function parseLeadingNumber(filename){
-    const base = (filename.split("/").pop() || filename).toUpperCase();
-    const m = base.match(/(\d{1,4})/);
-    return m ? parseInt(m[1],10) : null;
-  }
-  async function importZipFile(file){
-    if (!window.JSZip){
-      alert("JSZip failed to load (offline?). Connect once and try again.");
-      return;
-    }
-
-    await refreshMeta();
-    if (meta.length){
-      const ok = confirm("Importing a ZIP will REPLACE the current photos on this device. Continue?");
-      if (!ok) return;
-      await clearJob();
-    }
-
-    toast("Reading ZIP…");
-    const buf = await file.arrayBuffer();
-    const zip = await JSZip.loadAsync(buf);
-
-    const entries = Object.keys(zip.files);
-    const imgs = [];
-    for (const path of entries){
-      const zf = zip.files[path];
-      if (zf.dir) continue;
-      if (!(/\.(jpg|jpeg|png|webp)$/i.test(path))) continue;
-      const blob = await zf.async("blob");
-      const name = path.split("/").pop() || "photo.jpg";
-      imgs.push({name, blob, order: parseLeadingNumber(name) ?? 999999});
-    }
-    imgs.sort((a,b) => (a.order - b.order) || a.name.localeCompare(b.name));
-
-    const files = imgs.map((x,i)=> new File([x.blob], x.name || `${PREFIX}_${pad3(i+1)}.JPG`, {type: x.blob.type || "image/jpeg"}));
-    await addFiles(files);
-    toast("Import complete.");
-  }
-
-  // ---------- Clear ----------
-  async function clearJob(){
-    await refreshMeta();
-    const list = items();
-    if (!list.length) return;
-
-    const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
-    const sO = t.objectStore(STORE_ORIG);
-    const sE = t.objectStore(STORE_EDIT);
-    const sT = t.objectStore(STORE_THUMB);
-    const sM = t.objectStore(STORE_META);
-
-    for (const m of list){
-      await idbDel(sO, m.id).catch(()=>{});
-      await idbDel(sE, m.id).catch(()=>{});
-      await idbDel(sT, m.id).catch(()=>{});
-      await idbDel(sM, m.id).catch(()=>{});
-    }
-    await waitTxDone(t);
-
-    await refreshMeta();
-    setHdrCount();
-    await renderGrid();
-  }
-
-  async function clearAllDevice(){
-    try{ closeViewer(); }catch{}
-    try{ camStop(); }catch{}
-    try{ if (db) db.close(); }catch{}
-
-    localStorage.removeItem(LS_JOB);
-    localStorage.removeItem("mitchell_shutter_pos_easy");
-
-    await new Promise((resolve) => {
-      const req = indexedDB.deleteDatabase(DB_NAME);
-      req.onsuccess = resolve;
-      req.onerror = resolve;
-      req.onblocked = () => setTimeout(resolve, 250);
-    });
-
-    db = await openDB();
-    meta = [];
-    setHdrCount();
-    jobNameEl.value = "";
-    toast("Cleared all.");
-    await renderGrid();
-  }
-
-  // ---------- Viewer / Editor ----------
-  async function openViewer(idx){
-    await refreshMeta();
-    listNow = items();
-    idx = Math.max(0, Math.min(idx, listNow.length - 1));
-    indexInList = idx;
-    currentId = listNow[indexInList]?.id || null;
+    currentFolder = folder;
+    folderList = folderItems(folder);
+    indexInFolder = Math.max(0, Math.min(idx, folderList.length - 1));
+    currentId = folderList[indexInFolder]?.id || null;
     if (!currentId) return;
 
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden","false");
 
-    document.getElementById("posPill").textContent = `${indexInList+1} / ${listNow.length}`;
+    document.getElementById("posPill").textContent = `${indexInFolder+1} / ${folderList.length}`;
 
-    const m = listNow[indexInList];
+    const m = folderList[indexInFolder];
     anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
     undoStack = [];
     angleStage = 0;
     angleLine1 = null;
-    tempShape = null;
-
-    selectedTextIndex = -1;
-    syncTextPanel(true);
-
     document.getElementById("notesInput").value = m.notes || "";
 
     await loadOriginalBitmap(currentId);
     resetView();
     redraw();
+
     setArrows();
     setAngleHint();
-  }
-
-  async function step(dir){
-    const next = indexInList + dir;
-    if (next < 0 || next >= listNow.length) return;
-    await flushAutosave();
-    await openViewer(next);
+    setTextHint();
   }
 
   function closeViewer(){
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden","true");
     baseBitmap = null;
-    listNow = [];
-    indexInList = -1;
+    folderList = [];
+    indexInFolder = -1;
     currentId = null;
     anno = [];
     undoStack = [];
     angleStage = 0;
     angleLine1 = null;
     tempShape = null;
-    selectedTextIndex = -1;
-    syncTextPanel(true);
     clearTimeout(saveTimer);
     saveTimer = null;
   }
 
   function setArrows(){
-    const canPrev = indexInList > 0;
-    const canNext = indexInList < listNow.length - 1;
+    const canPrev = indexInFolder > 0;
+    const canNext = indexInFolder < folderList.length - 1;
     document.getElementById("prevBtn").disabled = !canPrev;
     document.getElementById("nextBtn").disabled = !canNext;
     document.getElementById("bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
     document.getElementById("bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
   }
 
+  async function step(dir){
+    const next = indexInFolder + dir;
+    if (next < 0 || next >= folderList.length) return;
+    await flushAutosave();
+    await openViewer(currentFolder, next);
+  }
+
   async function loadOriginalBitmap(id){
     const t = tx([STORE_ORIG], "readonly");
     const rec = await idbGet(t.objectStore(STORE_ORIG), id);
-    baseBitmap = rec?.blob ? await createImageBitmap(rec.blob) : null;
+    if (!rec?.blob){
+      baseBitmap = null;
+      return;
+    }
+    baseBitmap = await createImageBitmap(rec.blob);
     resizeCanvasToContainer();
   }
 
@@ -1372,6 +1407,7 @@
   function resetView(){
     view.tx = 0; view.ty = 0; view.scale = 1;
     if (!baseBitmap) return;
+
     const cw = canvas.clientWidth;
     const ch = canvas.clientHeight;
     const iw = baseBitmap.width;
@@ -1423,8 +1459,10 @@
     if (!currentId) return;
     const notes = document.getElementById("notesInput").value || "";
     await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
+    // store edited + thumb (so UI updates fast), but ZIP will also re-render fresh
     await renderAndStoreEdited(currentId);
-    ensureThumb(currentId).catch(()=>{});
+    renderFolderGrid();
+    renderFolders();
   }
 
   function pushUndo(){
@@ -1438,9 +1476,13 @@
     angleStage = 0;
     angleLine1 = null;
     setAngleHint();
+    setTextHint();
   }
   function setAngleHint(){
     document.getElementById("angleHint").style.display = (tool === "angle") ? "" : "none";
+  }
+  function setTextHint(){
+    document.getElementById("textHint").style.display = (tool === "text") ? "" : "none";
   }
 
   function redraw(){
@@ -1460,333 +1502,193 @@
       ctx.fillRect(0,0,cw,ch);
     }
 
-    drawShapes(anno, false);
-    if (tempShape) drawShapes([tempShape], true);
-    drawAngleLabelIfPresent();
+    // draw with screen-friendly sizes
+    drawShapesOnCtx(ctx, anno, {mode:"screen", baseW: baseBitmap?.width||1000, baseH: baseBitmap?.height||1000});
+    if (tempShape) drawShapesOnCtx(ctx, [tempShape], {mode:"screen", dashed:true, baseW: baseBitmap?.width||1000, baseH: baseBitmap?.height||1000});
   }
 
-  function roundRect(ctx, x, y, w, h, r){
+  // ---------------------------
+  // Shared rendering (screen + export)
+  // ---------------------------
+  function computeScaleForExport(w, h){
+    // scale factor so big photos get bigger arrows/labels
+    // 1200px long side = ~1.0
+    const longSide = Math.max(w,h) || 1200;
+    return Math.max(0.9, Math.min(3.0, longSide / 1200));
+  }
+
+  function roundRectPath(c, x, y, w, h, r){
     const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y, x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x, y+h, rr);
-    ctx.arcTo(x, y+h, x, y, rr);
-    ctx.arcTo(x, y, x+w, y, rr);
-    ctx.closePath();
+    c.beginPath();
+    c.moveTo(x+rr, y);
+    c.arcTo(x+w, y, x+w, y+h, rr);
+    c.arcTo(x+w, y+h, x, y+h, rr);
+    c.arcTo(x, y+h, x, y, rr);
+    c.arcTo(x, y, x+w, y, rr);
+    c.closePath();
   }
 
-  // ✅ Big text box: bigger font, bigger padding, auto width/height
-  function drawTextBox(s, dashed, selected){
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
+  function drawShapesOnCtx(c, list, opts){
+    const mode = opts?.mode || "screen"; // screen|export
+    const dashed = !!opts?.dashed;
 
-    const fontSize = Math.max(TEXT_MIN_FONT, Math.min(TEXT_MAX_FONT, s.font || TEXT_DEFAULT_FONT));
-    const padding = Math.round(fontSize * 0.55);
-    ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    // base sizes
+    const exportSF = (mode === "export") ? computeScaleForExport(opts.baseW, opts.baseH) : 1;
+    const strokeW = (mode === "export") ? (8 * exportSF) : 4;
+    const outlineW = (mode === "export") ? (strokeW + 4*exportSF) : (strokeW + 2);
 
-    const lines = (s.text || "").split("\n");
-    const lineH = fontSize * 1.15;
+    const arrowHead = (mode === "export") ? (90 * exportSF) : (18 / view.scale);
+    const labelFont = (mode === "export") ? (36 * exportSF) : (14 / view.scale);
 
-    let maxW = 0;
-    for (const line of lines) maxW = Math.max(maxW, ctx.measureText(line).width);
+    const textFont = (mode === "export") ? (62 * exportSF) : 28; // bigger on-screen than your earlier 22
+    const textPad  = (mode === "export") ? (22 * exportSF) : 12;
+    const textRadius = (mode === "export") ? (18 * exportSF) : 10;
 
-    const w = Math.max(fontSize * 1.6, maxW + padding*2);
-    const h = Math.max(fontSize * 1.2, lines.length * lineH + padding*2);
-
-    s.w = w; s.h = h;
-
-    ctx.setLineDash(dashed ? [10,8] : []);
-    ctx.fillStyle = GREEN;
-    ctx.strokeStyle = selected ? "rgba(59,130,246,0.95)" : "rgba(0,0,0,0.9)";
-    ctx.lineWidth = selected ? 6 : 4;
-
-    roundRect(ctx, s.x, s.y, w, h, Math.max(12, Math.round(fontSize * 0.30)));
-    ctx.fill();
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // black text
-    ctx.fillStyle = "rgba(0,0,0,1)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const cx = s.x + w/2;
-    const cy = s.y + h/2;
-    const totalH = lines.length * lineH;
-    let y = cy - totalH/2 + lineH/2;
-    for (const line of lines){
-      ctx.fillText(line, cx, y);
-      y += lineH;
-    }
-
-    ctx.restore();
-  }
-
-  function drawShapeStroke(s, color, width, dashed, selected){
-    if (s.type === "text"){
-      drawTextBox(s, dashed, selected);
-      return;
-    }
-
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width / view.scale;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.setLineDash(dashed ? [8 / view.scale, 6 / view.scale] : []);
-
-    const label = (txt, x, y) => {
-      ctx.save();
-      ctx.setLineDash([]);
-      ctx.font = `${14 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-      ctx.fillStyle = color;
-      ctx.strokeStyle = "rgba(0,0,0,0.65)";
-      ctx.lineWidth = 4 / view.scale;
-      ctx.strokeText(txt, x, y);
-      ctx.fillText(txt, x, y);
-      ctx.restore();
+    const drawLabel = (txt, x, y) => {
+      c.save();
+      c.setLineDash([]);
+      c.font = `${labelFont}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+      c.fillStyle = GREEN;
+      c.strokeStyle = "rgba(0,0,0,0.70)";
+      c.lineWidth = Math.max(3, (mode === "export") ? 10*exportSF : (5 / view.scale));
+      c.strokeText(txt, x, y);
+      c.fillText(txt, x, y);
+      c.restore();
     };
 
-    if (["line","ruler","angleLine"].includes(s.type)){
-      ctx.beginPath();
-      ctx.moveTo(s.x1, s.y1);
-      ctx.lineTo(s.x2, s.y2);
-      ctx.stroke();
-      if (s.type === "ruler"){
-        const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
-        label(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 8, (s.y1+s.y2)/2 - 8);
-      }
-    } else if (s.type === "rect"){
-      const x = Math.min(s.x1, s.x2);
-      const y = Math.min(s.y1, s.y2);
-      const w = Math.abs(s.x2 - s.x1);
-      const h = Math.abs(s.y2 - s.y1);
-      ctx.strokeRect(x,y,w,h);
-    } else if (s.type === "circle"){
-      const cx = (s.x1 + s.x2) / 2;
-      const cy = (s.y1 + s.y2) / 2;
-      const rx = Math.abs(s.x2 - s.x1) / 2;
-      const ry = Math.abs(s.y2 - s.y1) / 2;
-      ctx.beginPath();
-      if (ctx.ellipse) ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-      else {
-        ctx.save();
-        ctx.translate(cx,cy);
-        ctx.scale(rx || 1, ry || 1);
-        ctx.arc(0,0,1,0,Math.PI*2);
-        ctx.restore();
-      }
-      ctx.stroke();
-    } else if (s.type === "arrow"){
-      ctx.beginPath();
-      ctx.moveTo(s.x1, s.y1);
-      ctx.lineTo(s.x2, s.y2);
-      ctx.stroke();
-      const dx = s.x2 - s.x1;
-      const dy = s.y2 - s.y1;
-      const ang = Math.atan2(dy, dx);
-      const headLen = 60 / view.scale;
-      const a1 = ang - Math.PI / 8;
-      const a2 = ang + Math.PI / 8;
-      ctx.beginPath();
-      ctx.moveTo(s.x2, s.y2);
-      ctx.lineTo(s.x2 - Math.cos(a1)*headLen, s.y2 - Math.sin(a1)*headLen);
-      ctx.moveTo(s.x2, s.y2);
-      ctx.lineTo(s.x2 - Math.cos(a2)*headLen, s.y2 - Math.sin(a2)*headLen);
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  function drawShapes(list, dashed){
-    for (let i=0; i<list.length; i++){
-      const s = list[i];
-      const isSelectedText = (s.type === "text" && i === selectedTextIndex);
-      drawShapeStroke(s, DARK, WIDTH+2, dashed, isSelectedText);
-      drawShapeStroke(s, GREEN, WIDTH, dashed, isSelectedText);
-    }
-  }
-
-  function drawAngleLabelIfPresent(){
-    const lines = anno.filter(s => s.type === "angleLine");
-    if (lines.length < 2) return;
-    const l2 = lines[lines.length - 1];
-    const l1 = lines[lines.length - 2];
-    const a = {x: l1.x2 - l1.x1, y: l1.y2 - l1.y1};
-    const b = {x: l2.x2 - l2.x1, y: l2.y2 - l2.y1};
-    const dot = a.x*b.x + a.y*b.y;
-    const la = Math.hypot(a.x,a.y);
-    const lb = Math.hypot(b.x,b.y);
-    if (!la || !lb) return;
-    const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
-
-    ctx.save();
-    ctx.translate(view.tx, view.ty);
-    ctx.scale(view.scale, view.scale);
-    ctx.font = `${16 / view.scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-    ctx.fillStyle = GREEN;
-    ctx.strokeStyle = "rgba(0,0,0,0.65)";
-    ctx.lineWidth = 5 / view.scale;
-    const txt = `${deg.toFixed(1)}°`;
-    const x = l2.x1 + 10;
-    const y = l2.y1 - 10;
-    ctx.strokeText(txt, x, y);
-    ctx.fillText(txt, x, y);
-    ctx.restore();
-  }
-
-  // ✅ render edited image uses same BIG text rules
-  async function renderAndStoreEdited(id){
-    if (!baseBitmap) return;
-
-    const w = baseBitmap.width;
-    const h = baseBitmap.height;
-
-    const off = document.createElement("canvas");
-    off.width = w; off.height = h;
-    const octx = off.getContext("2d");
-    octx.drawImage(baseBitmap, 0, 0);
-
-    const roundRect2 = (c, x, y, ww, hh, r) => {
-      const rr = Math.min(r, ww/2, hh/2);
-      c.beginPath();
-      c.moveTo(x+rr, y);
-      c.arcTo(x+ww, y, x+ww, y+hh, rr);
-      c.arcTo(x+ww, y+hh, x, y+hh, rr);
-      c.arcTo(x, y+hh, x, y, rr);
-      c.arcTo(x, y, x+ww, y, rr);
-      c.closePath();
-    };
-
-    const drawText = (s) => {
-      const fontSize = Math.max(TEXT_MIN_FONT, Math.min(TEXT_MAX_FONT, s.font || TEXT_DEFAULT_FONT));
-      const padding = Math.round(fontSize * 0.55);
-      octx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-
+    const drawTextBox = (s) => {
+      // compute size
+      c.save();
+      c.font = `${textFont}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
       const lines = (s.text || "").split("\n");
-      const lineH = fontSize * 1.15;
-
+      const lineH = textFont * 1.2;
       let maxW = 0;
-      for (const line of lines) maxW = Math.max(maxW, octx.measureText(line).width);
+      for (const line of lines) maxW = Math.max(maxW, c.measureText(line).width);
+      const w = Math.max(80, maxW + textPad*2);
+      const h = Math.max(50, lines.length * lineH + textPad*2);
+      s.w = w; s.h = h;
 
-      const ww = Math.max(fontSize * 1.6, maxW + padding*2);
-      const hh = Math.max(fontSize * 1.2, lines.length * lineH + padding*2);
+      c.setLineDash(dashed ? [10,8] : []);
+      c.fillStyle = "rgba(0,255,0,0.95)";
+      c.strokeStyle = "rgba(0,0,0,0.92)";
+      c.lineWidth = Math.max(3, (mode === "export") ? 8*exportSF : 3);
+      roundRectPath(c, s.x, s.y, w, h, textRadius);
+      c.fill();
+      c.stroke();
+      c.setLineDash([]);
 
-      s.w = ww; s.h = hh;
-
-      octx.fillStyle = GREEN;
-      octx.strokeStyle = "rgba(0,0,0,0.9)";
-      octx.lineWidth = 4;
-      roundRect2(octx, s.x, s.y, ww, hh, Math.max(12, Math.round(fontSize * 0.30)));
-      octx.fill();
-      octx.stroke();
-
-      octx.fillStyle = "rgba(0,0,0,1)";
-      octx.textAlign = "center";
-      octx.textBaseline = "middle";
-      const cx = s.x + ww/2;
-      const cy = s.y + hh/2;
+      c.fillStyle = "rgba(0,0,0,1)";
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      const cx = s.x + w/2;
+      const cy = s.y + h/2;
       const totalH = lines.length * lineH;
       let yy = cy - totalH/2 + lineH/2;
       for (const line of lines){
-        octx.fillText(line, cx, yy);
+        c.fillText(line, cx, yy);
         yy += lineH;
       }
+      c.restore();
     };
 
-    const drawLine = (s, color, ww) => {
-      octx.save();
-      octx.strokeStyle = color;
-      octx.lineWidth = ww;
-      octx.lineCap = "round";
-      octx.lineJoin = "round";
-      octx.beginPath();
-      octx.moveTo(s.x1,s.y1);
-      octx.lineTo(s.x2,s.y2);
-      octx.stroke();
-      octx.restore();
-    };
+    const drawStroke = (s, color, lw, isOutline) => {
+      if (s.type === "text"){
+        drawTextBox(s);
+        return;
+      }
 
-    const drawLabel = (txt, x, y, color) => {
-      octx.save();
-      octx.font = `18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-      octx.fillStyle = color;
-      octx.strokeStyle = "rgba(0,0,0,0.65)";
-      octx.lineWidth = 6;
-      octx.strokeText(txt, x, y);
-      octx.fillText(txt, x, y);
-      octx.restore();
-    };
+      c.save();
+      c.strokeStyle = color;
+      c.lineWidth = lw;
+      c.lineCap = "round";
+      c.lineJoin = "round";
+      c.setLineDash(dashed ? [12,10] : []);
 
-    const drawShape = (s, color, ww) => {
-      if (s.type === "text"){ drawText(s); return; }
       if (["line","ruler","angleLine"].includes(s.type)){
-        drawLine(s, color, ww);
-        if (s.type === "ruler"){
+        c.beginPath();
+        c.moveTo(s.x1, s.y1);
+        c.lineTo(s.x2, s.y2);
+        c.stroke();
+
+        if (s.type === "ruler" && !isOutline){
           const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
-          drawLabel(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 10, (s.y1+s.y2)/2 - 10, color);
+          drawLabel(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 12, (s.y1+s.y2)/2 - 12);
         }
-        return;
-      }
-      if (s.type === "rect"){
-        const x = Math.min(s.x1,s.x2), y=Math.min(s.y1,s.y2);
-        const ww2 = Math.abs(s.x2-s.x1), hh2=Math.abs(s.y2-s.y1);
-        octx.save();
-        octx.strokeStyle = color;
-        octx.lineWidth = ww;
-        octx.strokeRect(x,y,ww2,hh2);
-        octx.restore();
-        return;
-      }
-      if (s.type === "circle"){
-        const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2;
-        const rx=Math.abs(s.x2-s.x1)/2, ry=Math.abs(s.y2-s.y1)/2;
-        octx.save();
-        octx.strokeStyle = color;
-        octx.lineWidth = ww;
-        octx.beginPath();
-        if (octx.ellipse) octx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+      } else if (s.type === "rect"){
+        const x = Math.min(s.x1, s.x2);
+        const y = Math.min(s.y1, s.y2);
+        const w = Math.abs(s.x2 - s.x1);
+        const h = Math.abs(s.y2 - s.y1);
+        c.strokeRect(x,y,w,h);
+      } else if (s.type === "circle"){
+        const cx = (s.x1 + s.x2) / 2;
+        const cy = (s.y1 + s.y2) / 2;
+        const rx = Math.abs(s.x2 - s.x1) / 2;
+        const ry = Math.abs(s.y2 - s.y1) / 2;
+        c.beginPath();
+        if (c.ellipse) c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
         else {
-          octx.save(); octx.translate(cx,cy); octx.scale(rx||1,ry||1);
-          octx.arc(0,0,1,0,Math.PI*2); octx.restore();
+          c.save();
+          c.translate(cx,cy);
+          c.scale(rx || 1, ry || 1);
+          c.arc(0,0,1,0,Math.PI*2);
+          c.restore();
         }
-        octx.stroke();
-        octx.restore();
-        return;
+        c.stroke();
+      } else if (s.type === "arrow"){
+        c.beginPath();
+        c.moveTo(s.x1, s.y1);
+        c.lineTo(s.x2, s.y2);
+        c.stroke();
+
+        const dx = s.x2 - s.x1;
+        const dy = s.y2 - s.y1;
+        const ang = Math.atan2(dy, dx);
+
+        const headLen = arrowHead;
+        const a1 = ang - Math.PI / 8;
+        const a2 = ang + Math.PI / 8;
+
+        c.beginPath();
+        c.moveTo(s.x2, s.y2);
+        c.lineTo(s.x2 - Math.cos(a1)*headLen, s.y2 - Math.sin(a1)*headLen);
+        c.moveTo(s.x2, s.y2);
+        c.lineTo(s.x2 - Math.cos(a2)*headLen, s.y2 - Math.sin(a2)*headLen);
+        c.stroke();
       }
-      if (s.type === "arrow"){
-        drawLine(s, color, ww);
-        const dx=s.x2-s.x1, dy=s.y2-s.y1;
-        const ang=Math.atan2(dy,dx);
-        const head=28;
-        const a1=ang-Math.PI/8, a2=ang+Math.PI/8;
-        octx.save();
-        octx.strokeStyle = color;
-        octx.lineWidth = ww;
-        octx.beginPath();
-        octx.moveTo(s.x2,s.y2);
-        octx.lineTo(s.x2-Math.cos(a1)*head, s.y2-Math.sin(a1)*head);
-        octx.moveTo(s.x2,s.y2);
-        octx.lineTo(s.x2-Math.cos(a2)*head, s.y2-Math.sin(a2)*head);
-        octx.stroke();
-        octx.restore();
-      }
+
+      c.restore();
     };
 
-    for (const s of anno){
-      drawShape(s, DARK, WIDTH+2);
-      drawShape(s, GREEN, WIDTH);
+    // If drawing on screen, shapes are stored in world coords, so we must apply the view transform.
+    // For export, no view transform is needed (we draw directly on full-res image coords).
+    const needsView = (mode === "screen");
+
+    c.save();
+    if (needsView){
+      c.translate(view.tx, view.ty);
+      c.scale(view.scale, view.scale);
     }
 
-    const lines = anno.filter(s => s.type === "angleLine");
+    for (const s of list){
+      drawStroke(s, DARK, outlineW / (needsView ? view.scale : 1), true);
+      drawStroke(s, GREEN, strokeW / (needsView ? view.scale : 1), false);
+    }
+
+    // angle label (draw after)
+    const angleLines = list === anno ? anno.filter(s => s.type === "angleLine") : [];
+    if (angleLines.length >= 2 && !needsView){
+      // handled in export renderer separately (so we can place label reliably)
+    }
+
+    c.restore();
+
+    // Angle label needs to be drawn in the same space as line coords:
+    // Screen mode -> with view; Export mode -> raw.
+    const lines = (list === anno ? anno : []).filter(s => s.type === "angleLine");
     if (lines.length >= 2){
-      const l2 = lines[lines.length-1];
-      const l1 = lines[lines.length-2];
+      const l2 = lines[lines.length - 1];
+      const l1 = lines[lines.length - 2];
       const a = {x: l1.x2 - l1.x1, y: l1.y2 - l1.y1};
       const b = {x: l2.x2 - l2.x1, y: l2.y2 - l2.y1};
       const dot = a.x*b.x + a.y*b.y;
@@ -1794,9 +1696,34 @@
       const lb = Math.hypot(b.x,b.y);
       if (la && lb){
         const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
-        drawLabel(`${deg.toFixed(1)}°`, l2.x1 + 12, l2.y1 - 12, GREEN);
+
+        c.save();
+        if (needsView){
+          c.translate(view.tx, view.ty);
+          c.scale(view.scale, view.scale);
+        }
+        // place label near l2 start
+        drawLabel(`${deg.toFixed(1)}°`, l2.x1 + 16, l2.y1 - 16);
+        c.restore();
       }
     }
+  }
+
+  // Build edited image in DB (for thumbnails + quick view)
+  async function renderAndStoreEdited(id){
+    if (!baseBitmap) return;
+
+    const w = baseBitmap.width;
+    const h = baseBitmap.height;
+
+    const off = document.createElement("canvas");
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext("2d");
+    octx.drawImage(baseBitmap, 0, 0);
+
+    // draw annotations in EXPORT mode so sizing is correct for big photos
+    drawShapesOnCtx(octx, anno, {mode:"export", baseW:w, baseH:h});
 
     const editedBlob = await new Promise(res => off.toBlob(res, "image/jpeg", 0.92));
     if (!editedBlob) return;
@@ -1805,6 +1732,7 @@
     await idbPut(t.objectStore(STORE_EDIT), {id, blob: editedBlob, type:"image/jpeg"});
     await waitTxDone(t);
 
+    // thumb from edited
     const max = 360;
     const scale = Math.min(1, max / Math.max(w, h));
     const tw = Math.max(1, Math.round(w * scale));
@@ -1821,21 +1749,7 @@
     }
   }
 
-  // ---- Text selection + panel sync ----
-  const textBoxEl = document.getElementById("textBox");
-  const textSelPill = document.getElementById("textSelPill");
-
-  function syncTextPanel(force=false){
-    if (selectedTextIndex < 0 || !anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text"){
-      textSelPill.textContent = "Selected: none";
-      if (force) textBoxEl.value = "";
-      return;
-    }
-    const s = anno[selectedTextIndex];
-    textSelPill.textContent = `Selected: #${selectedTextIndex+1}`;
-    textBoxEl.value = s.text || "";
-  }
-
+  // Text moving/editing
   function pointInText(s, p){
     if (s.type !== "text") return false;
     const w = s.w || 0, h = s.h || 0;
@@ -1844,45 +1758,12 @@
   function topmostTextAt(p){
     for (let i = anno.length - 1; i >= 0; i--){
       const s = anno[i];
-      if (s.type === "text" && pointInText(s, p)) return i;
+      if (s.type === "text" && pointInText(s, p)) return {shape:s, index:i};
     }
-    return -1;
+    return null;
   }
-
   let movingText = null;
-
-  // ✅ centered drop helper
-  function dropCenteredText(text){
-    if (!baseBitmap) return;
-    const txt = (text || "").trim();
-    if (!txt) { toast("Type text first."); return; }
-
-    // estimate size so we can center it properly
-    const font = TEXT_DEFAULT_FONT;
-    const pad = Math.round(font * 0.55);
-    const lines = txt.split("\n");
-    const lineH = font * 1.15;
-
-    // crude width estimate (good enough; drawTextBox will refine)
-    // use a hidden measurement on main canvas in world space:
-    const measure = document.createElement("canvas").getContext("2d");
-    measure.font = `900 ${font}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-    let maxW = 0;
-    for (const line of lines) maxW = Math.max(maxW, measure.measureText(line).width);
-    const ww = Math.max(font * 1.6, maxW + pad*2);
-    const hh = Math.max(font * 1.2, lines.length * lineH + pad*2);
-
-    const x = (baseBitmap.width  - ww) / 2;
-    const y = (baseBitmap.height - hh) / 2;
-
-    pushUndo();
-    anno.push({ type:"text", x, y, text: txt, font: TEXT_DEFAULT_FONT, w: ww, h: hh });
-    selectedTextIndex = anno.length - 1;
-    syncTextPanel(false);
-    redraw();
-    scheduleAutosave();
-    toast("Text added (center). Drag it to move.");
-  }
+  let selectedTextIndex = -1;
 
   function setupCanvas(){
     canvas.addEventListener("pointerdown", (e) => {
@@ -1893,22 +1774,17 @@
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
 
-      // ✅ Select/move text always (no needing the T tool)
-      const hitIdx = topmostTextAt(w);
-      if (hitIdx >= 0){
-        selectedTextIndex = hitIdx;
-        syncTextPanel(false);
-        redraw();
-
-        const s = anno[hitIdx];
-        movingText = { index: hitIdx, dx: w.x - s.x, dy: w.y - s.y };
+      // select/move text if tapped
+      const hitText = topmostTextAt(w);
+      if (hitText){
+        selectedTextIndex = hitText.index;
+        movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
         tempShape = null;
+        redraw();
         return;
+      } else {
+        selectedTextIndex = -1;
       }
-
-      selectedTextIndex = -1;
-      syncTextPanel(false);
-      redraw();
 
       startW = w;
       tempShape = null;
@@ -1956,7 +1832,7 @@
       redraw();
     });
 
-    canvas.addEventListener("pointerup", () => {
+    canvas.addEventListener("pointerup", async (e) => {
       if (!isDown) return;
       isDown = false;
 
@@ -1966,6 +1842,25 @@
       }
 
       if (tool === "pan"){ tempShape = null; return; }
+
+      if (tool === "text"){
+        const p = pointerPos(e);
+        const w = screenToWorld(p.x, p.y);
+
+        // place new text centered-ish by default if no selection
+        const content = prompt("Text:", "ADD NOTE");
+        if (content && content.trim()){
+          pushUndo();
+          // drop near tap
+          anno.push({type:"text", x:w.x, y:w.y, text: content.trim(), w: 0, h: 0});
+          selectedTextIndex = anno.length - 1;
+          redraw();
+          scheduleAutosave();
+        }
+        tempShape = null;
+        return;
+      }
+
       if (!tempShape) return;
 
       if (tool !== "angle"){
@@ -1985,6 +1880,7 @@
         tempShape = null;
         redraw();
         scheduleAutosave();
+        return;
       } else {
         const line2 = structuredClone(tempShape);
         pushUndo();
@@ -1994,10 +1890,31 @@
         tempShape = null;
         redraw();
         scheduleAutosave();
+        return;
+      }
+    });
+
+    // quick edit selected text without double click
+    canvas.addEventListener("click", (e) => {
+      if (tool !== "text") return;
+      // if user taps existing text, allow edit
+      const p = pointerPos(e);
+      const w = screenToWorld(p.x, p.y);
+      const hit = topmostTextAt(w);
+      if (hit){
+        selectedTextIndex = hit.index;
+        const next = prompt("Edit text:", hit.shape.text || "");
+        if (next != null){
+          pushUndo();
+          hit.shape.text = next.trim();
+          redraw();
+          scheduleAutosave();
+        }
       }
     });
   }
 
+  // ---------- Revert/Delete ----------
   async function revertToOriginal(){
     if (!currentId) return;
     if (!confirm("Revert this photo back to ORIGINAL (remove all edits/markup)?")) return;
@@ -2006,8 +1923,6 @@
     undoStack = [];
     angleStage = 0;
     angleLine1 = null;
-    selectedTextIndex = -1;
-    syncTextPanel(true);
 
     const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
     await idbDel(t.objectStore(STORE_EDIT), currentId).catch(()=>{});
@@ -2020,14 +1935,16 @@
     redraw();
     scheduleAutosave();
     toast("Reverted.");
-    renderGrid();
+    renderFolderGrid();
+    renderFolders();
   }
 
   async function deleteCurrent(){
     if (!currentId) return;
-    if (!confirm("Delete this photo?")) return;
+    if (!confirm(`Delete this photo?`)) return;
 
     const id = currentId;
+    const folder = currentFolder;
 
     const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
     await idbDel(t.objectStore(STORE_ORIG), id).catch(()=>{});
@@ -2037,87 +1954,251 @@
     await waitTxDone(t);
 
     await refreshMeta();
-    await ensureOrder();
-    await refreshMeta();
+    if (folder === "Teardown"){
+      await ensureFolderOrder("Teardown");
+      await refreshMeta();
+    }
 
-    const newList = items();
-    if (!newList.length){
+    const list = folderItems(folder);
+    if (!list.length){
       closeViewer();
+      await openFolder(folder);
       toast("Deleted.");
-      await renderGrid();
       return;
     }
-    const nextIndex = Math.min(indexInList, newList.length - 1);
+    const nextIndex = Math.min(indexInFolder, list.length - 1);
     closeViewer();
-    await renderGrid();
+    await openFolder(folder);
     toast("Deleted.");
-    openViewer(nextIndex);
+    openViewer(folder, nextIndex);
   }
 
-  // ---------- Camera Mode ----------
+  // ---------- Export / Import ----------
+  function downloadBlob(filename, blob){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function getOriginalBlob(id){
+    const t2 = tx([STORE_ORIG], "readonly");
+    const rec2 = await idbGet(t2.objectStore(STORE_ORIG), id);
+    return rec2?.blob || null;
+  }
+
+  // IMPORTANT FIX:
+  // ZIP export re-renders EACH image from ORIGINAL + SAVED annotations, so ZIP always matches exactly.
+  async function renderEditedBlobFromMeta(id){
+    // load meta anno + original blob
+    const tM = tx([STORE_META], "readonly");
+    const mrec = await idbGet(tM.objectStore(STORE_META), id);
+    const shapes = Array.isArray(mrec?.anno) ? mrec.anno : [];
+    const notes = mrec?.notes || "";
+
+    const ob = await getOriginalBlob(id);
+    if (!ob) return null;
+
+    const bmp = await createImageBitmap(ob);
+    const w = bmp.width, h = bmp.height;
+
+    const off = document.createElement("canvas");
+    off.width = w; off.height = h;
+    const octx = off.getContext("2d");
+    octx.drawImage(bmp, 0, 0);
+
+    // draw shapes in EXPORT mode (big arrows + big labels)
+    // (notes are stored but not drawn; you can add that later if you want)
+    drawShapesOnCtx(octx, structuredClone(shapes), {mode:"export", baseW:w, baseH:h});
+
+    const out = await new Promise(res => off.toBlob(res, "image/jpeg", 0.92));
+    return out || null;
+  }
+
+  async function exportZipFolders(folders, opts){
+    const { promptClearAfter = false } = opts || {};
+
+    if (!window.JSZip){
+      alert("JSZip failed to load (offline?). Connect once and try again.");
+      return;
+    }
+
+    // ensure current photo edits are saved before export
+    await flushAutosave();
+
+    await refreshMeta();
+    await ensureFolderOrder("Teardown");
+    await refreshMeta();
+
+    const zip = new JSZip();
+    for (const folder of folders){
+      const list = folderItems(folder);
+      const zf = zip.folder(folder);
+
+      for (let i=0; i<list.length; i++){
+        const m = list[i];
+
+        // build edited exactly at export time
+        let blob = await renderEditedBlobFromMeta(m.id);
+        if (!blob) blob = await getOriginalBlob(m.id);
+        if (!blob) continue;
+
+        zf.file(`${pad3(i+1)}.jpg`, blob);
+      }
+    }
+
+    const rawName = (jobNameEl.value || "").trim();
+    const safeJob = rawName ? rawName.replace(/[^\w\- ]+/g, "").replace(/\s+/g,"_") : "Job";
+    const date = new Date().toISOString().slice(0,10);
+    const fileName = `Mitchell_${safeJob}_${date}.zip`;
+
+    toast("Building ZIP…");
+    const out = await zip.generateAsync({type:"blob"});
+    downloadBlob(fileName, out);
+    toast("ZIP downloaded.");
+
+    if (promptClearAfter){
+      setTimeout(async () => {
+        if (confirm("Clear this job from this device now? (Recommended for phone capture)")){
+          await clearJob();
+          toast("Job cleared.");
+        }
+      }, 300);
+    }
+  }
+
+  async function exportZipAll(){
+    await exportZipFolders(FOLDERS, { promptClearAfter: false });
+  }
+
+  // Import ZIP (desktop)
+  function normFolderName(s){
+    return (s || "").toLowerCase().replace(/[\s_\-]+/g,"").trim();
+  }
+  function mapToFolder(name){
+    const n = normFolderName(name);
+    if (n === "walkaround" || n === "walkarounds" || n === "walk") return "Walk Around";
+    if (n === "upd" || n === "updates") return "UPD";
+    if (n === "teardown" || n === "tear" || n === "teardowns") return "Teardown";
+    return null;
+  }
+  function parseLeadingNumber(filename){
+    const base = filename.split("/").pop() || filename;
+    const m = base.match(/^(\d{1,4})/);
+    return m ? parseInt(m[1],10) : null;
+  }
+
+  async function importZipFile(file){
+    if (!window.JSZip){
+      alert("JSZip failed to load (offline?). Connect once and try again.");
+      return;
+    }
+
+    await refreshMeta();
+    if (meta.length){
+      const ok = confirm("Importing a ZIP will REPLACE the current job on this device. Continue?");
+      if (!ok) return;
+      await clearJob();
+    }
+
+    toast("Reading ZIP…");
+    const buf = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+
+    const byFolder = new Map();
+    for (const f of FOLDERS) byFolder.set(f, []);
+
+    const entries = Object.keys(zip.files);
+
+    for (const path of entries){
+      const zf = zip.files[path];
+      if (zf.dir) continue;
+
+      const lower = path.toLowerCase();
+      if (!(/\.(jpg|jpeg|png|webp)$/i.test(lower))) continue;
+
+      const parts = path.split("/").filter(Boolean);
+      if (parts.length < 2) continue;
+
+      const folderGuess = mapToFolder(parts[0]);
+      if (!folderGuess) continue;
+
+      const blob = await zf.async("blob");
+      const name = parts[parts.length - 1] || `photo.jpg`;
+      const order = parseLeadingNumber(name);
+
+      byFolder.get(folderGuess).push({ name, blob, order: order ?? 999999 });
+    }
+
+    for (const folder of FOLDERS){
+      const list = byFolder.get(folder) || [];
+      list.sort((a,b) => (a.order - b.order) || a.name.localeCompare(b.name));
+      const files = list.map((x,i)=> new File([x.blob], x.name || `${pad3(i+1)}.jpg`, { type: x.blob.type || "image/jpeg" }));
+      if (files.length) await addFilesToFolder(folder, files);
+    }
+
+    toast("Import complete.");
+    await renderFolders();
+    showHome();
+  }
+
+  // ---------- Clear job ----------
+  async function wipeFolder(folder){
+    await refreshMeta();
+    const list = folderItems(folder);
+    if (!list.length) return;
+
+    const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
+    const sO = t.objectStore(STORE_ORIG);
+    const sE = t.objectStore(STORE_EDIT);
+    const sT = t.objectStore(STORE_THUMB);
+    const sM = t.objectStore(STORE_META);
+
+    for (const m of list){
+      await idbDel(sO, m.id).catch(()=>{});
+      await idbDel(sE, m.id).catch(()=>{});
+      await idbDel(sT, m.id).catch(()=>{});
+      await idbDel(sM, m.id).catch(()=>{});
+    }
+    await waitTxDone(t);
+    await refreshMeta();
+  }
+
+  async function clearJob(){
+    for (const f of FOLDERS){
+      await wipeFolder(f);
+    }
+    await refreshMeta();
+    setHdrCount();
+    await renderFolders();
+    if (currentFolder) await openFolder(currentFolder);
+  }
+
+  async function wipeAllDevice(){
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = resolve;
+      req.onerror = resolve;
+      req.onblocked = resolve;
+    });
+    db = await openDB();
+    meta = [];
+    setHdrCount();
+  }
+
+  // ---------- Camera Mode (multi-shot) ----------
   const camOverlay = document.getElementById("camOverlay");
   const camVideo = document.getElementById("camVideo");
   const camThumbs = document.getElementById("camThumbs");
   const camCount = document.getElementById("camCount");
-  const camLive = document.getElementById("camLive");
 
   let camStream = null;
   let camFacing = "environment";
-  let camShots = [];
-
-  const LS_SHUTTER = "mitchell_shutter_pos_easy";
-  let shutterMoveMode = false;
-  let shutterDrag = null;
-
-  function playSnapSound(){
-    try{
-      const ac = new (window.AudioContext || window.webkitAudioContext)();
-      const t0 = ac.currentTime;
-      const osc = ac.createOscillator();
-      const gain = ac.createGain();
-      osc.type = "square";
-      osc.frequency.setValueAtTime(1200, t0);
-      osc.frequency.exponentialRampToValueAtTime(250, t0 + 0.03);
-      gain.gain.setValueAtTime(0.0001, t0);
-      gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
-      osc.connect(gain);
-      gain.connect(ac.destination);
-      osc.start(t0);
-      osc.stop(t0 + 0.07);
-      setTimeout(()=>ac.close().catch(()=>{}), 200);
-    }catch{}
-  }
-
-  function loadShutterPos(){
-    try{
-      const raw = localStorage.getItem(LS_SHUTTER);
-      if (!raw) return null;
-      const obj = JSON.parse(raw);
-      if (!obj || typeof obj.x !== "number" || typeof obj.y !== "number") return null;
-      return obj;
-    }catch{ return null; }
-  }
-  function saveShutterPos(x, y){
-    localStorage.setItem(LS_SHUTTER, JSON.stringify({x, y}));
-  }
-  function applyShutterPos(x, y){
-    camLive.style.setProperty("--shutter-x", x + "%");
-    camLive.style.setProperty("--shutter-y", y + "%");
-    camLive.style.setProperty("--shutter-b", "auto");
-  }
-  function resetShutterPos(){
-    camLive.style.removeProperty("--shutter-x");
-    camLive.style.removeProperty("--shutter-y");
-    camLive.style.removeProperty("--shutter-b");
-    localStorage.removeItem(LS_SHUTTER);
-  }
-
-  function updateCamLayout(){
-    if (!camOverlay.classList.contains("show")) return;
-    const landscape = window.matchMedia("(orientation: landscape)").matches || (window.innerWidth > window.innerHeight);
-    camOverlay.classList.toggle("landscape", landscape);
-  }
+  let camShots = []; // {blob, url}
 
   async function camStart(){
     camShots = [];
@@ -2125,18 +2206,14 @@
     camOverlay.classList.add("show");
     camOverlay.setAttribute("aria-hidden","false");
 
-    const pos = loadShutterPos();
-    if (pos) applyShutterPos(pos.x, pos.y);
-
-    updateCamLayout();
-    window.addEventListener("resize", updateCamLayout, {passive:true});
-    window.addEventListener("orientationchange", updateCamLayout, {passive:true});
+    try{ playSnapSound(); }catch{}
 
     if (!navigator.mediaDevices?.getUserMedia){
       alert("Camera Mode not supported on this browser. Use Upload Photos instead.");
       camStop();
       return;
     }
+
     await camOpenStream();
   }
 
@@ -2152,25 +2229,16 @@
       });
       camVideo.srcObject = camStream;
       await camVideo.play().catch(()=>{});
-      updateCamLayout();
     }catch(err){
       console.error(err);
-      alert("Camera permission blocked. Allow camera access, then try again.");
+      alert("Camera permission blocked. Allow camera access in your browser settings, then try again.");
       camStop();
     }
   }
 
   function camStop(){
     camOverlay.classList.remove("show");
-    camOverlay.classList.remove("landscape");
     camOverlay.setAttribute("aria-hidden","true");
-
-    shutterMoveMode = false;
-    camLive.classList.remove("moveMode");
-    document.getElementById("camMoveShutterBtn").textContent = "Move Shutter";
-
-    window.removeEventListener("resize", updateCamLayout);
-    window.removeEventListener("orientationchange", updateCamLayout);
 
     if (camStream){
       camStream.getTracks().forEach(t => t.stop());
@@ -2212,12 +2280,12 @@
       camStop();
       return;
     }
-    const files = camShots.map((s, i) => new File([s.blob], `${PREFIX}_${Date.now()}_${i+1}.JPG`, {type:"image/jpeg"}));
+    const files = camShots.map((s, i) => new File([s.blob], `camera_${Date.now()}_${i+1}.jpg`, {type:"image/jpeg"}));
     camShots.forEach(s => URL.revokeObjectURL(s.url));
     camShots = [];
     renderCamThumbs();
     camStop();
-    await addFiles(files);
+    await addFilesToFolder(currentFolder, files);
   }
 
   function camCancel(){
@@ -2238,32 +2306,70 @@
     await camOpenStream();
   }
 
-  function toggleMoveShutter(){
-    shutterMoveMode = !shutterMoveMode;
-    camLive.classList.toggle("moveMode", shutterMoveMode);
-    document.getElementById("camMoveShutterBtn").textContent = shutterMoveMode ? "Lock Shutter" : "Move Shutter";
-    toast(shutterMoveMode ? "Drag shutter to place it." : "Shutter locked.");
-  }
-
-  function percentFromPoint(clientX, clientY){
-    const r = camLive.getBoundingClientRect();
-    const x = ((clientX - r.left) / r.width) * 100;
-    const y = ((clientY - r.top) / r.height) * 100;
-    return {
-      x: Math.max(5, Math.min(95, x)),
-      y: Math.max(5, Math.min(95, y))
-    };
-  }
-
-  // ---------- UI wiring ----------
+  // ---------- UI Wiring ----------
   function wireUI(){
+    document.getElementById("backHomeBtn").addEventListener("click", async () => {
+      await flushAutosave();
+      closeViewer();
+      showHome();
+      renderFolders();
+    });
+
+    document.getElementById("wipeBtn").addEventListener("click", async () => {
+      if (!confirm("Clear ALL photos + data on this device?")) return;
+      await wipeAllDevice();
+      toast("Cleared.");
+      showHome();
+      renderFolders();
+    });
+
+    document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
+    document.getElementById("folderExportZipBtn").addEventListener("click", exportZipAll);
+
+    document.getElementById("clearJobBtn").addEventListener("click", async () => {
+      if (!confirm("Clear this job (remove all photos on this device)?")) return;
+      await clearJob();
+      toast("Job cleared.");
+    });
+
+    // Phone quick buttons
+    document.getElementById("phoneGoTeardown").addEventListener("click", async () => {
+      await openFolder("Teardown");
+      await camStart();
+    });
+    document.getElementById("phoneSendOffice").addEventListener("click", async () => {
+      await flushAutosave();
+      // send ORIGINAL (like before) and optionally clear
+      await exportZipFolders(FOLDERS, { promptClearAfter: true });
+    });
+
+    // Desktop import ZIP
+    const zipInput = document.getElementById("zipInput");
+    zipInput.addEventListener("change", async (e) => {
+      const file = (e.target.files || [])[0];
+      e.target.value = "";
+      if (!file) return;
+      await importZipFile(file);
+    });
+
+    // Folder wipe
+    document.getElementById("folderWipeBtn").addEventListener("click", async () => {
+      if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
+      await wipeFolder(currentFolder);
+      toast("Folder wiped.");
+      await openFolder(currentFolder);
+      await renderFolders();
+    });
+
+    // Upload Photos
     const fileInput = document.getElementById("fileInput");
     fileInput.addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
       e.target.value = "";
-      if (files.length) await addFiles(files);
+      if (files.length) await addFilesToFolder(currentFolder, files);
     });
 
+    // Drop zone
     const dz = document.getElementById("dropZone");
     ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -2276,31 +2382,10 @@
     dz.addEventListener("drop", async (e) => {
       const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
       if (!files.length) return;
-      await addFiles(files);
+      await addFilesToFolder(currentFolder, files);
     });
 
-    document.getElementById("exportZipBtn").addEventListener("click", exportZip);
-
-    document.getElementById("clearJobBtn").addEventListener("click", async () => {
-      if (!confirm("Clear this job (remove all photos on this device)?")) return;
-      await clearJob();
-      toast("Job cleared.");
-    });
-
-    document.getElementById("wipeBtn").addEventListener("click", async () => {
-      if (!confirm("CLEAR ALL on this device? (Removes everything stored in this browser)")) return;
-      await clearAllDevice();
-    });
-
-    const zipInput = document.getElementById("zipInput");
-    zipInput.addEventListener("change", async (e) => {
-      const file = (e.target.files || [])[0];
-      e.target.value = "";
-      if (!file) return;
-      await importZipFile(file);
-      await renderGrid();
-    });
-
+    // Overlay
     document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
     document.getElementById("prevBtn").addEventListener("click", () => step(-1));
     document.getElementById("nextBtn").addEventListener("click", () => step(+1));
@@ -2314,6 +2399,7 @@
       if (e.key === "ArrowRight") step(+1);
     });
 
+    // Tools
     document.getElementById("toolRow").addEventListener("click", (e) => {
       const t = e.target.closest(".toolIcon");
       if (!t) return;
@@ -2326,95 +2412,28 @@
       if (!undoStack.length) return;
       anno = undoStack.pop();
       angleStage = 0; angleLine1 = null;
-      selectedTextIndex = -1;
-      syncTextPanel(true);
       redraw();
       scheduleAutosave();
     });
-
     document.getElementById("clearBtn").addEventListener("click", () => {
       if (!anno.length) return;
       if (!confirm("Clear all markup on this photo?")) return;
       pushUndo();
       anno = [];
       angleStage = 0; angleLine1 = null;
-      selectedTextIndex = -1;
-      syncTextPanel(true);
       redraw();
       scheduleAutosave();
     });
-
     document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
     document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
 
-    // ✅ Add text: CENTER + BIG by default
-    document.getElementById("addTextBtn").addEventListener("click", () => {
-      dropCenteredText(textBoxEl.value || "");
-    });
-
-    // Apply changes to selected text box
-    document.getElementById("applyTextBtn").addEventListener("click", () => {
-      if (selectedTextIndex < 0 || !anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text"){
-        toast("Tap a green text box to select it.");
-        return;
-      }
-      pushUndo();
-      anno[selectedTextIndex].text = (textBoxEl.value || "").trim();
-      if (!anno[selectedTextIndex].font) anno[selectedTextIndex].font = TEXT_DEFAULT_FONT;
-      redraw();
-      scheduleAutosave();
-      toast("Text updated.");
-    });
-
-    document.getElementById("deleteTextBtn").addEventListener("click", () => {
-      if (selectedTextIndex < 0 || !anno[selectedTextIndex] || anno[selectedTextIndex].type !== "text"){
-        toast("Tap a green text box to select it.");
-        return;
-      }
-      pushUndo();
-      anno.splice(selectedTextIndex, 1);
-      selectedTextIndex = -1;
-      syncTextPanel(true);
-      redraw();
-      scheduleAutosave();
-      toast("Text deleted.");
-    });
-
-    // camera
+    // Camera Mode
     document.getElementById("openCamBtn").addEventListener("click", camStart);
     document.getElementById("camSnapBtn").addEventListener("click", camSnap);
-    document.getElementById("camTopSnapBtn").addEventListener("click", camSnap);
-
-    const camShutter = document.getElementById("camShutter");
-    camShutter.addEventListener("click", () => { if (!shutterMoveMode) camSnap(); });
-
     document.getElementById("camDoneBtn").addEventListener("click", camDone);
     document.getElementById("camCancelBtn").addEventListener("click", camCancel);
     document.getElementById("camClearBtn").addEventListener("click", camClear);
     document.getElementById("camFlipBtn").addEventListener("click", camFlip);
-
-    document.getElementById("camMoveShutterBtn").addEventListener("click", toggleMoveShutter);
-    document.getElementById("camResetShutterBtn").addEventListener("click", () => { resetShutterPos(); toast("Shutter reset."); });
-
-    camShutter.addEventListener("pointerdown", (e) => {
-      if (!shutterMoveMode) return;
-      e.preventDefault();
-      camShutter.setPointerCapture(e.pointerId);
-      shutterDrag = { active: true };
-      const p = percentFromPoint(e.clientX, e.clientY);
-      applyShutterPos(p.x, p.y);
-      saveShutterPos(p.x, p.y);
-    }, {passive:false});
-
-    camShutter.addEventListener("pointermove", (e) => {
-      if (!shutterMoveMode || !shutterDrag?.active) return;
-      e.preventDefault();
-      const p = percentFromPoint(e.clientX, e.clientY);
-      applyShutterPos(p.x, p.y);
-      saveShutterPos(p.x, p.y);
-    }, {passive:false});
-
-    camShutter.addEventListener("pointerup", () => { shutterDrag = null; });
   }
 
   // ---------- Boot ----------
@@ -2422,7 +2441,8 @@
     db = await openDB();
     wireUI();
     setupCanvas();
-    await renderGrid();
+    showHome();
+    await renderFolders();
   }
   init().catch(err => { console.error(err); toast("Failed to load."); });
 })();
