@@ -1,14 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Mitchell Photo App</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+  <title>Mitchell Teardown Photos</title>
 
   <meta name="theme-color" content="#070b16">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Mitchell Photos">
 
   <style>
     :root{
@@ -50,16 +49,7 @@
     }
     h1{ margin:0; font-size:16px; font-weight:1000; letter-spacing:.2px; }
     .muted{ color:var(--muted); font-size:12px; }
-    .pill{
-      display:inline-flex; gap:8px; align-items:center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      font-weight: 900;
-      font-size:12px;
-      color: var(--muted);
-    }
+
     main{
       height: calc(100% - 58px);
       overflow:auto;
@@ -75,6 +65,18 @@
       padding: 12px;
     }
     .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .spacer{ flex:1; }
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      font-weight: 900;
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
 
     input, textarea, button{ font:inherit; }
     textarea{
@@ -85,10 +87,9 @@
       background: rgba(10,16,34,.55);
       color: var(--text);
       outline:none;
-      min-height: 80px;
+      min-height: 70px;
       resize: vertical;
     }
-
     .btn{
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.08);
@@ -102,68 +103,23 @@
     .btn.primary{ background: rgba(59,130,246,.20); border-color: rgba(59,130,246,.35); }
     .btn.danger{ background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.35); }
     .btn.ok{ background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.35); }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .btn.sm{ padding: 8px 10px; border-radius: 10px; font-size: 12px; }
     .btn.icon{
       width:44px; height:44px;
       display:inline-flex; align-items:center; justify-content:center;
-      padding:0;
-      border-radius: 14px;
-      font-size: 18px;
+      padding:0; border-radius: 14px; font-size: 18px;
     }
-    .btn.sm{ padding: 8px 10px; border-radius: 10px; font-size: 12px; }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
 
     .drop{
+      margin-top:10px;
       border:2px dashed rgba(255,255,255,.16);
       border-radius: var(--radius);
       padding: 12px;
       text-align:center;
       background: rgba(0,0,0,.10);
     }
-    .drop.drag{
-      border-color: rgba(59,130,246,.85);
-      background: rgba(59,130,246,.10);
-    }
-
-    .folders{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:12px;
-      margin-top: 12px;
-    }
-    @media (max-width: 900px){ .folders{ grid-template-columns: 1fr; } }
-    .folderCard{
-      padding: 16px;
-      border-radius: var(--radius);
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(12,18,38,.70);
-      box-shadow: 0 18px 44px rgba(0,0,0,.35);
-      cursor:pointer;
-      user-select:none;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      overflow:hidden;
-    }
-    .folderTitle{ font-weight:1000; font-size: 16px; }
-    .folderHint{ color: var(--muted); font-size: 12px; }
-
-    .miniStrip{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top: 6px; }
-    .miniThumb{
-      width: 34px; height: 34px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.12);
-      object-fit: cover;
-      background: rgba(0,0,0,.25);
-      box-shadow: 0 10px 20px rgba(0,0,0,.20);
-    }
-    .miniMore{
-      width: 34px; height: 34px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 1000; font-size: 12px; color: var(--muted);
-    }
+    .drop.drag{ border-color: rgba(59,130,246,.85); background: rgba(59,130,246,.10); }
 
     .grid{
       margin-top: 12px;
@@ -200,7 +156,24 @@
       backdrop-filter: blur(10px);
       z-index: 3;
     }
-    .thumbBar{
+
+    .moveTag{
+      position:absolute;
+      top:8px; right:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 1100;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      z-index: 3;
+      cursor: grab;
+      user-select:none;
+    }
+    .moveTag:active{ cursor: grabbing; }
+
+    .chipBar{
       position:absolute;
       left:8px; right:8px; bottom:8px;
       display:flex; justify-content:space-between; gap:8px;
@@ -252,7 +225,7 @@
       border-radius: 999px;
       border:1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.55);
-      font-weight: 1000;
+      font-weight: 1100;
       font-size: 12px;
       max-width: 100%;
       white-space: nowrap;
@@ -269,6 +242,7 @@
       display:none;
     }
     .overlay.show{ display:block; }
+
     .viewer{
       position:absolute;
       inset: 10px;
@@ -320,7 +294,7 @@
       background: rgba(0,0,0,.35);
       display:flex; align-items:center; justify-content:center;
       font-size: 24px;
-      font-weight: 1000;
+      font-weight: 1100;
       cursor:pointer;
       user-select:none;
       pointer-events:auto;
@@ -344,14 +318,13 @@
       cursor:pointer;
       user-select:none;
       display:flex; align-items:center; justify-content:center;
-      font-weight:1000;
+      font-weight:1100;
       font-size: 18px;
     }
     .toolIcon.active{
       background: rgba(59,130,246,.22);
       border-color: rgba(59,130,246,.40);
     }
-
     .hint{ color: var(--muted); font-size: 12px; margin-top: 8px; }
     .hr{ height:1px; background: rgba(255,255,255,.10); margin: 10px 0; }
 
@@ -364,7 +337,7 @@
       border:1px solid rgba(255,255,255,.12);
       padding: 10px 12px;
       border-radius: 999px;
-      font-weight:1000;
+      font-weight:1100;
       font-size:12px;
       z-index: 60;
       display:none;
@@ -374,206 +347,63 @@
       text-overflow: ellipsis;
     }
     .toast.show{ display:block; }
-
-    /* Camera */
-    .camOverlay{
-      position:fixed;
-      inset:0;
-      background: rgba(0,0,0,.75);
-      backdrop-filter: blur(10px);
-      z-index: 80;
-      display:none;
-    }
-    .camOverlay.show{ display:block; }
-    .camPanel{
-      position:absolute;
-      inset: 12px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(12,18,38,.92);
-      box-shadow: var(--shadow);
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-    }
-    .camTop{
-      padding: 10px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-    }
-    .camBody{
-      flex:1;
-      display:flex;
-      gap:10px;
-      padding: 10px;
-      overflow:hidden;
-    }
-    .camLive{
-      flex: 1.35;
-      border-radius: 16px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.25);
-      position:relative;
-      min-width:0;
-    }
-    .camLive video{
-      width:100%;
-      height:100%;
-      object-fit: cover;
-      display:block;
-    }
-    .camStrip{
-      flex: 0.65;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      overflow:auto;
-      padding: 10px;
-      min-width: 220px;
-    }
-    .camThumbs{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-    .camThumbs img{
-      width: 64px;
-      height: 64px;
-      border-radius: 12px;
-      object-fit: cover;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.25);
-    }
-    @media (max-width: 900px){
-      .camBody{ flex-direction:column; }
-      .camStrip{ min-width:0; }
-    }
-
-    .bigPhoneBtn{
-      width:100%;
-      padding: 14px 14px;
-      border-radius: 16px;
-      font-size: 16px;
-      font-weight: 1100;
-    }
   </style>
 </head>
 
 <body>
 <header>
   <div>
-    <h1>Mitchell Photo App</h1>
-    <div class="muted" id="subtitle">Folders</div>
+    <h1>Mitchell Teardown</h1>
+    <div class="muted">Thumbnails → click to edit → ZIP matches edits exactly</div>
   </div>
   <div class="pill"><span id="hdrCount">0</span> photos</div>
 </header>
 
 <main>
-  <!-- HOME -->
-  <section id="homeView">
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div style="font-weight:1000; font-size:16px;">Job</div>
-        <div class="pill" id="modePill">Mode</div>
+  <section class="card">
+    <div class="row" style="justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-weight:1100; font-size:16px;">Teardown</div>
+        <div class="muted">Upload multiple photos • Reorder with MOVE • Drop shows IN FRONT / BEHIND • Auto-scroll while dragging</div>
       </div>
+      <div class="pill" id="zipNamePill">ZIP: Mitchell_Teardown.zip</div>
+    </div>
 
-      <div class="row" style="margin-top:10px;">
-        <input id="jobName" placeholder="Job name (RO12345_Smith)" style="
-          flex:1; min-width: 220px;
-          padding: 10px 12px; border-radius: 12px;
-          border:1px solid rgba(255,255,255,.14);
-          background: rgba(10,16,34,.55);
-          color: var(--text);
-          outline:none;
-          font-weight: 900;
-        ">
-        <button class="btn" id="clearJobBtn">Clear Job</button>
-      </div>
-      <div class="muted" style="margin-top:6px;">Tip: Job name is used in the ZIP file name.</div>
+    <div class="row" style="margin-top:10px;">
+      <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
+        ⬆️ Upload Photos
+        <input id="fileInput" type="file" accept="image/*" multiple hidden>
+      </label>
 
-      <div class="hr"></div>
+      <button class="btn ok" id="exportZipBtn">Export ZIP (Mitchell Order)</button>
+      <button class="btn danger" id="clearBtn">Clear All</button>
+      <div class="spacer"></div>
 
-      <!-- Desktop import -->
-      <div id="desktopImportBox" style="display:none;">
-        <div class="row" style="justify-content:space-between;">
-          <div style="font-weight:1000;">Computer Tools</div>
-          <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
-            ⬆️ Import Job ZIP
-            <input id="zipInput" type="file" accept=".zip,application/zip" hidden>
-          </label>
-        </div>
-        <div class="muted" style="margin-top:6px;">Upload a ZIP and it will unpack into Walk Around / UPD / Teardown automatically.</div>
-        <div class="hr"></div>
-      </div>
+      <input id="jobName" placeholder="Job name (RO12345_Smith)" style="
+        min-width:240px; flex: 0 1 380px;
+        padding: 10px 12px; border-radius: 12px;
+        border:1px solid rgba(255,255,255,.14);
+        background: rgba(10,16,34,.55);
+        color: var(--text);
+        outline:none;
+        font-weight: 900;
+      ">
+    </div>
 
-      <!-- Phone capture shortcuts -->
-      <div id="phoneQuickBox" style="display:none;">
-        <div style="font-weight:1000;">Phone Capture</div>
-        <div class="muted" style="margin-top:6px;">Capture photos on your phone → send ZIP to the office → edit/order on computer.</div>
-        <div class="hr"></div>
-        <button class="btn primary bigPhoneBtn" id="phoneGoTeardown">📸 Teardown (Camera Mode)</button>
-        <button class="btn ok bigPhoneBtn" id="phoneSendOffice" style="margin-top:10px;">📦 Send to Office (ZIP)</button>
-        <div class="muted" style="margin-top:8px;">This exports ORIGINAL photos (best for editing later on the computer).</div>
-        <div class="hr"></div>
-      </div>
+    <div class="drop" id="dropZone">
+      <b>Drop photos here</b>
+      <div class="muted">Reorder by grabbing MOVE on a photo.</div>
+    </div>
 
-      <div style="font-weight:1000; font-size:16px;">Folders</div>
-      <div class="muted">Tap a folder. Drag to reorder. (Desktop: click=view, double click=edit.)</div>
-      <div class="folders" id="folders"></div>
-
-      <div class="hr"></div>
-      <div class="row">
-        <button class="btn ok" id="exportZipBtn">Export ZIP (Mitchell Order)</button>
-        <button class="btn danger" id="wipeBtn">Clear All (This Device)</button>
-      </div>
-
-      <div class="hint">Teardown is the only folder that must be in Mitchell order — this app keeps that exact numbering.</div>
+    <div class="insertBadge" id="insertBadge">
+      <div class="insertBadgeInner" id="insertBadgeInner">Dragging…</div>
     </div>
   </section>
 
-  <!-- FOLDER -->
-  <section id="folderView" style="display:none;">
-    <div class="card" style="margin-bottom:12px;">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <div style="font-weight:1000; font-size:16px;" id="folderTitle">Folder</div>
-          <div class="muted" id="folderSub">Drag to reorder. Desktop: click=view, double click=edit.</div>
-        </div>
-        <div class="row">
-          <button class="btn" id="backHomeBtn">← Folders</button>
-          <button class="btn ok" id="folderExportZipBtn">Export ZIP</button>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <label class="btn primary" style="display:inline-flex; align-items:center; gap:8px;">
-          ⬆️ Upload Photos
-          <input id="fileInput" type="file" accept="image/*" multiple hidden>
-        </label>
-
-        <button class="btn primary" id="openCamBtn">📸 Camera Mode</button>
-        <button class="btn danger" id="folderWipeBtn">Wipe Folder</button>
-      </div>
-
-      <div class="drop" id="dropZone" style="margin-top:10px;">
-        <b>Drop photos into “<span id="dropFolderName"></span>”</b>
-        <div class="muted">Reorder by dragging. (Dragging will NOT open view/edit.)</div>
-      </div>
-
-      <div class="insertBadge" id="insertBadge">
-        <div class="insertBadgeInner" id="insertBadgeInner">Dragging…</div>
-      </div>
-    </div>
-
-    <div id="grid" class="grid"></div>
-    <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
-      No photos yet. Add some above.
-    </div>
-  </section>
+  <div id="grid" class="grid"></div>
+  <div id="empty" class="muted" style="text-align:center; padding: 22px 0; display:none;">
+    No photos yet. Upload some above.
+  </div>
 </main>
 
 <!-- VIEW/EDIT OVERLAY -->
@@ -598,12 +428,8 @@
     </div>
 
     <div class="vRight">
-      <div class="row" style="justify-content:space-between; align-items:center;">
-        <div>
-          <div style="font-weight:1000; margin-bottom:2px;" id="modeTitle">EDIT (always on)</div>
-          <div class="muted" id="modeSub">Autosave ON</div>
-        </div>
-      </div>
+      <div style="font-weight:1100; margin-bottom:4px;">EDIT (always on)</div>
+      <div class="muted">Autosave ON • ZIP export is re-rendered from your saved edits (so it matches)</div>
 
       <div class="hr"></div>
 
@@ -612,7 +438,7 @@
 
       <div class="hr"></div>
 
-      <div style="font-weight:1000;">Tools</div>
+      <div style="font-weight:1100;">Tools</div>
       <div class="toolRow" id="toolRow">
         <div class="toolIcon active" data-tool="arrow" title="Arrow">➤</div>
         <div class="toolIcon" data-tool="circle" title="Circle">◯</div>
@@ -620,56 +446,27 @@
         <div class="toolIcon" data-tool="line" title="Straight Line">／</div>
         <div class="toolIcon" data-tool="angle" title="Angle (2 lines)">∠</div>
         <div class="toolIcon" data-tool="ruler" title="Measure">📏</div>
-        <div class="toolIcon" data-tool="text" title="Add Text">T</div>
+        <div class="toolIcon" data-tool="text" title="Add/Edit Text">T</div>
         <div class="toolIcon" data-tool="pan" title="Pan">✋</div>
       </div>
 
       <div class="row" style="margin-top:10px;">
         <button class="btn sm" id="undoBtn">Undo</button>
-        <button class="btn sm" id="clearBtn">Clear</button>
+        <button class="btn sm" id="clearMarkupBtn">Clear Markup</button>
         <button class="btn sm" id="revertBtn">Revert Original</button>
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <button class="btn danger" id="deleteBtn">Delete</button>
+        <button class="btn danger" id="deleteBtn">Delete Photo</button>
       </div>
 
       <div class="hint" id="angleHint" style="display:none;">
-        Angle tool: draw <b>Line 1</b> (start→end), then draw <b>Line 2</b> (start→end). Angle shows between them.
+        Angle tool: draw <b>Line 1</b>, then draw <b>Line 2</b>. Angle label shows automatically.
       </div>
       <div class="hint" id="textHint" style="display:none;">
-        Text tool: tap to place. Drag to move. Tap a green text box to select, then use the prompt to change text.
+        Text tool: tap to place text (big). Tap existing green text to edit. Drag green text to move.
       </div>
-      <div class="hint" id="editHint">Edits auto-save and ZIP export will match exactly.</div>
-    </div>
-  </div>
-</div>
-
-<!-- CAMERA MODAL -->
-<div class="camOverlay" id="camOverlay" aria-hidden="true">
-  <div class="camPanel">
-    <div class="camTop">
-      <div class="pill"><span id="camCount">0</span> captured</div>
-      <div class="row">
-        <button class="btn" id="camFlipBtn">Flip</button>
-        <button class="btn danger" id="camCancelBtn">Cancel</button>
-        <button class="btn ok" id="camDoneBtn">Done</button>
-      </div>
-    </div>
-
-    <div class="camBody">
-      <div class="camLive">
-        <video id="camVideo" playsinline autoplay muted></video>
-      </div>
-
-      <div class="camStrip">
-        <div class="row" style="justify-content:space-between;">
-          <button class="btn primary" id="camSnapBtn">Snap</button>
-          <button class="btn danger" id="camClearBtn">Clear</button>
-        </div>
-        <div class="hr"></div>
-        <div class="camThumbs" id="camThumbs"></div>
-      </div>
+      <div class="hint">Tip: Use ✋ Pan to move around. (Zoom not included in this simple version.)</div>
     </div>
   </div>
 </div>
@@ -680,110 +477,79 @@
 
 <script>
 (() => {
-  const FOLDERS = ["Walk Around","UPD","Teardown"];
-
-  const DB_NAME = "mitchell_app_pro_v6";
-  const DB_VER = 1;
-  const STORE_ORIG  = "originals";
-  const STORE_EDIT  = "edits";
-  const STORE_THUMB = "thumbs";
-  const STORE_META  = "meta";
-
-  // Device mode
-  const isTouch = matchMedia("(pointer: coarse)").matches || ("ontouchstart" in window);
-  const isSmall = matchMedia("(max-width: 900px)").matches;
-  const isPhoneMode = isTouch && isSmall;   // capture-first
-  const isDesktopMode = !isPhoneMode;
+  // ======= Simple Teardown-only App =======
+  const DB_NAME = "mitchell_teardown_simple_v1";
+  const DB_VER  = 1;
+  const STORE_ORIG  = "orig";   // {id, blob, type}
+  const STORE_META  = "meta";   // {id, order, filename, created, notes, anno}
+  const STORE_THUMB = "thumb";  // {id, blob}
+  const STORE_EDIT  = "edit";   // {id, blob} (cached edited for thumbnails)
+  const GREEN = "rgba(0,255,0,0.95)";
+  const OUTLN = "rgba(0,0,0,0.75)";
 
   let db;
-  let meta = [];
-  let currentFolder = null;
+  let meta = [];  // current job list (Teardown only)
+  let suppressClickUntil = 0;
 
-  // drag reorder
+  // reorder drag
   let dragCandidate = null;
   let dragging = null;
   let insertTarget = null;
-  let suppressClickUntil = 0;
+  let autoScrollRAF = null;
+  let autoScrollDir = 0;
 
-  // overlay viewer/editor
+  // viewer/editor
   const overlay = document.getElementById("overlay");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
-
-  let folderList = [];
-  let indexInFolder = -1;
+  let list = [];
+  let idx = -1;
   let currentId = null;
-
-  // base original + view transform
   let baseBitmap = null;
   let view = { scale: 1, tx: 0, ty: 0 };
-
-  // tools + shapes
   let tool = "arrow";
   let isDown = false;
   let startW = {x:0,y:0};
   let tempShape = null;
   let anno = [];
   let undoStack = [];
-
-  // angle tool state
   let angleStage = 0;
-  let angleLine1 = null;
 
   // autosave
   let saveTimer = null;
-  const AUTOSAVE_MS = 250;
+  const AUTOSAVE_MS = 220;
 
-  // colors
-  const GREEN = "rgba(0,255,0,0.95)";
-  const DARK  = "rgba(0,0,0,0.60)";
-
-  // --- Snap sound (synth click) ---
-  let audioCtx = null;
-  function playSnapSound(){
-    try{
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      const ac = audioCtx;
-      const t0 = ac.currentTime;
-
-      const osc = ac.createOscillator();
-      const gain = ac.createGain();
-
-      osc.type = "square";
-      osc.frequency.setValueAtTime(1200, t0);
-      osc.frequency.exponentialRampToValueAtTime(250, t0 + 0.03);
-
-      gain.gain.setValueAtTime(0.0001, t0);
-      gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
-
-      osc.connect(gain);
-      gain.connect(ac.destination);
-      osc.start(t0);
-      osc.stop(t0 + 0.07);
-    }catch{}
-  }
-
-  // Job name
-  const jobNameEl = document.getElementById("jobName");
-  const LS_JOB = "mitchell_job_name";
-  jobNameEl.value = localStorage.getItem(LS_JOB) || "";
-  jobNameEl.addEventListener("input", () => localStorage.setItem(LS_JOB, jobNameEl.value || ""));
-
-  // mode pill UI
-  const modePill = document.getElementById("modePill");
-  modePill.textContent = isPhoneMode ? "Phone Capture Mode" : "Desktop Editor Mode";
-  document.getElementById("desktopImportBox").style.display = isDesktopMode ? "" : "none";
-  document.getElementById("phoneQuickBox").style.display = isPhoneMode ? "" : "none";
-
-  // toast
+  // UI
+  const grid = document.getElementById("grid");
+  const empty = document.getElementById("empty");
+  const badgeWrap = document.getElementById("insertBadge");
+  const badgeInner = document.getElementById("insertBadgeInner");
+  const hdrCount = document.getElementById("hdrCount");
+  const zipNamePill = document.getElementById("zipNamePill");
   const toastEl = document.getElementById("toast");
   let toastTimer = null;
+
+  // Job name
+  const LS_JOB = "mitchell_teardown_jobname";
+  const jobNameEl = document.getElementById("jobName");
+  jobNameEl.value = localStorage.getItem(LS_JOB) || "";
+  jobNameEl.addEventListener("input", () => {
+    localStorage.setItem(LS_JOB, jobNameEl.value || "");
+    updateZipPill();
+  });
+
+  function updateZipPill(){
+    const raw = (jobNameEl.value || "").trim();
+    const safe = raw ? raw.replace(/[^\w\- ]+/g,"").replace(/\s+/g,"_") : "Teardown";
+    zipNamePill.textContent = `ZIP: Mitchell_${safe}.zip`;
+  }
+  updateZipPill();
+
   function toast(msg){
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1600);
+    toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 1600);
   }
 
   function uuid(){
@@ -792,7 +558,7 @@
   function nowISO(){ return new Date().toISOString(); }
   function pad3(n){ return String(n).padStart(3,"0"); }
 
-  // ---------- IndexedDB ----------
+  // ===== IndexedDB =====
   function openDB(){
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VER);
@@ -800,9 +566,9 @@
       req.onupgradeneeded = () => {
         const d = req.result;
         if (!d.objectStoreNames.contains(STORE_ORIG))  d.createObjectStore(STORE_ORIG,  {keyPath:"id"});
-        if (!d.objectStoreNames.contains(STORE_EDIT))  d.createObjectStore(STORE_EDIT,  {keyPath:"id"});
-        if (!d.objectStoreNames.contains(STORE_THUMB)) d.createObjectStore(STORE_THUMB, {keyPath:"id"});
         if (!d.objectStoreNames.contains(STORE_META))  d.createObjectStore(STORE_META,  {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_THUMB)) d.createObjectStore(STORE_THUMB, {keyPath:"id"});
+        if (!d.objectStoreNames.contains(STORE_EDIT))  d.createObjectStore(STORE_EDIT,  {keyPath:"id"});
       };
       req.onsuccess = () => resolve(req.result);
     });
@@ -848,279 +614,171 @@
     const all = await idbGetAll(tx([STORE_META],"readonly").objectStore(STORE_META));
     meta = all.map(m => ({
       id: m.id,
-      folder: m.folder,
       order: Number.isFinite(m.order) ? m.order : 0,
       filename: m.filename || "photo.jpg",
       created: m.created || nowISO(),
       notes: m.notes || "",
       anno: Array.isArray(m.anno) ? m.anno : []
     }));
-    await ensureFolderOrder("Teardown");
-  }
-
-  function folderItems(folder){
-    return meta
-      .filter(m => m.folder === folder)
-      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
-  }
-
-  async function ensureFolderOrder(folder){
-    const list = folderItems(folder);
-    let needs = false;
-    list.forEach((x,i)=> { if ((x.order||0) !== i+1) needs = true; });
-    if (!needs) return;
-
-    list.forEach((x,i)=> x.order = i+1);
-    const t = tx([STORE_META], "readwrite");
+    meta.sort((a,b)=> (a.order||0)-(b.order||0));
+    // normalize order 1..n
+    meta.forEach((m,i)=> m.order = i+1);
+    const t = tx([STORE_META],"readwrite");
     const s = t.objectStore(STORE_META);
-    for (const item of list){
-      const cur = await idbGet(s, item.id);
+    for (const m of meta){
+      const cur = await idbGet(s, m.id);
       if (!cur) continue;
-      await idbPut(s, {...cur, order: item.order});
+      await idbPut(s, {...cur, order: m.order});
     }
     await waitTxDone(t);
-
-    for (const item of list){
-      const idx = meta.findIndex(m => m.id === item.id);
-      if (idx >= 0) meta[idx].order = item.order;
-    }
   }
 
-  function setHdrCount(){
-    document.getElementById("hdrCount").textContent = String(meta.length);
-  }
-
-  // ---------- Home UI ----------
   async function getThumbBlob(id){
     try{
-      const t = tx([STORE_THUMB], "readonly");
+      const t = tx([STORE_THUMB],"readonly");
       const rec = await idbGet(t.objectStore(STORE_THUMB), id);
       if (rec?.blob) return rec.blob;
     }catch{}
     try{
-      const t = tx([STORE_EDIT], "readonly");
+      const t = tx([STORE_EDIT],"readonly");
       const rec = await idbGet(t.objectStore(STORE_EDIT), id);
       if (rec?.blob) return rec.blob;
     }catch{}
     try{
-      const t = tx([STORE_ORIG], "readonly");
+      const t = tx([STORE_ORIG],"readonly");
       const rec = await idbGet(t.objectStore(STORE_ORIG), id);
       return rec?.blob || null;
     }catch{}
     return null;
   }
 
-  async function renderFolders(){
+  async function ensureThumb(id){
+    // already?
+    try{
+      const t = tx([STORE_THUMB],"readonly");
+      const rec = await idbGet(t.objectStore(STORE_THUMB), id);
+      if (rec?.blob) return;
+    }catch{}
+    const blob = await getThumbBlob(id);
+    if (!blob) return;
+    const bmp = await createImageBitmap(blob);
+    const max = 360;
+    const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+    const c = document.createElement("canvas");
+    c.width=w; c.height=h;
+    c.getContext("2d").drawImage(bmp,0,0,w,h);
+    const thumbBlob = await new Promise(res=>c.toBlob(res,"image/jpeg",0.85));
+    if (!thumbBlob) return;
+    const t2 = tx([STORE_THUMB],"readwrite");
+    await idbPut(t2.objectStore(STORE_THUMB), {id, blob: thumbBlob});
+    await waitTxDone(t2);
+  }
+
+  // ===== Add photos =====
+  async function addFiles(files){
     await refreshMeta();
-    setHdrCount();
-
-    const wrap = document.getElementById("folders");
-    wrap.innerHTML = "";
-
-    for (const f of FOLDERS){
-      const list = folderItems(f);
-      const count = list.length;
-
-      const hint =
-        f === "Walk Around" ? "Overall / approach / wide shots" :
-        f === "UPD" ? "Updates / supplements / progress" :
-        "Tear-down / hidden damage (Mitchell order)";
-
-      const div = document.createElement("div");
-      div.className = "folderCard";
-
-      div.innerHTML = `
-        <div class="folderTitle">${f}</div>
-        <div class="folderHint">${hint}</div>
-        <div class="pill"><span>${count}</span> photos</div>
-      `;
-
-      const strip = document.createElement("div");
-      strip.className = "miniStrip";
-      const preview = list.slice(0, 10);
-      for (const m of preview){
-        const img = document.createElement("img");
-        img.className = "miniThumb";
-        img.alt = "";
-        strip.appendChild(img);
-        getThumbBlob(m.id).then(blob => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          img.src = url;
-          img.onload = () => URL.revokeObjectURL(url);
-        }).catch(()=>{});
-      }
-      if (count > preview.length){
-        const more = document.createElement("div");
-        more.className = "miniMore";
-        more.textContent = `+${count - preview.length}`;
-        strip.appendChild(more);
-      }
-      div.appendChild(strip);
-
-      div.addEventListener("click", () => openFolder(f));
-      wrap.appendChild(div);
+    const maxOrder = meta.reduce((mx,m)=>Math.max(mx,m.order||0),0);
+    const t = tx([STORE_ORIG, STORE_META], "readwrite");
+    const sO = t.objectStore(STORE_ORIG);
+    const sM = t.objectStore(STORE_META);
+    let added = 0;
+    for (const f of files){
+      if (!f.type.startsWith("image/")) continue;
+      const id = uuid();
+      await idbPut(sO, {id, blob: f, type: f.type || "image/jpeg"});
+      await idbPut(sM, {
+        id,
+        order: maxOrder + added + 1,
+        filename: f.name || `TEARDOWN_${pad3(maxOrder+added+1)}.JPG`,
+        created: nowISO(),
+        notes: "",
+        anno: []
+      });
+      added++;
     }
-  }
-
-  function showHome(){
-    document.getElementById("subtitle").textContent = "Folders";
-    document.getElementById("homeView").style.display = "";
-    document.getElementById("folderView").style.display = "none";
-    currentFolder = null;
-  }
-
-  async function openFolder(folder){
-    currentFolder = folder;
-    document.getElementById("subtitle").textContent = folder;
-    document.getElementById("homeView").style.display = "none";
-    document.getElementById("folderView").style.display = "";
-    document.getElementById("folderTitle").textContent = folder;
-    document.getElementById("dropFolderName").textContent = folder;
-
-    const folderSub = document.getElementById("folderSub");
-    folderSub.textContent = isPhoneMode
-      ? "Drag to reorder. (Phone: capture here, edit later on computer.)"
-      : "Drag to reorder. Desktop: click=view, double click=edit.";
-
+    await waitTxDone(t);
     await refreshMeta();
-    setHdrCount();
-    renderFolderGrid();
+    // thumbs
+    for (const m of meta.slice(-added)) await ensureThumb(m.id);
+    toast(`Added ${added} photo(s).`);
+    renderGrid();
   }
 
-  // ---------- Folder Grid + drag reorder ----------
-  async function renderFolderGrid(){
-    const grid = document.getElementById("grid");
-    const empty = document.getElementById("empty");
-    const badgeWrap = document.getElementById("insertBadge");
-    const badgeInner = document.getElementById("insertBadgeInner");
-
+  // ===== Grid render =====
+  async function renderGrid(){
+    await refreshMeta();
+    hdrCount.textContent = String(meta.length);
     grid.innerHTML = "";
     badgeWrap.style.display = "none";
+    empty.style.display = meta.length ? "none" : "";
 
-    const list = folderItems(currentFolder);
-    empty.style.display = list.length ? "none" : "";
-
-    list.forEach((m, idx) => {
+    meta.forEach((m, i) => {
       const div = document.createElement("div");
       div.className = "thumb";
       div.dataset.id = m.id;
-      div.dataset.index = String(idx);
+      div.dataset.index = String(i);
 
       const img = document.createElement("img");
-      img.alt = m.filename || "photo";
       div.appendChild(img);
 
       const num = document.createElement("div");
       num.className = "num";
-      const shownNum = (currentFolder === "Teardown") ? (m.order || (idx+1)) : (idx+1);
-      num.textContent = String(shownNum);
+      num.textContent = String(i+1);
       div.appendChild(num);
 
+      const move = document.createElement("div");
+      move.className = "moveTag";
+      move.textContent = "MOVE";
+      move.title = "Hold and drag to reorder";
+      div.appendChild(move);
+
       const bar = document.createElement("div");
-      bar.className = "thumbBar";
-      bar.innerHTML = `<span class="chip">${currentFolder}</span><span class="chip">${pad3(shownNum)}</span>`;
+      bar.className = "chipBar";
+      bar.innerHTML = `<span class="chip">Teardown</span><span class="chip">${pad3(i+1)}</span>`;
       div.appendChild(bar);
 
       const insertLine = document.createElement("div");
       insertLine.className = "insertLine";
       div.appendChild(insertLine);
 
-      // Desktop: click=view, dblclick=edit
-      if (isDesktopMode){
-        let clickTimer = null;
-        div.addEventListener("click", () => {
-          if (Date.now() < suppressClickUntil) return;
-          clearTimeout(clickTimer);
-          clickTimer = setTimeout(() => openViewer(currentFolder, idx), 200);
-        });
-        div.addEventListener("dblclick", () => {
-          if (Date.now() < suppressClickUntil) return;
-          clearTimeout(clickTimer);
-          openViewer(currentFolder, idx);
-        });
-      } else {
-        // Phone: tap=view/edit
-        div.addEventListener("click", () => {
-          if (Date.now() < suppressClickUntil) return;
-          openViewer(currentFolder, idx);
-        });
-      }
+      // click to open (but not right after dragging)
+      div.addEventListener("click", () => {
+        if (Date.now() < suppressClickUntil) return;
+        openViewer(i);
+      });
 
-      // Drag threshold
-      div.addEventListener("pointerdown", (e) => {
-        if (overlay.classList.contains("show")) return;
-        if (e.button !== undefined && e.button !== 0) return;
-
-        dragCandidate = {
-          startX: e.clientX,
-          startY: e.clientY,
-          el: div,
-          idx,
-          badgeWrap,
-          badgeInner,
-          grid
-        };
-
-        const move = (ev) => dragCandidateMove(ev);
-        const up = (ev) => dragCandidateUp(ev, move, up);
-        window.addEventListener("pointermove", move, {passive:false});
-        window.addEventListener("pointerup", up, {passive:false});
+      // Only allow reorder by grabbing MOVE
+      move.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        beginDrag(e, div, i);
       });
 
       grid.appendChild(div);
-      loadThumbInto(m.id, img);
+
+      getThumbBlob(m.id).then(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        img.src = url;
+        img.onload = () => URL.revokeObjectURL(url);
+      });
     });
-
-    async function loadThumbInto(id, imgEl){
-      let blob = await getThumbBlob(id);
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      imgEl.src = url;
-      imgEl.onload = () => URL.revokeObjectURL(url);
-    }
   }
 
-  function dragCandidateMove(e){
-    if (!dragCandidate) return;
-
-    // auto-scroll page while dragging near top/bottom
-    tryAutoScroll(e.clientY);
-
-    if (dragging){
-      onDragMove(e, dragCandidate.grid, dragCandidate.badgeInner);
-      return;
-    }
-    const dx = e.clientX - dragCandidate.startX;
-    const dy = e.clientY - dragCandidate.startY;
-    if (Math.hypot(dx,dy) < 10) return;
-    beginDrag(e, dragCandidate.el, dragCandidate.idx, dragCandidate.badgeWrap, dragCandidate.badgeInner, dragCandidate.grid);
-  }
-
-  function dragCandidateUp(e, moveHandler, upHandler){
-    window.removeEventListener("pointermove", moveHandler);
-    window.removeEventListener("pointerup", upHandler);
-
-    if (dragging){
-      onDragEnd(e, dragCandidate.grid, dragCandidate.badgeWrap);
-    }
-    dragCandidate = null;
-    stopAutoScroll();
-  }
-
-  function beginDrag(e, el, fromIndex, badgeWrap, badgeInner, grid){
-    e.preventDefault();
-
-    const rect = el.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
+  // ===== Drag reorder =====
+  function beginDrag(e, el, fromIndex){
+    const r = el.getBoundingClientRect();
+    const offsetX = e.clientX - r.left;
+    const offsetY = e.clientY - r.top;
 
     const ghost = el.cloneNode(true);
     ghost.classList.add("ghost");
     ghost.style.left = (e.clientX - offsetX) + "px";
     ghost.style.top  = (e.clientY - offsetY) + "px";
-    ghost.style.width = rect.width + "px";
-    ghost.style.height = rect.height + "px";
+    ghost.style.width  = r.width + "px";
+    ghost.style.height = r.height + "px";
     document.body.appendChild(ghost);
 
     dragging = { id: el.dataset.id, fromIndex, ghost, offsetX, offsetY };
@@ -1128,15 +786,47 @@
 
     badgeWrap.style.display = "";
     badgeInner.textContent = "Dragging…";
+
+    const move = (ev)=> onDragMove(ev);
+    const up   = (ev)=> onDragEnd(ev, move, up);
+    window.addEventListener("pointermove", move, {passive:false});
+    window.addEventListener("pointerup", up, {passive:false});
   }
 
-  function clearInsertIndicators(grid){
+  function clearInsertIndicators(){
     grid.querySelectorAll(".insertLine").forEach(l => l.style.display = "none");
   }
 
-  function onDragMove(e, grid, badgeInner){
+  function tryAutoScroll(clientY){
+    const margin = 70;
+    const top = 58 + 10;
+    const bottom = window.innerHeight - 20;
+    if (clientY < top + margin) autoScrollDir = -1;
+    else if (clientY > bottom - margin) autoScrollDir = 1;
+    else autoScrollDir = 0;
+
+    if (autoScrollDir !== 0 && !autoScrollRAF){
+      const step = () => {
+        if (!autoScrollDir){ autoScrollRAF = null; return; }
+        document.querySelector("main").scrollTop += autoScrollDir * 18;
+        autoScrollRAF = requestAnimationFrame(step);
+      };
+      autoScrollRAF = requestAnimationFrame(step);
+    }
+    if (autoScrollDir === 0 && autoScrollRAF){
+      cancelAnimationFrame(autoScrollRAF);
+      autoScrollRAF = null;
+    }
+  }
+  function stopAutoScroll(){
+    autoScrollDir = 0;
+    if (autoScrollRAF){ cancelAnimationFrame(autoScrollRAF); autoScrollRAF = null; }
+  }
+
+  function onDragMove(e){
     if (!dragging) return;
     e.preventDefault();
+    tryAutoScroll(e.clientY);
 
     dragging.ghost.style.left = (e.clientX - dragging.offsetX) + "px";
     dragging.ghost.style.top  = (e.clientY - dragging.offsetY) + "px";
@@ -1151,7 +841,7 @@
       }
     }
 
-    clearInsertIndicators(grid);
+    clearInsertIndicators();
     insertTarget = null;
 
     if (!hit){
@@ -1167,24 +857,29 @@
     line.style.left = (side === "before") ? "8px" : "calc(100% - 8px)";
 
     insertTarget = { index: hit.index, side };
-
     const placeNum = hit.index + 1;
     badgeInner.textContent = side === "before"
       ? `Place BEFORE #${placeNum} (IN FRONT)`
       : `Place AFTER #${placeNum} (BEHIND)`;
   }
 
-  async function onDragEnd(e, grid, badgeWrap){
+  async function onDragEnd(e, moveHandler, upHandler){
+    window.removeEventListener("pointermove", moveHandler);
+    window.removeEventListener("pointerup", upHandler);
+
     if (!dragging) return;
     e.preventDefault();
 
-    clearInsertIndicators(grid);
+    stopAutoScroll();
+    clearInsertIndicators();
     badgeWrap.style.display = "none";
+
     dragging.ghost.remove();
 
     suppressClickUntil = Date.now() + 350;
 
-    const from = dragging.fromIndex;
+    await refreshMeta();
+    let from = dragging.fromIndex;
     let to = from;
 
     if (insertTarget){
@@ -1192,208 +887,69 @@
       if (to > from) to -= 1;
     }
 
+    const n = meta.length;
+    to = Math.max(0, Math.min(to, n-1));
+    if (to !== from){
+      const arr = meta.slice();
+      const item = arr.splice(from,1)[0];
+      arr.splice(to,0,item);
+      arr.forEach((m,i)=> m.order = i+1);
+
+      const t = tx([STORE_META],"readwrite");
+      const s = t.objectStore(STORE_META);
+      for (const m of arr){
+        const cur = await idbGet(s, m.id);
+        if (!cur) continue;
+        await idbPut(s, {...cur, order: m.order});
+      }
+      await waitTxDone(t);
+      toast(`Moved to #${to+1}`);
+    }
+
     dragging = null;
     insertTarget = null;
-    stopAutoScroll();
 
-    await refreshMeta();
-    let listNow = folderItems(currentFolder);
-    if (!listNow.length) return;
-
-    to = Math.max(0, Math.min(to, listNow.length - 1));
-    if (to === from) return;
-
-    const item = listNow.splice(from, 1)[0];
-    listNow.splice(to, 0, item);
-    listNow.forEach((x,i)=> x.order = i+1);
-
-    const t = tx([STORE_META], "readwrite");
-    const s = t.objectStore(STORE_META);
-    for (const m of listNow){
-      const cur = await idbGet(s, m.id);
-      if (!cur) continue;
-      await idbPut(s, {...cur, order: m.order});
-    }
-    await waitTxDone(t);
-
-    toast(`Moved to #${to+1}`);
-    await refreshMeta();
-    renderFolderGrid();
-    renderFolders();
+    await renderGrid();
   }
 
-  // --- Auto-scroll while dragging (important for long lists) ---
-  let autoScrollRAF = null;
-  let autoScrollDir = 0; // -1 up, +1 down
-  function tryAutoScroll(clientY){
-    const margin = 70;
-    const top = 58 + 10; // header + a little
-    const bottom = window.innerHeight - 20;
-    if (clientY < top + margin) autoScrollDir = -1;
-    else if (clientY > bottom - margin) autoScrollDir = 1;
-    else autoScrollDir = 0;
+  // ===== Drop zone + file input =====
+  const fileInput = document.getElementById("fileInput");
+  fileInput.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (files.length) await addFiles(files);
+  });
 
-    if (autoScrollDir !== 0 && !autoScrollRAF){
-      const step = () => {
-        if (!autoScrollDir){ autoScrollRAF = null; return; }
-        const main = document.querySelector("main");
-        main.scrollTop += autoScrollDir * 18;
-        autoScrollRAF = requestAnimationFrame(step);
-      };
-      autoScrollRAF = requestAnimationFrame(step);
-    }
-    if (autoScrollDir === 0 && autoScrollRAF){
-      cancelAnimationFrame(autoScrollRAF);
-      autoScrollRAF = null;
-    }
-  }
-  function stopAutoScroll(){
-    autoScrollDir = 0;
-    if (autoScrollRAF){
-      cancelAnimationFrame(autoScrollRAF);
-      autoScrollRAF = null;
-    }
-  }
+  const dropZone = document.getElementById("dropZone");
+  ["dragenter","dragover"].forEach(ev => dropZone.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.add("drag");
+  }));
+  ["dragleave","drop"].forEach(ev => dropZone.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.remove("drag");
+  }));
+  dropZone.addEventListener("drop", async (e) => {
+    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
+    if (files.length) await addFiles(files);
+  });
 
-  // ---------- Add photos ----------
-  async function addFilesToFolder(folder, files){
-    await refreshMeta();
-    const list = folderItems(folder);
-    const maxOrder = list.reduce((mx, x) => Math.max(mx, x.order || 0), 0);
+  // ===== Clear all =====
+  document.getElementById("clearBtn").addEventListener("click", async () => {
+    if (!confirm("Clear ALL photos on this device?")) return;
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = resolve;
+      req.onerror = resolve;
+      req.onblocked = resolve;
+    });
+    db = await openDB();
+    meta = [];
+    toast("Cleared.");
+    renderGrid();
+  });
 
-    const t = tx([STORE_ORIG, STORE_META], "readwrite");
-    const sO = t.objectStore(STORE_ORIG);
-    const sM = t.objectStore(STORE_META);
-
-    let added = 0;
-    for (const f of files){
-      if (!f.type.startsWith("image/")) continue;
-      const id = uuid();
-      await idbPut(sO, {id, blob: f, type: f.type || "image/jpeg"});
-      const m = {
-        id,
-        folder,
-        order: maxOrder + added + 1,
-        filename: f.name || `photo_${added+1}.jpg`,
-        created: nowISO(),
-        notes: "",
-        anno: []
-      };
-      await idbPut(sM, m);
-      meta.push(m);
-      added++;
-    }
-    await waitTxDone(t);
-
-    const newOnes = folderItems(folder).slice(-added);
-    for (const m of newOnes) await ensureThumb(m.id);
-
-    toast(`Added ${added} photo(s).`);
-    await refreshMeta();
-    setHdrCount();
-    renderFolderGrid();
-    renderFolders();
-  }
-
-  async function ensureThumb(id){
-    try{
-      const t = tx([STORE_THUMB],"readonly");
-      const rec = await idbGet(t.objectStore(STORE_THUMB), id);
-      if (rec?.blob) return;
-    } catch {}
-
-    let blob = await getThumbBlob(id);
-    if (!blob) return;
-
-    const bmp = await createImageBitmap(blob);
-    const max = 360;
-    const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
-    const w = Math.max(1, Math.round(bmp.width * scale));
-    const h = Math.max(1, Math.round(bmp.height * scale));
-    const c = document.createElement("canvas");
-    c.width = w; c.height = h;
-    c.getContext("2d").drawImage(bmp, 0, 0, w, h);
-    const thumbBlob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.85));
-    if (!thumbBlob) return;
-
-    const t4 = tx([STORE_THUMB], "readwrite");
-    await idbPut(t4.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
-    await waitTxDone(t4);
-  }
-
-  // ---------- Viewer / Editor (always on) ----------
-  async function openViewer(folder, idx){
-    await refreshMeta();
-    currentFolder = folder;
-    folderList = folderItems(folder);
-    indexInFolder = Math.max(0, Math.min(idx, folderList.length - 1));
-    currentId = folderList[indexInFolder]?.id || null;
-    if (!currentId) return;
-
-    overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden","false");
-
-    document.getElementById("posPill").textContent = `${indexInFolder+1} / ${folderList.length}`;
-
-    const m = folderList[indexInFolder];
-    anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
-    undoStack = [];
-    angleStage = 0;
-    angleLine1 = null;
-    document.getElementById("notesInput").value = m.notes || "";
-
-    await loadOriginalBitmap(currentId);
-    resetView();
-    redraw();
-
-    setArrows();
-    setAngleHint();
-    setTextHint();
-  }
-
-  function closeViewer(){
-    overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden","true");
-    baseBitmap = null;
-    folderList = [];
-    indexInFolder = -1;
-    currentId = null;
-    anno = [];
-    undoStack = [];
-    angleStage = 0;
-    angleLine1 = null;
-    tempShape = null;
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-
-  function setArrows(){
-    const canPrev = indexInFolder > 0;
-    const canNext = indexInFolder < folderList.length - 1;
-    document.getElementById("prevBtn").disabled = !canPrev;
-    document.getElementById("nextBtn").disabled = !canNext;
-    document.getElementById("bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
-    document.getElementById("bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
-  }
-
-  async function step(dir){
-    const next = indexInFolder + dir;
-    if (next < 0 || next >= folderList.length) return;
-    await flushAutosave();
-    await openViewer(currentFolder, next);
-  }
-
-  async function loadOriginalBitmap(id){
-    const t = tx([STORE_ORIG], "readonly");
-    const rec = await idbGet(t.objectStore(STORE_ORIG), id);
-    if (!rec?.blob){
-      baseBitmap = null;
-      return;
-    }
-    baseBitmap = await createImageBitmap(rec.blob);
-    resizeCanvasToContainer();
-  }
-
+  // ===== Viewer/editor open/close/nav =====
   function resizeCanvasToContainer(){
     const host = document.getElementById("vLeft").getBoundingClientRect();
     const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -1403,23 +959,16 @@
     canvas.style.height = host.height + "px";
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-
   function resetView(){
     view.tx = 0; view.ty = 0; view.scale = 1;
     if (!baseBitmap) return;
-
-    const cw = canvas.clientWidth;
-    const ch = canvas.clientHeight;
-    const iw = baseBitmap.width;
-    const ih = baseBitmap.height;
-    const s = Math.min(cw / iw, ch / ih);
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    const iw = baseBitmap.width, ih = baseBitmap.height;
+    const s = Math.min(cw/iw, ch/ih);
     view.scale = s;
-    const dw = iw * s;
-    const dh = ih * s;
-    view.tx = (cw - dw) / 2;
-    view.ty = (ch - dh) / 2;
+    view.tx = (cw - iw*s)/2;
+    view.ty = (ch - ih*s)/2;
   }
-
   function pointerPos(e){
     const r = canvas.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -1428,91 +977,105 @@
     return { x: (x - view.tx) / view.scale, y: (y - view.ty) / view.scale };
   }
 
-  function scheduleAutosave(){
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => autosave().catch(console.error), AUTOSAVE_MS);
-  }
-  async function flushAutosave(){
-    if (saveTimer){
-      clearTimeout(saveTimer);
-      saveTimer = null;
-      await autosave();
-    }
+  async function loadOriginalBitmap(id){
+    const t = tx([STORE_ORIG],"readonly");
+    const rec = await idbGet(t.objectStore(STORE_ORIG), id);
+    if (!rec?.blob){ baseBitmap = null; return; }
+    baseBitmap = await createImageBitmap(rec.blob);
+    resizeCanvasToContainer();
   }
 
-  async function persistMetaPatch(id, patch){
-    const t = tx([STORE_META], "readwrite");
-    const s = t.objectStore(STORE_META);
-    const cur = await idbGet(s, id);
-    if (!cur){ t.abort(); return; }
-    await idbPut(s, {...cur, ...patch});
-    await waitTxDone(t);
-
-    const idx = meta.findIndex(m => m.id === id);
-    if (idx >= 0){
-      if (patch.notes !== undefined) meta[idx].notes = patch.notes;
-      if (patch.anno !== undefined) meta[idx].anno = patch.anno;
-    }
+  function setArrows(){
+    const canPrev = idx > 0;
+    const canNext = idx < list.length - 1;
+    document.getElementById("prevBtn").disabled = !canPrev;
+    document.getElementById("nextBtn").disabled = !canNext;
+    document.getElementById("bigPrev").setAttribute("aria-disabled", canPrev ? "false" : "true");
+    document.getElementById("bigNext").setAttribute("aria-disabled", canNext ? "false" : "true");
   }
 
-  async function autosave(){
+  async function openViewer(i){
+    await refreshMeta();
+    list = meta.slice();
+    idx = Math.max(0, Math.min(i, list.length-1));
+    currentId = list[idx]?.id || null;
     if (!currentId) return;
-    const notes = document.getElementById("notesInput").value || "";
-    await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
-    // store edited + thumb (so UI updates fast), but ZIP will also re-render fresh
-    await renderAndStoreEdited(currentId);
-    renderFolderGrid();
-    renderFolders();
+
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden","false");
+    document.getElementById("posPill").textContent = `${idx+1} / ${list.length}`;
+
+    const m = list[idx];
+    anno = Array.isArray(m.anno) ? structuredClone(m.anno) : [];
+    undoStack = [];
+    angleStage = 0;
+    document.getElementById("notesInput").value = m.notes || "";
+
+    await loadOriginalBitmap(currentId);
+    resetView();
+    redraw();
+    setArrows();
+    setHints();
   }
+
+  function closeViewer(){
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden","true");
+    baseBitmap = null;
+    list = [];
+    idx = -1;
+    currentId = null;
+    anno = [];
+    undoStack = [];
+    angleStage = 0;
+    tempShape = null;
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
+  async function step(dir){
+    const next = idx + dir;
+    if (next < 0 || next >= list.length) return;
+    await flushAutosave();
+    await openViewer(next);
+  }
+
+  document.getElementById("closeBtn").addEventListener("click", async ()=>{ await flushAutosave(); closeViewer(); });
+  document.getElementById("prevBtn").addEventListener("click", ()=>step(-1));
+  document.getElementById("nextBtn").addEventListener("click", ()=>step(+1));
+  document.getElementById("bigPrev").addEventListener("click", ()=>step(-1));
+  document.getElementById("bigNext").addEventListener("click", ()=>step(+1));
+  document.addEventListener("keydown", async (e)=>{
+    if (!overlay.classList.contains("show")) return;
+    if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
+    if (e.key === "ArrowLeft") step(-1);
+    if (e.key === "ArrowRight") step(+1);
+  });
+
+  // ===== Tools + drawing =====
+  function setTool(next){
+    tool = next;
+    document.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
+    angleStage = 0;
+    setHints();
+  }
+  function setHints(){
+    document.getElementById("angleHint").style.display = (tool==="angle") ? "" : "none";
+    document.getElementById("textHint").style.display = (tool==="text") ? "" : "none";
+  }
+  document.getElementById("toolRow").addEventListener("click",(e)=>{
+    const t = e.target.closest(".toolIcon");
+    if (!t) return;
+    setTool(t.dataset.tool);
+  });
 
   function pushUndo(){
     undoStack.push(structuredClone(anno));
     if (undoStack.length > 60) undoStack.shift();
   }
 
-  function setTool(next){
-    tool = next;
-    document.querySelectorAll(".toolIcon").forEach(el => el.classList.toggle("active", el.dataset.tool === tool));
-    angleStage = 0;
-    angleLine1 = null;
-    setAngleHint();
-    setTextHint();
-  }
-  function setAngleHint(){
-    document.getElementById("angleHint").style.display = (tool === "angle") ? "" : "none";
-  }
-  function setTextHint(){
-    document.getElementById("textHint").style.display = (tool === "text") ? "" : "none";
-  }
-
-  function redraw(){
-    resizeCanvasToContainer();
-    const cw = canvas.clientWidth;
-    const ch = canvas.clientHeight;
-    ctx.clearRect(0,0,cw,ch);
-
-    if (baseBitmap){
-      ctx.save();
-      ctx.translate(view.tx, view.ty);
-      ctx.scale(view.scale, view.scale);
-      ctx.drawImage(baseBitmap, 0, 0);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = "rgba(255,255,255,0.08)";
-      ctx.fillRect(0,0,cw,ch);
-    }
-
-    // draw with screen-friendly sizes
-    drawShapesOnCtx(ctx, anno, {mode:"screen", baseW: baseBitmap?.width||1000, baseH: baseBitmap?.height||1000});
-    if (tempShape) drawShapesOnCtx(ctx, [tempShape], {mode:"screen", dashed:true, baseW: baseBitmap?.width||1000, baseH: baseBitmap?.height||1000});
-  }
-
-  // ---------------------------
-  // Shared rendering (screen + export)
-  // ---------------------------
-  function computeScaleForExport(w, h){
-    // scale factor so big photos get bigger arrows/labels
-    // 1200px long side = ~1.0
+  // ===== Render: screen + export use SAME math, export scales bigger =====
+  function computeExportSF(w,h){
     const longSide = Math.max(w,h) || 1200;
     return Math.max(0.9, Math.min(3.0, longSide / 1200));
   }
@@ -1528,381 +1091,337 @@
     c.closePath();
   }
 
-  function drawShapesOnCtx(c, list, opts){
-    const mode = opts?.mode || "screen"; // screen|export
-    const dashed = !!opts?.dashed;
+  function drawLabel(c, txt, x, y, fontPx, lw){
+    c.save();
+    c.setLineDash([]);
+    c.font = `${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+    c.fillStyle = GREEN;
+    c.strokeStyle = OUTLN;
+    c.lineWidth = lw;
+    c.strokeText(txt, x, y);
+    c.fillText(txt, x, y);
+    c.restore();
+  }
 
-    // base sizes
-    const exportSF = (mode === "export") ? computeScaleForExport(opts.baseW, opts.baseH) : 1;
-    const strokeW = (mode === "export") ? (8 * exportSF) : 4;
-    const outlineW = (mode === "export") ? (strokeW + 4*exportSF) : (strokeW + 2);
+  function drawShapes(c, shapes, mode, baseW, baseH, dashed=false){
+    // mode: "screen" (world coords + view transform) or "export" (raw image coords)
+    const sf = (mode==="export") ? computeExportSF(baseW, baseH) : 1;
 
-    const arrowHead = (mode === "export") ? (90 * exportSF) : (18 / view.scale);
-    const labelFont = (mode === "export") ? (36 * exportSF) : (14 / view.scale);
+    const strokeW = (mode==="export") ? (8*sf) : 4;
+    const outlineW = (mode==="export") ? (strokeW + 4*sf) : (strokeW + 2);
 
-    const textFont = (mode === "export") ? (62 * exportSF) : 28; // bigger on-screen than your earlier 22
-    const textPad  = (mode === "export") ? (22 * exportSF) : 12;
-    const textRadius = (mode === "export") ? (18 * exportSF) : 10;
+    const arrowHead = (mode==="export") ? (90*sf) : (18 / view.scale);
+    const labelFont = (mode==="export") ? (36*sf) : (14 / view.scale);
 
-    const drawLabel = (txt, x, y) => {
-      c.save();
-      c.setLineDash([]);
-      c.font = `${labelFont}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-      c.fillStyle = GREEN;
-      c.strokeStyle = "rgba(0,0,0,0.70)";
-      c.lineWidth = Math.max(3, (mode === "export") ? 10*exportSF : (5 / view.scale));
-      c.strokeText(txt, x, y);
-      c.fillText(txt, x, y);
-      c.restore();
-    };
+    const textFont = (mode==="export") ? (62*sf) : 30;   // BIG on screen
+    const textPad  = (mode==="export") ? (22*sf) : 12;
+    const textRad  = (mode==="export") ? (18*sf) : 10;
 
-    const drawTextBox = (s) => {
-      // compute size
-      c.save();
-      c.font = `${textFont}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
-      const lines = (s.text || "").split("\n");
-      const lineH = textFont * 1.2;
-      let maxW = 0;
-      for (const line of lines) maxW = Math.max(maxW, c.measureText(line).width);
-      const w = Math.max(80, maxW + textPad*2);
-      const h = Math.max(50, lines.length * lineH + textPad*2);
-      s.w = w; s.h = h;
+    const needsView = (mode==="screen");
 
-      c.setLineDash(dashed ? [10,8] : []);
-      c.fillStyle = "rgba(0,255,0,0.95)";
-      c.strokeStyle = "rgba(0,0,0,0.92)";
-      c.lineWidth = Math.max(3, (mode === "export") ? 8*exportSF : 3);
-      roundRectPath(c, s.x, s.y, w, h, textRadius);
-      c.fill();
-      c.stroke();
-      c.setLineDash([]);
-
-      c.fillStyle = "rgba(0,0,0,1)";
-      c.textAlign = "center";
-      c.textBaseline = "middle";
-      const cx = s.x + w/2;
-      const cy = s.y + h/2;
-      const totalH = lines.length * lineH;
-      let yy = cy - totalH/2 + lineH/2;
-      for (const line of lines){
-        c.fillText(line, cx, yy);
-        yy += lineH;
-      }
-      c.restore();
-    };
-
-    const drawStroke = (s, color, lw, isOutline) => {
+    function drawOne(s, color, lw, isOutline){
       if (s.type === "text"){
-        drawTextBox(s);
+        c.save();
+        if (needsView){ c.translate(view.tx, view.ty); c.scale(view.scale, view.scale); }
+        c.font = `${textFont}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial`;
+        const lines = (s.text||"").split("\n");
+        const lineH = textFont * 1.2;
+        let maxW = 0;
+        for (const line of lines) maxW = Math.max(maxW, c.measureText(line).width);
+        const w = Math.max(120, maxW + textPad*2);
+        const h = Math.max(70, lines.length*lineH + textPad*2);
+        s.w = w; s.h = h;
+
+        if (!isOutline){
+          c.fillStyle = GREEN;
+          roundRectPath(c, s.x, s.y, w, h, textRad);
+          c.fill();
+          c.strokeStyle = "rgba(0,0,0,0.92)";
+          c.lineWidth = Math.max(3, (mode==="export") ? 8*sf : 3);
+          c.stroke();
+          c.fillStyle = "rgba(0,0,0,1)";
+          c.textAlign = "center";
+          c.textBaseline = "middle";
+          const cx = s.x + w/2, cy = s.y + h/2;
+          const totalH = lines.length*lineH;
+          let yy = cy - totalH/2 + lineH/2;
+          for (const line of lines){
+            c.fillText(line, cx, yy);
+            yy += lineH;
+          }
+        }
+        c.restore();
         return;
       }
 
       c.save();
+      if (needsView){ c.translate(view.tx, view.ty); c.scale(view.scale, view.scale); }
       c.strokeStyle = color;
-      c.lineWidth = lw;
+      c.lineWidth = lw / (needsView ? view.scale : 1);
       c.lineCap = "round";
       c.lineJoin = "round";
       c.setLineDash(dashed ? [12,10] : []);
 
       if (["line","ruler","angleLine"].includes(s.type)){
         c.beginPath();
-        c.moveTo(s.x1, s.y1);
-        c.lineTo(s.x2, s.y2);
+        c.moveTo(s.x1,s.y1);
+        c.lineTo(s.x2,s.y2);
         c.stroke();
 
         if (s.type === "ruler" && !isOutline){
-          const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
-          drawLabel(`${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 12, (s.y1+s.y2)/2 - 12);
+          const len = Math.hypot(s.x2-s.x1, s.y2-s.y1);
+          drawLabel(c, `${len.toFixed(0)} px`, (s.x1+s.x2)/2 + 16, (s.y1+s.y2)/2 - 16, labelFont, Math.max(3,(mode==="export")?10*sf:(5/view.scale)));
         }
       } else if (s.type === "rect"){
-        const x = Math.min(s.x1, s.x2);
-        const y = Math.min(s.y1, s.y2);
-        const w = Math.abs(s.x2 - s.x1);
-        const h = Math.abs(s.y2 - s.y1);
+        const x = Math.min(s.x1,s.x2), y = Math.min(s.y1,s.y2);
+        const w = Math.abs(s.x2-s.x1), h = Math.abs(s.y2-s.y1);
         c.strokeRect(x,y,w,h);
       } else if (s.type === "circle"){
-        const cx = (s.x1 + s.x2) / 2;
-        const cy = (s.y1 + s.y2) / 2;
-        const rx = Math.abs(s.x2 - s.x1) / 2;
-        const ry = Math.abs(s.y2 - s.y1) / 2;
+        const cx = (s.x1+s.x2)/2, cy = (s.y1+s.y2)/2;
+        const rx = Math.abs(s.x2-s.x1)/2, ry = Math.abs(s.y2-s.y1)/2;
         c.beginPath();
-        if (c.ellipse) c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        if (c.ellipse) c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
         else {
-          c.save();
-          c.translate(cx,cy);
-          c.scale(rx || 1, ry || 1);
+          c.save(); c.translate(cx,cy); c.scale(rx||1, ry||1);
           c.arc(0,0,1,0,Math.PI*2);
           c.restore();
         }
         c.stroke();
       } else if (s.type === "arrow"){
         c.beginPath();
-        c.moveTo(s.x1, s.y1);
-        c.lineTo(s.x2, s.y2);
+        c.moveTo(s.x1,s.y1);
+        c.lineTo(s.x2,s.y2);
         c.stroke();
 
-        const dx = s.x2 - s.x1;
-        const dy = s.y2 - s.y1;
-        const ang = Math.atan2(dy, dx);
-
+        const dx = s.x2-s.x1, dy = s.y2-s.y1;
+        const ang = Math.atan2(dy,dx);
         const headLen = arrowHead;
-        const a1 = ang - Math.PI / 8;
-        const a2 = ang + Math.PI / 8;
+        const a1 = ang - Math.PI/8;
+        const a2 = ang + Math.PI/8;
 
         c.beginPath();
-        c.moveTo(s.x2, s.y2);
+        c.moveTo(s.x2,s.y2);
         c.lineTo(s.x2 - Math.cos(a1)*headLen, s.y2 - Math.sin(a1)*headLen);
-        c.moveTo(s.x2, s.y2);
+        c.moveTo(s.x2,s.y2);
         c.lineTo(s.x2 - Math.cos(a2)*headLen, s.y2 - Math.sin(a2)*headLen);
         c.stroke();
       }
-
       c.restore();
-    };
-
-    // If drawing on screen, shapes are stored in world coords, so we must apply the view transform.
-    // For export, no view transform is needed (we draw directly on full-res image coords).
-    const needsView = (mode === "screen");
-
-    c.save();
-    if (needsView){
-      c.translate(view.tx, view.ty);
-      c.scale(view.scale, view.scale);
     }
 
-    for (const s of list){
-      drawStroke(s, DARK, outlineW / (needsView ? view.scale : 1), true);
-      drawStroke(s, GREEN, strokeW / (needsView ? view.scale : 1), false);
-    }
+    // outlines first, then green
+    for (const s of shapes) drawOne(s, OUTLN, outlineW, true);
+    for (const s of shapes) drawOne(s, GREEN, strokeW, false);
 
-    // angle label (draw after)
-    const angleLines = list === anno ? anno.filter(s => s.type === "angleLine") : [];
-    if (angleLines.length >= 2 && !needsView){
-      // handled in export renderer separately (so we can place label reliably)
-    }
-
-    c.restore();
-
-    // Angle label needs to be drawn in the same space as line coords:
-    // Screen mode -> with view; Export mode -> raw.
-    const lines = (list === anno ? anno : []).filter(s => s.type === "angleLine");
+    // angle label (last)
+    const lines = shapes.filter(s=>s.type==="angleLine");
     if (lines.length >= 2){
-      const l2 = lines[lines.length - 1];
-      const l1 = lines[lines.length - 2];
-      const a = {x: l1.x2 - l1.x1, y: l1.y2 - l1.y1};
-      const b = {x: l2.x2 - l2.x1, y: l2.y2 - l2.y1};
+      const l2 = lines[lines.length-1];
+      const l1 = lines[lines.length-2];
+      const a = {x: l1.x2-l1.x1, y:l1.y2-l1.y1};
+      const b = {x: l2.x2-l2.x1, y:l2.y2-l2.y1};
       const dot = a.x*b.x + a.y*b.y;
-      const la = Math.hypot(a.x,a.y);
-      const lb = Math.hypot(b.x,b.y);
+      const la = Math.hypot(a.x,a.y), lb = Math.hypot(b.x,b.y);
       if (la && lb){
         const deg = Math.acos(Math.max(-1, Math.min(1, dot/(la*lb)))) * 180/Math.PI;
 
         c.save();
-        if (needsView){
-          c.translate(view.tx, view.ty);
-          c.scale(view.scale, view.scale);
-        }
-        // place label near l2 start
-        drawLabel(`${deg.toFixed(1)}°`, l2.x1 + 16, l2.y1 - 16);
+        if (needsView){ c.translate(view.tx, view.ty); c.scale(view.scale, view.scale); }
+        drawLabel(c, `${deg.toFixed(1)}°`, l2.x1 + 18, l2.y1 - 18, labelFont, Math.max(3,(mode==="export")?10*sf:(5/view.scale)));
         c.restore();
       }
     }
   }
 
-  // Build edited image in DB (for thumbnails + quick view)
-  async function renderAndStoreEdited(id){
-    if (!baseBitmap) return;
+  function redraw(){
+    resizeCanvasToContainer();
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    ctx.clearRect(0,0,cw,ch);
 
-    const w = baseBitmap.width;
-    const h = baseBitmap.height;
-
-    const off = document.createElement("canvas");
-    off.width = w;
-    off.height = h;
-    const octx = off.getContext("2d");
-    octx.drawImage(baseBitmap, 0, 0);
-
-    // draw annotations in EXPORT mode so sizing is correct for big photos
-    drawShapesOnCtx(octx, anno, {mode:"export", baseW:w, baseH:h});
-
-    const editedBlob = await new Promise(res => off.toBlob(res, "image/jpeg", 0.92));
-    if (!editedBlob) return;
-
-    const t = tx([STORE_EDIT], "readwrite");
-    await idbPut(t.objectStore(STORE_EDIT), {id, blob: editedBlob, type:"image/jpeg"});
-    await waitTxDone(t);
-
-    // thumb from edited
-    const max = 360;
-    const scale = Math.min(1, max / Math.max(w, h));
-    const tw = Math.max(1, Math.round(w * scale));
-    const th = Math.max(1, Math.round(h * scale));
-    const tc = document.createElement("canvas");
-    tc.width = tw; tc.height = th;
-    tc.getContext("2d").drawImage(off, 0, 0, tw, th);
-
-    const thumbBlob = await new Promise(res => tc.toBlob(res, "image/jpeg", 0.85));
-    if (thumbBlob){
-      const t2 = tx([STORE_THUMB], "readwrite");
-      await idbPut(t2.objectStore(STORE_THUMB), {id, blob: thumbBlob, type:"image/jpeg"});
-      await waitTxDone(t2);
+    if (baseBitmap){
+      ctx.save();
+      ctx.translate(view.tx, view.ty);
+      ctx.scale(view.scale, view.scale);
+      ctx.drawImage(baseBitmap, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(0,0,cw,ch);
     }
+
+    drawShapes(ctx, anno, "screen", baseBitmap?.width||1200, baseBitmap?.height||900, false);
+    if (tempShape) drawShapes(ctx, [tempShape], "screen", baseBitmap?.width||1200, baseBitmap?.height||900, true);
   }
 
-  // Text moving/editing
+  // ===== Text select/move/edit =====
   function pointInText(s, p){
     if (s.type !== "text") return false;
     const w = s.w || 0, h = s.h || 0;
     return p.x >= s.x && p.x <= s.x + w && p.y >= s.y && p.y <= s.y + h;
   }
   function topmostTextAt(p){
-    for (let i = anno.length - 1; i >= 0; i--){
+    for (let i=anno.length-1; i>=0; i--){
       const s = anno[i];
-      if (s.type === "text" && pointInText(s, p)) return {shape:s, index:i};
+      if (s.type==="text" && pointInText(s,p)) return {shape:s, index:i};
     }
     return null;
   }
   let movingText = null;
-  let selectedTextIndex = -1;
 
-  function setupCanvas(){
-    canvas.addEventListener("pointerdown", (e) => {
-      if (!baseBitmap) return;
-      canvas.setPointerCapture(e.pointerId);
+  // ===== Autosave (meta + cached edited blob + thumb) =====
+  function scheduleAutosave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>autosave().catch(console.error), AUTOSAVE_MS);
+  }
+  async function flushAutosave(){
+    if (saveTimer){
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      await autosave();
+    }
+  }
+  async function persistMetaPatch(id, patch){
+    const t = tx([STORE_META],"readwrite");
+    const s = t.objectStore(STORE_META);
+    const cur = await idbGet(s, id);
+    if (!cur){ t.abort(); return; }
+    await idbPut(s, {...cur, ...patch});
+    await waitTxDone(t);
+  }
 
-      isDown = true;
-      const p = pointerPos(e);
-      const w = screenToWorld(p.x, p.y);
+  async function renderEditedBlobFromAnno(id, shapes){
+    const tO = (tx([STORE_ORIG],"readonly")).objectStore(STORE_ORIG);
+    const rec = await idbGet(tO, id);
+    if (!rec?.blob) return null;
+    const bmp = await createImageBitmap(rec.blob);
 
-      // select/move text if tapped
-      const hitText = topmostTextAt(w);
-      if (hitText){
-        selectedTextIndex = hitText.index;
-        movingText = { index: hitText.index, dx: w.x - hitText.shape.x, dy: w.y - hitText.shape.y };
-        tempShape = null;
-        redraw();
-        return;
-      } else {
-        selectedTextIndex = -1;
+    const w = bmp.width, h = bmp.height;
+    const off = document.createElement("canvas");
+    off.width = w; off.height = h;
+    const o = off.getContext("2d");
+    o.drawImage(bmp,0,0);
+    drawShapes(o, structuredClone(shapes||[]), "export", w, h, false);
+
+    const out = await new Promise(res=>off.toBlob(res,"image/jpeg",0.92));
+    return out || null;
+  }
+
+  async function autosave(){
+    if (!currentId) return;
+    const notes = document.getElementById("notesInput").value || "";
+    await persistMetaPatch(currentId, { notes, anno: structuredClone(anno) });
+
+    // cache edited image for fast thumbnails (optional but helpful)
+    if (baseBitmap){
+      const editedBlob = await renderEditedBlobFromAnno(currentId, anno);
+      if (editedBlob){
+        const t = tx([STORE_EDIT],"readwrite");
+        await idbPut(t.objectStore(STORE_EDIT), {id: currentId, blob: editedBlob});
+        await waitTxDone(t);
+
+        // thumb from edited
+        const bmp = await createImageBitmap(editedBlob);
+        const max = 360;
+        const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+        const tw = Math.max(1, Math.round(bmp.width * scale));
+        const th = Math.max(1, Math.round(bmp.height * scale));
+        const tc = document.createElement("canvas");
+        tc.width=tw; tc.height=th;
+        tc.getContext("2d").drawImage(bmp,0,0,tw,th);
+        const thumbBlob = await new Promise(res=>tc.toBlob(res,"image/jpeg",0.85));
+        if (thumbBlob){
+          const t2 = tx([STORE_THUMB],"readwrite");
+          await idbPut(t2.objectStore(STORE_THUMB), {id: currentId, blob: thumbBlob});
+          await waitTxDone(t2);
+        }
       }
+    }
 
-      startW = w;
+    // update grid thumbs
+    renderGrid();
+  }
+
+  // ===== Canvas interactions =====
+  canvas.addEventListener("pointerdown", (e)=>{
+    if (!baseBitmap) return;
+    canvas.setPointerCapture(e.pointerId);
+    isDown = true;
+
+    const p = pointerPos(e);
+    const w = screenToWorld(p.x, p.y);
+
+    // text hit?
+    const hit = topmostTextAt(w);
+    if (hit){
+      movingText = { index: hit.index, dx: w.x - hit.shape.x, dy: w.y - hit.shape.y };
       tempShape = null;
-
-      if (tool === "pan"){
-        startW._sx = p.x; startW._sy = p.y;
-        startW._tx = view.tx; startW._ty = view.ty;
-      }
-    });
-
-    canvas.addEventListener("pointermove", (e) => {
-      if (!isDown || !baseBitmap) return;
-      const p = pointerPos(e);
-
-      if (movingText){
-        const w = screenToWorld(p.x, p.y);
-        const s = anno[movingText.index];
-        if (s && s.type === "text"){
-          s.x = w.x - movingText.dx;
-          s.y = w.y - movingText.dy;
-          redraw();
-          scheduleAutosave();
-        }
-        return;
-      }
-
-      if (tool === "pan"){
-        const dx = p.x - (startW._sx || 0);
-        const dy = p.y - (startW._sy || 0);
-        view.tx = (startW._tx || 0) + dx;
-        view.ty = (startW._ty || 0) + dy;
-        redraw();
-        return;
-      }
-
-      const w = screenToWorld(p.x, p.y);
-
-      if (tool === "rect") tempShape = {type:"rect", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (tool === "circle") tempShape = {type:"circle", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (tool === "line") tempShape = {type:"line", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (tool === "arrow") tempShape = {type:"arrow", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (tool === "ruler") tempShape = {type:"ruler", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-      else if (tool === "angle") tempShape = {type:"angleLine", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
-
       redraw();
-    });
+      return;
+    }
 
-    canvas.addEventListener("pointerup", async (e) => {
-      if (!isDown) return;
-      isDown = false;
+    startW = w;
+    tempShape = null;
 
-      if (movingText){
-        movingText = null;
-        return;
-      }
+    if (tool==="pan"){
+      startW._sx = p.x; startW._sy = p.y;
+      startW._tx = view.tx; startW._ty = view.ty;
+    }
+  });
 
-      if (tool === "pan"){ tempShape = null; return; }
+  canvas.addEventListener("pointermove", (e)=>{
+    if (!isDown || !baseBitmap) return;
+    const p = pointerPos(e);
 
-      if (tool === "text"){
-        const p = pointerPos(e);
-        const w = screenToWorld(p.x, p.y);
-
-        // place new text centered-ish by default if no selection
-        const content = prompt("Text:", "ADD NOTE");
-        if (content && content.trim()){
-          pushUndo();
-          // drop near tap
-          anno.push({type:"text", x:w.x, y:w.y, text: content.trim(), w: 0, h: 0});
-          selectedTextIndex = anno.length - 1;
-          redraw();
-          scheduleAutosave();
-        }
-        tempShape = null;
-        return;
-      }
-
-      if (!tempShape) return;
-
-      if (tool !== "angle"){
-        pushUndo();
-        anno.push(tempShape);
-        tempShape = null;
+    if (movingText){
+      const w = screenToWorld(p.x, p.y);
+      const s = anno[movingText.index];
+      if (s && s.type==="text"){
+        s.x = w.x - movingText.dx;
+        s.y = w.y - movingText.dy;
         redraw();
         scheduleAutosave();
-        return;
       }
+      return;
+    }
 
-      if (angleStage === 0){
-        angleLine1 = structuredClone(tempShape);
-        pushUndo();
-        anno.push(angleLine1);
-        angleStage = 1;
-        tempShape = null;
-        redraw();
-        scheduleAutosave();
-        return;
-      } else {
-        const line2 = structuredClone(tempShape);
-        pushUndo();
-        anno.push(line2);
-        angleStage = 0;
-        angleLine1 = null;
-        tempShape = null;
-        redraw();
-        scheduleAutosave();
-        return;
-      }
-    });
+    if (tool==="pan"){
+      const dx = p.x - (startW._sx||0);
+      const dy = p.y - (startW._sy||0);
+      view.tx = (startW._tx||0) + dx;
+      view.ty = (startW._ty||0) + dy;
+      redraw();
+      return;
+    }
 
-    // quick edit selected text without double click
-    canvas.addEventListener("click", (e) => {
-      if (tool !== "text") return;
-      // if user taps existing text, allow edit
+    const w = screenToWorld(p.x,p.y);
+
+    if (tool==="rect") tempShape = {type:"rect", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+    else if (tool==="circle") tempShape = {type:"circle", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+    else if (tool==="line") tempShape = {type:"line", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+    else if (tool==="arrow") tempShape = {type:"arrow", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+    else if (tool==="ruler") tempShape = {type:"ruler", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+    else if (tool==="angle") tempShape = {type:"angleLine", x1:startW.x, y1:startW.y, x2:w.x, y2:w.y};
+
+    redraw();
+  });
+
+  canvas.addEventListener("pointerup", (e)=>{
+    if (!isDown) return;
+    isDown = false;
+
+    if (movingText){
+      movingText = null;
+      return;
+    }
+
+    if (tool==="pan"){ tempShape = null; return; }
+
+    if (tool==="text"){
+      // tap existing text edits, otherwise add
       const p = pointerPos(e);
       const w = screenToWorld(p.x, p.y);
       const hit = topmostTextAt(w);
       if (hit){
-        selectedTextIndex = hit.index;
         const next = prompt("Edit text:", hit.shape.text || "");
         if (next != null){
           pushUndo();
@@ -1910,20 +1429,77 @@
           redraw();
           scheduleAutosave();
         }
+        return;
       }
-    });
-  }
+      const content = prompt("Text:", "ADD NOTE");
+      if (content && content.trim()){
+        pushUndo();
+        // drop near center if empty tap? (use tap position)
+        anno.push({type:"text", x:w.x, y:w.y, text: content.trim(), w:0, h:0});
+        redraw();
+        scheduleAutosave();
+      }
+      return;
+    }
 
-  // ---------- Revert/Delete ----------
+    if (!tempShape) return;
+
+    if (tool !== "angle"){
+      pushUndo();
+      anno.push(tempShape);
+      tempShape = null;
+      redraw();
+      scheduleAutosave();
+      return;
+    }
+
+    // angle: needs 2 lines
+    if (angleStage === 0){
+      pushUndo();
+      anno.push(structuredClone(tempShape));
+      angleStage = 1;
+      tempShape = null;
+      redraw();
+      scheduleAutosave();
+    } else {
+      pushUndo();
+      anno.push(structuredClone(tempShape));
+      angleStage = 0;
+      tempShape = null;
+      redraw();
+      scheduleAutosave();
+    }
+  });
+
+  // ===== Notes autosave =====
+  document.getElementById("notesInput").addEventListener("input", scheduleAutosave);
+
+  // ===== Undo/Clear/Revert/Delete =====
+  document.getElementById("undoBtn").addEventListener("click", ()=>{
+    if (!undoStack.length) return;
+    anno = undoStack.pop();
+    angleStage = 0;
+    redraw();
+    scheduleAutosave();
+  });
+  document.getElementById("clearMarkupBtn").addEventListener("click", ()=>{
+    if (!anno.length) return;
+    if (!confirm("Clear all markup on this photo?")) return;
+    pushUndo();
+    anno = [];
+    angleStage = 0;
+    redraw();
+    scheduleAutosave();
+  });
+
   async function revertToOriginal(){
     if (!currentId) return;
     if (!confirm("Revert this photo back to ORIGINAL (remove all edits/markup)?")) return;
-
     anno = [];
     undoStack = [];
     angleStage = 0;
-    angleLine1 = null;
 
+    // remove caches
     const t = tx([STORE_EDIT, STORE_THUMB], "readwrite");
     await idbDel(t.objectStore(STORE_EDIT), currentId).catch(()=>{});
     await idbDel(t.objectStore(STORE_THUMB), currentId).catch(()=>{});
@@ -1933,47 +1509,39 @@
     await ensureThumb(currentId);
 
     redraw();
-    scheduleAutosave();
     toast("Reverted.");
-    renderFolderGrid();
-    renderFolders();
+    renderGrid();
   }
+  document.getElementById("revertBtn").addEventListener("click", ()=>revertToOriginal().catch(console.error));
 
   async function deleteCurrent(){
     if (!currentId) return;
-    if (!confirm(`Delete this photo?`)) return;
+    if (!confirm("Delete this photo?")) return;
 
     const id = currentId;
-    const folder = currentFolder;
 
-    const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
+    const t = tx([STORE_ORIG, STORE_META, STORE_THUMB, STORE_EDIT], "readwrite");
     await idbDel(t.objectStore(STORE_ORIG), id).catch(()=>{});
-    await idbDel(t.objectStore(STORE_EDIT), id).catch(()=>{});
-    await idbDel(t.objectStore(STORE_THUMB), id).catch(()=>{});
     await idbDel(t.objectStore(STORE_META), id).catch(()=>{});
+    await idbDel(t.objectStore(STORE_THUMB), id).catch(()=>{});
+    await idbDel(t.objectStore(STORE_EDIT), id).catch(()=>{});
     await waitTxDone(t);
 
     await refreshMeta();
-    if (folder === "Teardown"){
-      await ensureFolderOrder("Teardown");
-      await refreshMeta();
-    }
-
-    const list = folderItems(folder);
-    if (!list.length){
+    toast("Deleted.");
+    if (!meta.length){
       closeViewer();
-      await openFolder(folder);
-      toast("Deleted.");
+      renderGrid();
       return;
     }
-    const nextIndex = Math.min(indexInFolder, list.length - 1);
+    const nextIndex = Math.min(idx, meta.length-1);
     closeViewer();
-    await openFolder(folder);
-    toast("Deleted.");
-    openViewer(folder, nextIndex);
+    await renderGrid();
+    openViewer(nextIndex);
   }
+  document.getElementById("deleteBtn").addEventListener("click", ()=>deleteCurrent().catch(console.error));
 
-  // ---------- Export / Import ----------
+  // ===== ZIP Export (THE IMPORTANT PART) =====
   function downloadBlob(filename, blob){
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1985,464 +1553,48 @@
     URL.revokeObjectURL(url);
   }
 
-  async function getOriginalBlob(id){
-    const t2 = tx([STORE_ORIG], "readonly");
-    const rec2 = await idbGet(t2.objectStore(STORE_ORIG), id);
-    return rec2?.blob || null;
-  }
-
-  // IMPORTANT FIX:
-  // ZIP export re-renders EACH image from ORIGINAL + SAVED annotations, so ZIP always matches exactly.
-  async function renderEditedBlobFromMeta(id){
-    // load meta anno + original blob
-    const tM = tx([STORE_META], "readonly");
-    const mrec = await idbGet(tM.objectStore(STORE_META), id);
-    const shapes = Array.isArray(mrec?.anno) ? mrec.anno : [];
-    const notes = mrec?.notes || "";
-
-    const ob = await getOriginalBlob(id);
-    if (!ob) return null;
-
-    const bmp = await createImageBitmap(ob);
-    const w = bmp.width, h = bmp.height;
-
-    const off = document.createElement("canvas");
-    off.width = w; off.height = h;
-    const octx = off.getContext("2d");
-    octx.drawImage(bmp, 0, 0);
-
-    // draw shapes in EXPORT mode (big arrows + big labels)
-    // (notes are stored but not drawn; you can add that later if you want)
-    drawShapesOnCtx(octx, structuredClone(shapes), {mode:"export", baseW:w, baseH:h});
-
-    const out = await new Promise(res => off.toBlob(res, "image/jpeg", 0.92));
-    return out || null;
-  }
-
-  async function exportZipFolders(folders, opts){
-    const { promptClearAfter = false } = opts || {};
-
+  async function exportZip(){
     if (!window.JSZip){
       alert("JSZip failed to load (offline?). Connect once and try again.");
       return;
     }
 
-    // ensure current photo edits are saved before export
     await flushAutosave();
-
-    await refreshMeta();
-    await ensureFolderOrder("Teardown");
     await refreshMeta();
 
     const zip = new JSZip();
-    for (const folder of folders){
-      const list = folderItems(folder);
-      const zf = zip.folder(folder);
 
-      for (let i=0; i<list.length; i++){
-        const m = list[i];
+    for (let i=0; i<meta.length; i++){
+      const m = meta[i];
 
-        // build edited exactly at export time
-        let blob = await renderEditedBlobFromMeta(m.id);
-        if (!blob) blob = await getOriginalBlob(m.id);
-        if (!blob) continue;
-
-        zf.file(`${pad3(i+1)}.jpg`, blob);
+      // KEY: Re-render from ORIGINAL + SAVED ANNO right now,
+      // so ZIP image is EXACTLY like the edited one.
+      const editedBlob = await renderEditedBlobFromAnno(m.id, m.anno);
+      if (editedBlob){
+        zip.file(`TEARDOWN_${pad3(i+1)}.JPG`, editedBlob);
+      } else {
+        // fallback to original
+        const tO = tx([STORE_ORIG],"readonly");
+        const rec = await idbGet(tO.objectStore(STORE_ORIG), m.id);
+        if (rec?.blob) zip.file(`TEARDOWN_${pad3(i+1)}.JPG`, rec.blob);
       }
     }
 
-    const rawName = (jobNameEl.value || "").trim();
-    const safeJob = rawName ? rawName.replace(/[^\w\- ]+/g, "").replace(/\s+/g,"_") : "Job";
-    const date = new Date().toISOString().slice(0,10);
-    const fileName = `Mitchell_${safeJob}_${date}.zip`;
+    const raw = (jobNameEl.value || "").trim();
+    const safe = raw ? raw.replace(/[^\w\- ]+/g,"").replace(/\s+/g,"_") : "Teardown";
+    const fileName = `Mitchell_${safe}.zip`;
 
     toast("Building ZIP…");
     const out = await zip.generateAsync({type:"blob"});
     downloadBlob(fileName, out);
     toast("ZIP downloaded.");
-
-    if (promptClearAfter){
-      setTimeout(async () => {
-        if (confirm("Clear this job from this device now? (Recommended for phone capture)")){
-          await clearJob();
-          toast("Job cleared.");
-        }
-      }, 300);
-    }
   }
+  document.getElementById("exportZipBtn").addEventListener("click", ()=>exportZip().catch(console.error));
 
-  async function exportZipAll(){
-    await exportZipFolders(FOLDERS, { promptClearAfter: false });
-  }
-
-  // Import ZIP (desktop)
-  function normFolderName(s){
-    return (s || "").toLowerCase().replace(/[\s_\-]+/g,"").trim();
-  }
-  function mapToFolder(name){
-    const n = normFolderName(name);
-    if (n === "walkaround" || n === "walkarounds" || n === "walk") return "Walk Around";
-    if (n === "upd" || n === "updates") return "UPD";
-    if (n === "teardown" || n === "tear" || n === "teardowns") return "Teardown";
-    return null;
-  }
-  function parseLeadingNumber(filename){
-    const base = filename.split("/").pop() || filename;
-    const m = base.match(/^(\d{1,4})/);
-    return m ? parseInt(m[1],10) : null;
-  }
-
-  async function importZipFile(file){
-    if (!window.JSZip){
-      alert("JSZip failed to load (offline?). Connect once and try again.");
-      return;
-    }
-
-    await refreshMeta();
-    if (meta.length){
-      const ok = confirm("Importing a ZIP will REPLACE the current job on this device. Continue?");
-      if (!ok) return;
-      await clearJob();
-    }
-
-    toast("Reading ZIP…");
-    const buf = await file.arrayBuffer();
-    const zip = await JSZip.loadAsync(buf);
-
-    const byFolder = new Map();
-    for (const f of FOLDERS) byFolder.set(f, []);
-
-    const entries = Object.keys(zip.files);
-
-    for (const path of entries){
-      const zf = zip.files[path];
-      if (zf.dir) continue;
-
-      const lower = path.toLowerCase();
-      if (!(/\.(jpg|jpeg|png|webp)$/i.test(lower))) continue;
-
-      const parts = path.split("/").filter(Boolean);
-      if (parts.length < 2) continue;
-
-      const folderGuess = mapToFolder(parts[0]);
-      if (!folderGuess) continue;
-
-      const blob = await zf.async("blob");
-      const name = parts[parts.length - 1] || `photo.jpg`;
-      const order = parseLeadingNumber(name);
-
-      byFolder.get(folderGuess).push({ name, blob, order: order ?? 999999 });
-    }
-
-    for (const folder of FOLDERS){
-      const list = byFolder.get(folder) || [];
-      list.sort((a,b) => (a.order - b.order) || a.name.localeCompare(b.name));
-      const files = list.map((x,i)=> new File([x.blob], x.name || `${pad3(i+1)}.jpg`, { type: x.blob.type || "image/jpeg" }));
-      if (files.length) await addFilesToFolder(folder, files);
-    }
-
-    toast("Import complete.");
-    await renderFolders();
-    showHome();
-  }
-
-  // ---------- Clear job ----------
-  async function wipeFolder(folder){
-    await refreshMeta();
-    const list = folderItems(folder);
-    if (!list.length) return;
-
-    const t = tx([STORE_ORIG, STORE_EDIT, STORE_THUMB, STORE_META], "readwrite");
-    const sO = t.objectStore(STORE_ORIG);
-    const sE = t.objectStore(STORE_EDIT);
-    const sT = t.objectStore(STORE_THUMB);
-    const sM = t.objectStore(STORE_META);
-
-    for (const m of list){
-      await idbDel(sO, m.id).catch(()=>{});
-      await idbDel(sE, m.id).catch(()=>{});
-      await idbDel(sT, m.id).catch(()=>{});
-      await idbDel(sM, m.id).catch(()=>{});
-    }
-    await waitTxDone(t);
-    await refreshMeta();
-  }
-
-  async function clearJob(){
-    for (const f of FOLDERS){
-      await wipeFolder(f);
-    }
-    await refreshMeta();
-    setHdrCount();
-    await renderFolders();
-    if (currentFolder) await openFolder(currentFolder);
-  }
-
-  async function wipeAllDevice(){
-    await new Promise((resolve) => {
-      const req = indexedDB.deleteDatabase(DB_NAME);
-      req.onsuccess = resolve;
-      req.onerror = resolve;
-      req.onblocked = resolve;
-    });
-    db = await openDB();
-    meta = [];
-    setHdrCount();
-  }
-
-  // ---------- Camera Mode (multi-shot) ----------
-  const camOverlay = document.getElementById("camOverlay");
-  const camVideo = document.getElementById("camVideo");
-  const camThumbs = document.getElementById("camThumbs");
-  const camCount = document.getElementById("camCount");
-
-  let camStream = null;
-  let camFacing = "environment";
-  let camShots = []; // {blob, url}
-
-  async function camStart(){
-    camShots = [];
-    renderCamThumbs();
-    camOverlay.classList.add("show");
-    camOverlay.setAttribute("aria-hidden","false");
-
-    try{ playSnapSound(); }catch{}
-
-    if (!navigator.mediaDevices?.getUserMedia){
-      alert("Camera Mode not supported on this browser. Use Upload Photos instead.");
-      camStop();
-      return;
-    }
-
-    await camOpenStream();
-  }
-
-  async function camOpenStream(){
-    if (camStream){
-      camStream.getTracks().forEach(t => t.stop());
-      camStream = null;
-    }
-    try{
-      camStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: camFacing },
-        audio: false
-      });
-      camVideo.srcObject = camStream;
-      await camVideo.play().catch(()=>{});
-    }catch(err){
-      console.error(err);
-      alert("Camera permission blocked. Allow camera access in your browser settings, then try again.");
-      camStop();
-    }
-  }
-
-  function camStop(){
-    camOverlay.classList.remove("show");
-    camOverlay.setAttribute("aria-hidden","true");
-
-    if (camStream){
-      camStream.getTracks().forEach(t => t.stop());
-      camStream = null;
-    }
-    camVideo.srcObject = null;
-  }
-
-  function renderCamThumbs(){
-    camThumbs.innerHTML = "";
-    camCount.textContent = String(camShots.length);
-    for (const s of camShots){
-      const img = document.createElement("img");
-      img.src = s.url;
-      camThumbs.appendChild(img);
-    }
-  }
-
-  async function camSnap(){
-    if (!camVideo.videoWidth) return;
-    const c = document.createElement("canvas");
-    c.width = camVideo.videoWidth;
-    c.height = camVideo.videoHeight;
-    const cctx = c.getContext("2d");
-    cctx.drawImage(camVideo, 0, 0, c.width, c.height);
-    const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
-    if (!blob) return;
-
-    playSnapSound();
-
-    const url = URL.createObjectURL(blob);
-    camShots.push({blob, url});
-    renderCamThumbs();
-    toast(`Captured ${camShots.length}`);
-  }
-
-  async function camDone(){
-    if (!camShots.length){
-      camStop();
-      return;
-    }
-    const files = camShots.map((s, i) => new File([s.blob], `camera_${Date.now()}_${i+1}.jpg`, {type:"image/jpeg"}));
-    camShots.forEach(s => URL.revokeObjectURL(s.url));
-    camShots = [];
-    renderCamThumbs();
-    camStop();
-    await addFilesToFolder(currentFolder, files);
-  }
-
-  function camCancel(){
-    camShots.forEach(s => URL.revokeObjectURL(s.url));
-    camShots = [];
-    renderCamThumbs();
-    camStop();
-  }
-
-  function camClear(){
-    camShots.forEach(s => URL.revokeObjectURL(s.url));
-    camShots = [];
-    renderCamThumbs();
-  }
-
-  async function camFlip(){
-    camFacing = (camFacing === "environment") ? "user" : "environment";
-    await camOpenStream();
-  }
-
-  // ---------- UI Wiring ----------
-  function wireUI(){
-    document.getElementById("backHomeBtn").addEventListener("click", async () => {
-      await flushAutosave();
-      closeViewer();
-      showHome();
-      renderFolders();
-    });
-
-    document.getElementById("wipeBtn").addEventListener("click", async () => {
-      if (!confirm("Clear ALL photos + data on this device?")) return;
-      await wipeAllDevice();
-      toast("Cleared.");
-      showHome();
-      renderFolders();
-    });
-
-    document.getElementById("exportZipBtn").addEventListener("click", exportZipAll);
-    document.getElementById("folderExportZipBtn").addEventListener("click", exportZipAll);
-
-    document.getElementById("clearJobBtn").addEventListener("click", async () => {
-      if (!confirm("Clear this job (remove all photos on this device)?")) return;
-      await clearJob();
-      toast("Job cleared.");
-    });
-
-    // Phone quick buttons
-    document.getElementById("phoneGoTeardown").addEventListener("click", async () => {
-      await openFolder("Teardown");
-      await camStart();
-    });
-    document.getElementById("phoneSendOffice").addEventListener("click", async () => {
-      await flushAutosave();
-      // send ORIGINAL (like before) and optionally clear
-      await exportZipFolders(FOLDERS, { promptClearAfter: true });
-    });
-
-    // Desktop import ZIP
-    const zipInput = document.getElementById("zipInput");
-    zipInput.addEventListener("change", async (e) => {
-      const file = (e.target.files || [])[0];
-      e.target.value = "";
-      if (!file) return;
-      await importZipFile(file);
-    });
-
-    // Folder wipe
-    document.getElementById("folderWipeBtn").addEventListener("click", async () => {
-      if (!confirm(`Wipe ONLY folder "${currentFolder}"?`)) return;
-      await wipeFolder(currentFolder);
-      toast("Folder wiped.");
-      await openFolder(currentFolder);
-      await renderFolders();
-    });
-
-    // Upload Photos
-    const fileInput = document.getElementById("fileInput");
-    fileInput.addEventListener("change", async (e) => {
-      const files = Array.from(e.target.files || []);
-      e.target.value = "";
-      if (files.length) await addFilesToFolder(currentFolder, files);
-    });
-
-    // Drop zone
-    const dz = document.getElementById("dropZone");
-    ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.add("drag");
-    }));
-    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, (e) => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.remove("drag");
-    }));
-    dz.addEventListener("drop", async (e) => {
-      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-      if (!files.length) return;
-      await addFilesToFolder(currentFolder, files);
-    });
-
-    // Overlay
-    document.getElementById("closeBtn").addEventListener("click", async () => { await flushAutosave(); closeViewer(); });
-    document.getElementById("prevBtn").addEventListener("click", () => step(-1));
-    document.getElementById("nextBtn").addEventListener("click", () => step(+1));
-    document.getElementById("bigPrev").addEventListener("click", () => step(-1));
-    document.getElementById("bigNext").addEventListener("click", () => step(+1));
-
-    document.addEventListener("keydown", async (e) => {
-      if (!overlay.classList.contains("show")) return;
-      if (e.key === "Escape"){ await flushAutosave(); closeViewer(); }
-      if (e.key === "ArrowLeft") step(-1);
-      if (e.key === "ArrowRight") step(+1);
-    });
-
-    // Tools
-    document.getElementById("toolRow").addEventListener("click", (e) => {
-      const t = e.target.closest(".toolIcon");
-      if (!t) return;
-      setTool(t.dataset.tool);
-    });
-
-    document.getElementById("notesInput").addEventListener("input", () => scheduleAutosave());
-
-    document.getElementById("undoBtn").addEventListener("click", () => {
-      if (!undoStack.length) return;
-      anno = undoStack.pop();
-      angleStage = 0; angleLine1 = null;
-      redraw();
-      scheduleAutosave();
-    });
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      if (!anno.length) return;
-      if (!confirm("Clear all markup on this photo?")) return;
-      pushUndo();
-      anno = [];
-      angleStage = 0; angleLine1 = null;
-      redraw();
-      scheduleAutosave();
-    });
-    document.getElementById("revertBtn").addEventListener("click", revertToOriginal);
-    document.getElementById("deleteBtn").addEventListener("click", deleteCurrent);
-
-    // Camera Mode
-    document.getElementById("openCamBtn").addEventListener("click", camStart);
-    document.getElementById("camSnapBtn").addEventListener("click", camSnap);
-    document.getElementById("camDoneBtn").addEventListener("click", camDone);
-    document.getElementById("camCancelBtn").addEventListener("click", camCancel);
-    document.getElementById("camClearBtn").addEventListener("click", camClear);
-    document.getElementById("camFlipBtn").addEventListener("click", camFlip);
-  }
-
-  // ---------- Boot ----------
+  // ===== Init =====
   async function init(){
     db = await openDB();
-    wireUI();
-    setupCanvas();
-    showHome();
-    await renderFolders();
+    await renderGrid();
   }
   init().catch(err => { console.error(err); toast("Failed to load."); });
 })();
