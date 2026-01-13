@@ -1110,7 +1110,8 @@
     const strokeW = (mode==="export") ? (8*sf) : 4;
     const outlineW = (mode==="export") ? (strokeW + 4*sf) : (strokeW + 2);
 
-    const arrowHead = (mode==="export") ? (90*sf) : (18 / view.scale);
+   const arrowHead = 60; // SAME in editor + ZIP export
+
     const labelFont = (mode==="export") ? (36*sf) : (14 / view.scale);
 
     const textFont = (mode==="export") ? (62*sf) : 30;   // BIG on screen
